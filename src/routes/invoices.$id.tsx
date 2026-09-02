@@ -84,7 +84,7 @@ function InvoiceDetailPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">Subtotal</CardTitle>
@@ -105,6 +105,14 @@ function InvoiceDetailPage() {
             </CardHeader>
             <CardContent className="text-2xl font-bold">
               {formatCurrency(invoice.total)}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">Amount Paid</CardTitle>
+            </CardHeader>
+            <CardContent className="text-2xl font-bold text-emerald-600">
+              {formatCurrency(invoice.amount_paid)}
             </CardContent>
           </Card>
           <Card>

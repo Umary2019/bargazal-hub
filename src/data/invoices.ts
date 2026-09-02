@@ -25,15 +25,12 @@ export type InvoiceDraft = {
   status: Database["public"]["Enums"]["invoice_status"];
   discount: number;
   tax: number;
+  amount_paid?: number;
   notes?: string | null;
   items: InvoiceItemDraft[];
 };
 
-export function computeInvoiceTotals(
-  items: InvoiceItemDraft[],
-  discount: number,
-  taxRate: number,
-) {
+export function computeInvoiceTotals(items: InvoiceItemDraft[], discount: number, taxRate: number) {
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
   const discounted = Math.max(subtotal - discount, 0);
   const tax = Math.round(discounted * (taxRate / 100) * 100) / 100;
@@ -84,9 +81,15 @@ export function useSaveInvoice() {
 
       let invoiceId = id;
       if (id) {
-        const { error } = await supabase.from("invoices").update({ ...header, subtotal }).eq("id", id);
+        const { error } = await supabase
+          .from("invoices")
+          .update({ ...header, subtotal })
+          .eq("id", id);
         if (error) throw error;
-        const { error: delError } = await supabase.from("invoice_items").delete().eq("invoice_id", id);
+        const { error: delError } = await supabase
+          .from("invoice_items")
+          .delete()
+          .eq("invoice_id", id);
         if (delError) throw delError;
       } else {
         const { data, error } = await supabase
