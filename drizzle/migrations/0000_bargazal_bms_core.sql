@@ -61,7 +61,7 @@ $$;
 -- ============ BUSINESS SETTINGS ============
 CREATE TABLE public.business_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  business_name TEXT NOT NULL DEFAULT 'Bargazal and Sons Tech Solutions',
+  business_name TEXT NOT NULL DEFAULT 'Bargazal and Sons Tech Solution',
   phone TEXT,
   whatsapp TEXT,
   email TEXT,
@@ -403,7 +403,7 @@ CREATE INDEX idx_activity_created ON public.activity_log (created_at DESC);
 
 -- ============ BASE CONFIGURATION DATA ============
 INSERT INTO public.business_settings (business_name, phone, whatsapp, email, address, website, currency, invoice_prefix)
-VALUES ('Bargazal and Sons Tech Solutions', '', '', '', '', '', 'NGN', 'BTS-INV');
+VALUES ('Bargazal and Sons Tech Solution', '', '', '', '', '', 'NGN', 'BTS-INV');
 
 INSERT INTO public.service_categories (name, slug, description, sort_order) VALUES
  ('Final Year Projects', 'final-year-projects', 'Academic final year project services', 1),

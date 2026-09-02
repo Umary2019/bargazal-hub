@@ -10,33 +10,216 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ExpensesRouteImport } from './routes/expenses'
+import { Route as InvoicesRouteImport } from './routes/invoices'
+import { Route as LandingRouteImport } from './routes/landing'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PaymentsRouteImport } from './routes/payments'
+import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ServicesRouteImport } from './routes/services'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ClientsIdRouteImport } from './routes/clients.$id'
+import { Route as InvoicesIdRouteImport } from './routes/invoices.$id'
+import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientsRoute = ClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpensesRoute = ExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvoicesRoute = InvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsRoute = PaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsIdRoute = ClientsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ClientsRoute,
+} as any)
+const InvoicesIdRoute = InvoicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => InvoicesRoute,
+} as any)
+const ProjectsIdRoute = ProjectsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ProjectsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/clients': typeof ClientsRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/expenses': typeof ExpensesRoute
+  '/invoices': typeof InvoicesRouteWithChildren
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/payments': typeof PaymentsRoute
+  '/projects': typeof ProjectsRouteWithChildren
+  '/reports': typeof ReportsRoute
+  '/services': typeof ServicesRoute
+  '/settings': typeof SettingsRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/invoices/$id': typeof InvoicesIdRoute
+  '/projects/$id': typeof ProjectsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/clients': typeof ClientsRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/expenses': typeof ExpensesRoute
+  '/invoices': typeof InvoicesRouteWithChildren
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/payments': typeof PaymentsRoute
+  '/projects': typeof ProjectsRouteWithChildren
+  '/reports': typeof ReportsRoute
+  '/services': typeof ServicesRoute
+  '/settings': typeof SettingsRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/invoices/$id': typeof InvoicesIdRoute
+  '/projects/$id': typeof ProjectsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/clients': typeof ClientsRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/expenses': typeof ExpensesRoute
+  '/invoices': typeof InvoicesRouteWithChildren
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/payments': typeof PaymentsRoute
+  '/projects': typeof ProjectsRouteWithChildren
+  '/reports': typeof ReportsRoute
+  '/services': typeof ServicesRoute
+  '/settings': typeof SettingsRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/invoices/$id': typeof InvoicesIdRoute
+  '/projects/$id': typeof ProjectsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/clients'
+    | '/dashboard'
+    | '/expenses'
+    | '/invoices'
+    | '/landing'
+    | '/login'
+    | '/payments'
+    | '/projects'
+    | '/reports'
+    | '/services'
+    | '/settings'
+    | '/clients/$id'
+    | '/invoices/$id'
+    | '/projects/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/clients'
+    | '/dashboard'
+    | '/expenses'
+    | '/invoices'
+    | '/landing'
+    | '/login'
+    | '/payments'
+    | '/projects'
+    | '/reports'
+    | '/services'
+    | '/settings'
+    | '/clients/$id'
+    | '/invoices/$id'
+    | '/projects/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/clients'
+    | '/dashboard'
+    | '/expenses'
+    | '/invoices'
+    | '/landing'
+    | '/login'
+    | '/payments'
+    | '/projects'
+    | '/reports'
+    | '/services'
+    | '/settings'
+    | '/clients/$id'
+    | '/invoices/$id'
+    | '/projects/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClientsRoute: typeof ClientsRouteWithChildren
+  DashboardRoute: typeof DashboardRoute
+  ExpensesRoute: typeof ExpensesRoute
+  InvoicesRoute: typeof InvoicesRouteWithChildren
+  LandingRoute: typeof LandingRoute
+  LoginRoute: typeof LoginRoute
+  PaymentsRoute: typeof PaymentsRoute
+  ProjectsRoute: typeof ProjectsRouteWithChildren
+  ReportsRoute: typeof ReportsRoute
+  ServicesRoute: typeof ServicesRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +231,155 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clients': {
+      id: '/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/expenses': {
+      id: '/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof ExpensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invoices': {
+      id: '/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof InvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments': {
+      id: '/payments'
+      path: '/payments'
+      fullPath: '/payments'
+      preLoaderRoute: typeof PaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients/$id': {
+      id: '/clients/$id'
+      path: '/$id'
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof ClientsIdRouteImport
+      parentRoute: typeof ClientsRoute
+    }
+    '/invoices/$id': {
+      id: '/invoices/$id'
+      path: '/$id'
+      fullPath: '/invoices/$id'
+      preLoaderRoute: typeof InvoicesIdRouteImport
+      parentRoute: typeof InvoicesRoute
+    }
+    '/projects/$id': {
+      id: '/projects/$id'
+      path: '/$id'
+      fullPath: '/projects/$id'
+      preLoaderRoute: typeof ProjectsIdRouteImport
+      parentRoute: typeof ProjectsRoute
+    }
   }
 }
 
+interface ClientsRouteChildren {
+  ClientsIdRoute: typeof ClientsIdRoute
+}
+
+const ClientsRouteChildren: ClientsRouteChildren = {
+  ClientsIdRoute: ClientsIdRoute,
+}
+
+const ClientsRouteWithChildren =
+  ClientsRoute._addFileChildren(ClientsRouteChildren)
+
+interface InvoicesRouteChildren {
+  InvoicesIdRoute: typeof InvoicesIdRoute
+}
+
+const InvoicesRouteChildren: InvoicesRouteChildren = {
+  InvoicesIdRoute: InvoicesIdRoute,
+}
+
+const InvoicesRouteWithChildren = InvoicesRoute._addFileChildren(
+  InvoicesRouteChildren,
+)
+
+interface ProjectsRouteChildren {
+  ProjectsIdRoute: typeof ProjectsIdRoute
+}
+
+const ProjectsRouteChildren: ProjectsRouteChildren = {
+  ProjectsIdRoute: ProjectsIdRoute,
+}
+
+const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
+  ProjectsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClientsRoute: ClientsRouteWithChildren,
+  DashboardRoute: DashboardRoute,
+  ExpensesRoute: ExpensesRoute,
+  InvoicesRoute: InvoicesRouteWithChildren,
+  LandingRoute: LandingRoute,
+  LoginRoute: LoginRoute,
+  PaymentsRoute: PaymentsRoute,
+  ProjectsRoute: ProjectsRouteWithChildren,
+  ReportsRoute: ReportsRoute,
+  ServicesRoute: ServicesRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

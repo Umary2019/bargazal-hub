@@ -20,11 +20,13 @@ export type DashboardData = {
   topServices: { name: string; revenue: number }[];
 };
 
+export type DashboardRange = "thisMonth" | "thisYear" | "allTime";
+
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export function useDashboard() {
+export function useDashboard(range: DashboardRange = "allTime") {
   return useQuery({
-    queryKey: ["dashboard"],
+    queryKey: ["dashboard", range],
     queryFn: async (): Promise<DashboardData> => {
       const [paymentsRes, expensesRes, invoicesRes, clientsRes, projectsRes] = await Promise.all([
         supabase.from("payments").select("amount, payment_date").limit(5000),
@@ -51,8 +53,21 @@ export function useDashboard() {
         services: { name: string } | null;
       }[];
 
-      const revenue = payments.reduce((sum, row) => sum + toNumber(row.amount), 0);
-      const expenseTotal = expenses.reduce((sum, row) => sum + toNumber(row.amount), 0);
+      const now = new Date();
+      const periodStart = range === "thisMonth"
+        ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
+        : range === "thisYear"
+          ? `${now.getFullYear()}-01`
+          : null;
+      const periodPayments = periodStart
+        ? payments.filter((row) => (row.payment_date ?? "").startsWith(periodStart))
+        : payments;
+      const periodExpenses = periodStart
+        ? expenses.filter((row) => (row.expense_date ?? "").startsWith(periodStart))
+        : expenses;
+
+      const revenue = periodPayments.reduce((sum, row) => sum + toNumber(row.amount), 0);
+      const expenseTotal = periodExpenses.reduce((sum, row) => sum + toNumber(row.amount), 0);
       const outstanding = invoices
         .filter((row) => row.status !== "Cancelled" && row.status !== "Draft")
         .reduce((sum, row) => sum + Math.max(toNumber(row.total) - toNumber(row.amount_paid), 0), 0);
@@ -67,7 +82,6 @@ export function useDashboard() {
       ).length;
 
       const months: MonthlyPoint[] = [];
-      const now = new Date();
       for (let index = 11; index >= 0; index -= 1) {
         const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;

@@ -12,6 +12,9 @@ export function formatMoney(value: number | string | null | undefined): string {
   );
 }
 
+/** Alias for formatMoney */
+export const formatCurrency = formatMoney;
+
 /** Compact money for chart axes, e.g. ₦1.2M */
 export function formatMoneyShort(value: number): string {
   if (Math.abs(value) >= 1_000_000) return `${CURRENCY_SYMBOL}${(value / 1_000_000).toFixed(1)}M`;

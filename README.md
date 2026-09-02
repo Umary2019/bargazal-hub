@@ -2,13 +2,13 @@
 
 MASTER DEVELOPMENT PROMPT
 
-Bargazal and Sons Tech Solutions — Business Management System MVP
+Bargazal and Sons Tech Solution — Business Management System MVP
 
 You are a senior full-stack software architect, UI/UX designer, database engineer, security engineer, and production software developer.
 
 Your task is to design, develop, test, and prepare for deployment a complete MVP business management system for:
 
-Bargazal and Sons Tech Solutions
+Bargazal and Sons Tech Solution
 
 The system must be a real-world, professional business management application, not a demo, template, mockup, or collection of disconnected CRUD pages.
 
@@ -18,7 +18,7 @@ Build the application with a clean architecture so it can be expanded later into
 
 1. PRIMARY OBJECTIVE
 
-Build a responsive web-based business management system that allows Bargazal and Sons Tech Solutions to manage its daily operations from one application.
+Build a responsive web-based business management system that allows Bargazal and Sons Tech Solution to manage its daily operations from one application.
 
 The MVP must allow the administrator to:
 
@@ -150,7 +150,7 @@ The application must work correctly after production deployment.
 
 Create a professional application structure:
 
-Bargazal and Sons Tech Solutions
+Bargazal and Sons Tech Solution
 │
 ├── Authentication
 │
@@ -229,7 +229,7 @@ Unauthenticated users must not access protected application pages.
 
 The application must consistently use:
 
-Bargazal and Sons Tech Solutions
+Bargazal and Sons Tech Solution
 
 Do not use placeholder company names such as:
 
@@ -368,7 +368,7 @@ The client profile should provide a complete history of their business relations
 
 9. SERVICES MODULE
 
-Services represent what Bargazal and Sons Tech Solutions sells.
+Services represent what Bargazal and Sons Tech Solution sells.
 
 Create service categories.
 
@@ -459,7 +459,7 @@ The administrator must be able to create, edit, deactivate, and delete services.
 
 This is a VERY IMPORTANT part of the application.
 
-Final Year Projects are one of the core services offered by Bargazal and Sons Tech Solutions.
+Final Year Projects are one of the core services offered by Bargazal and Sons Tech Solution.
 
 Create a dedicated Final Year Project section.
 
@@ -710,7 +710,7 @@ Create a printable professional invoice.
 
 Header:
 
-Bargazal and Sons Tech Solutions
+Bargazal and Sons Tech Solution
 
 
 Include configurable business information:
@@ -2019,7 +2019,7 @@ Leave the application in a working production-ready state.
 
 Do not stop after creating the UI.
 
-The final result must be a fully functional Bargazal and Sons Tech Solutions Business Management System MVP connected to Supabase with real database operations.
+The final result must be a fully functional Bargazal and Sons Tech Solution Business Management System MVP connected to Supabase with real database operations.
 
 This project was built with [Lovable](https://lovable.dev).
 

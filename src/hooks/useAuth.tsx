@@ -3,6 +3,19 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import { supabase } from "@/integrations/supabase/client";
 
+async function ensureProfile(user: User) {
+  const email = user.email ?? "";
+  const fullName = user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User";
+
+  try {
+    await supabase
+      .from("profiles")
+      .upsert({ id: user.id, email, full_name: fullName }, { onConflict: "id" });
+  } catch (error) {
+    console.warn("Profile bootstrap failed:", error);
+  }
+}
+
 type AuthState = {
   user: User | null;
   session: Session | null;
@@ -41,16 +54,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFullName("");
       return;
     }
+
+    void ensureProfile(session.user);
+
     let cancelled = false;
     void (async () => {
-      const [roleRes, profileRes] = await Promise.all([
-        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
-        supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
-      ]);
-      if (cancelled) return;
-      setIsAdmin(Boolean(roleRes.data));
-      setFullName(profileRes.data?.full_name ?? session?.user?.email ?? "");
+      try {
+        const [roleRes, profileRes] = await Promise.all([
+          supabase.rpc("has_role", { _user_id: userId, _role: "admin" }).catch((error) => {
+            console.warn("Role check failed:", error);
+            return { data: false, error } as const;
+          }),
+          supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+        ]);
+
+        if (cancelled) return;
+
+        const hasRole =
+          roleRes && typeof roleRes === "object" && "data" in roleRes
+            ? Boolean(roleRes.data)
+            : false;
+
+        setIsAdmin(hasRole);
+        setFullName(profileRes.data?.full_name ?? session?.user?.email ?? "");
+      } catch (error) {
+        if (!cancelled) {
+          setIsAdmin(false);
+          setFullName(session?.user?.email ?? "");
+        }
+      }
     })();
+
     return () => {
       cancelled = true;
     };
