@@ -86,7 +86,7 @@ export function InvoiceFormDialog({
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <Select value={clientId} onValueChange={setClientId}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Client">
               <SelectValue placeholder="Select client" />
             </SelectTrigger>
             <SelectContent>
@@ -98,12 +98,14 @@ export function InvoiceFormDialog({
             </SelectContent>
           </Select>
           <Input
+            aria-label="Item description"
             placeholder="Item description"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             required
           />
           <Input
+            aria-label="Amount"
             type="number"
             min="0.01"
             step="0.01"

@@ -72,7 +72,7 @@ function ProjectsCollection() {
     <ProtectedRoute>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
             <p className="text-muted-foreground">Manage client projects and track progress</p>
@@ -86,8 +86,8 @@ function ProjectsCollection() {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6 space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1 flex items-center gap-2">
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 <Search className="w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by title or project number..."
@@ -99,7 +99,7 @@ function ProjectsCollection() {
                 value={statusFilter || "all"}
                 onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>

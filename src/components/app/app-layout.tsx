@@ -111,7 +111,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             : "w-64 shrink-0 border-r"
         } ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        <div className="flex flex-col h-full">
+        <div id="app-navigation" className="flex flex-col h-full">
           {/* Logo */}
           <div className="border-b px-4 py-4 sm:px-6">
             <Link to="/dashboard" className="flex items-center gap-2">
@@ -168,6 +168,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             {isMobile && (
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-expanded={sidebarOpen}
+                aria-controls="app-navigation"
                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

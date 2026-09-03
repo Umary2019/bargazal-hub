@@ -63,7 +63,7 @@ function ReportsPage() {
     <ProtectedRoute>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
             <p className="text-muted-foreground">Business insights and analytics</p>
@@ -78,7 +78,7 @@ function ReportsPage() {
         <Card>
           <CardContent className="pt-6">
             <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Select date range" />
               </SelectTrigger>
               <SelectContent>
@@ -92,7 +92,7 @@ function ReportsPage() {
 
         {/* Reports Tabs */}
         <Tabs defaultValue="financial" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="w-full sm:grid sm:grid-cols-4">
             <TabsTrigger value="financial">Financial</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>

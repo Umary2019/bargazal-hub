@@ -47,7 +47,7 @@ function InvoiceDetailPage() {
   return (
     <ProtectedRoute>
       <div className="space-y-6">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
           <div>
             <Button
               variant="ghost"
@@ -62,7 +62,7 @@ function InvoiceDetailPage() {
               {invoice.clients?.full_name || "Unknown client"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="px-3 py-1.5 text-base">
               {invoice.status}
             </Badge>

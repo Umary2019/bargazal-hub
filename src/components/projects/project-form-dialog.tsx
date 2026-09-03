@@ -134,13 +134,14 @@ export function ProjectFormDialog({
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4 pr-1">
           <Input
+            aria-label="Project title"
             placeholder="Project title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             required
           />
           <Select value={clientId} onValueChange={setClientId} required>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Client">
               <SelectValue placeholder="Select client" />
             </SelectTrigger>
             <SelectContent>
@@ -152,7 +153,7 @@ export function ProjectFormDialog({
             </SelectContent>
           </Select>
           <Select value={serviceId} onValueChange={setServiceId}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Service">
               <SelectValue placeholder="Select service (optional)" />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +166,7 @@ export function ProjectFormDialog({
           </Select>
           <div className="grid gap-3 sm:grid-cols-2">
             <Select value={status} onValueChange={(value) => setStatus(value as typeof status)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Project status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -180,7 +181,7 @@ export function ProjectFormDialog({
               value={priority}
               onValueChange={(value) => setPriority(value as typeof priority)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Project priority">
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>
@@ -193,6 +194,7 @@ export function ProjectFormDialog({
             </Select>
           </div>
           <Input
+            aria-label="Progress percentage"
             type="number"
             min="0"
             max="100"
@@ -201,6 +203,7 @@ export function ProjectFormDialog({
             onChange={(event) => setProgress(event.target.value)}
           />
           <Input
+            aria-label="Budget"
             type="number"
             min="0"
             step="0.01"

@@ -48,7 +48,7 @@ function ProjectDetailPage() {
   return (
     <ProtectedRoute>
       <div className="space-y-6 p-1">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
               <Button
@@ -63,7 +63,7 @@ function ProjectDetailPage() {
             <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
             <p className="text-muted-foreground">{project.project_number}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="text-base px-3 py-1.5">
               {project.status}
             </Badge>
@@ -97,19 +97,19 @@ function ProjectDetailPage() {
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Client</span>
-                <span>{project.clients?.full_name ?? "—"}</span>
+                <span className="min-w-0 break-words text-right">{project.clients?.full_name ?? "—"}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Institution</span>
-                <span>{project.institution ?? "—"}</span>
+                <span className="min-w-0 break-words text-right">{project.institution ?? "—"}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Department</span>
-                <span>{project.department ?? "—"}</span>
+                <span className="min-w-0 break-words text-right">{project.department ?? "—"}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Program</span>
-                <span>{project.programme ?? "—"}</span>
+                <span className="min-w-0 break-words text-right">{project.programme ?? "—"}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Start Date</span>
@@ -161,7 +161,7 @@ function ProjectDetailPage() {
               </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">Supervisor</span>
-                <span>{project.supervisor ?? "—"}</span>
+                <span className="min-w-0 break-words text-right">{project.supervisor ?? "—"}</span>
               </div>
             </CardContent>
           </Card>

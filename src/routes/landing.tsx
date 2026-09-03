@@ -263,7 +263,7 @@ function Landing() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-[132px_1fr]">
+                <div className="grid grid-cols-1 sm:grid-cols-[132px_1fr]">
                   <aside className="hidden border-r border-border bg-secondary/60 p-3 sm:block">
                     {[
                       { icon: LayoutDashboard, label: "Dashboard", active: true },
@@ -288,7 +288,7 @@ function Landing() {
                   </aside>
 
                   <div className="p-4">
-                    <div className="grid grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-3">
                       {[
                         { label: "Revenue", value: "₦14,850,000", tone: "text-success" },
                         { label: "Outstanding", value: "₦2,740,000", tone: "text-warning" },

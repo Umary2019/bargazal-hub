@@ -88,7 +88,7 @@ export function PaymentFormDialog({
               setInvoiceId("");
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label="Client">
               <SelectValue placeholder="Select client" />
             </SelectTrigger>
             <SelectContent>
@@ -100,7 +100,7 @@ export function PaymentFormDialog({
             </SelectContent>
           </Select>
           <Select value={invoiceId} onValueChange={setInvoiceId}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Invoice">
               <SelectValue placeholder="Link to invoice (optional)" />
             </SelectTrigger>
             <SelectContent>
@@ -112,6 +112,7 @@ export function PaymentFormDialog({
             </SelectContent>
           </Select>
           <Input
+            aria-label="Payment amount"
             type="number"
             min="0.01"
             step="0.01"
@@ -140,7 +141,7 @@ export function PaymentFormDialog({
             </p>
           )}
           <Select value={method} onValueChange={(value) => setMethod(value as typeof method)}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Payment method">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
