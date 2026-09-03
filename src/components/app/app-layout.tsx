@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 
 interface NavItem {
   label: string;
@@ -177,6 +178,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </button>
             )}
             <div className="flex-1" />
+            <ThemeToggle />
           </div>
         </header>
 
