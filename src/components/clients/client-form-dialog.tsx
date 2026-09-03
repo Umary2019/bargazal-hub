@@ -103,7 +103,7 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="email"
@@ -133,7 +133,7 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="whatsapp"
@@ -177,7 +177,7 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="city"

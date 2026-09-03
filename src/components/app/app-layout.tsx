@@ -102,16 +102,18 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen min-w-0 bg-background">
       {/* Sidebar */}
       <aside
         className={`${
-          isMobile ? "fixed inset-0 z-40 w-64 bg-slate-900 transition-transform" : "w-64 border-r"
+          isMobile
+            ? "fixed inset-y-0 left-0 z-40 w-[min(18rem,85vw)] bg-slate-900 transition-transform"
+            : "w-64 shrink-0 border-r"
         } ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="px-6 py-4 border-b">
+          <div className="border-b px-4 py-4 sm:px-6">
             <Link to="/dashboard" className="flex items-center gap-2">
               <img
                 src="/company-logo.png"
@@ -159,10 +161,10 @@ export function AppLayout({ children }: AppLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Header */}
         <header className="border-b bg-background">
-          <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6">
             {isMobile && (
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -177,7 +179,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-6">{children}</div>
+          <div className="container mx-auto min-w-0 px-4 py-5 sm:p-6">{children}</div>
         </main>
       </div>
 
