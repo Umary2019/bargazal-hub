@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 async function ensureProfile(user: User) {
   const email = user.email ?? "";
-  const fullName = user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User";
+  const fullName = user.user_metadata?.['full_name'] ?? user.email?.split("@")[0] ?? "User";
 
   try {
     await supabase
@@ -74,9 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const [roleRes, profileRes] = await Promise.all([
-          supabase.rpc("has_role", { _user_id: userId, _role: "admin" }).catch((error) => {
+          Promise.resolve(
+            supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+          ).catch((error: unknown) => {
             console.warn("Role check failed:", error);
-            return { data: false, error } as const;
+            return { data: false } as const;
           }),
           supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
         ]);
