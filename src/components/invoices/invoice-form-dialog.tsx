@@ -124,7 +124,11 @@ export function InvoiceFormDialog({
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Remaining balance</div>
               <div className="mt-1 font-semibold">
-                ₦{Math.max(Number(amount || 0) - (Number(amountPaid) || 0), 0).toLocaleString()}
+                ₦
+                {Math.max(
+                  Number(amount || 0) - Number(invoice?.amount_paid ?? 0),
+                  0,
+                ).toLocaleString()}
               </div>
             </div>
           </div>
