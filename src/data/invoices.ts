@@ -75,7 +75,7 @@ export function useInvoice(id: string | undefined) {
 export function useSaveInvoice() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: InvoiceDraft }): Promise<Invoice> => {
+    mutationFn: async ({ id, values }: { id?: string | undefined; values: InvoiceDraft }): Promise<Invoice> => {
       const { items, ...header } = values;
       const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
 
