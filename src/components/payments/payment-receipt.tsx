@@ -88,15 +88,12 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
 
   async function printReceipt() {
     if (!receiptRef.current) return;
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
     const stylesheet =
       document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href ?? "";
     const receiptMarkup = receiptRef.current.innerHTML;
-    printWindow.document.open();
-    printWindow.document.write(`
+    const html = `
       <!doctype html>
-      <html><head><title>${businessName} - Receipt ${payment?.payment_number || invoice.invoice_number}</title><link rel="stylesheet" href="${stylesheet}">
+      <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${businessName} - Receipt ${payment?.payment_number || invoice.invoice_number}</title><link rel="stylesheet" href="${stylesheet}">
       <style>
         @page { size: A4; margin: 16mm; }
         * { box-sizing: border-box; }
@@ -114,14 +111,40 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
         .paid { background: #e7f5ed; color: #17663b; font-weight: bold; padding: 12px; text-align: center; margin-top: 24px; }
         .signature { margin-top: 64px; width: 220px; border-top: 1px solid #17202a; padding-top: 8px; }
         .footer { border-top: 1px solid #d8dee4; color: #5f6b76; margin-top: 48px; padding-top: 14px; text-align: center; font-size: 12px; }
-      </style></head><body><div class="receipt">${receiptMarkup}</div></body></html>`);
-    printWindow.document.close();
+      </style></head><body><div class="receipt">${receiptMarkup}</div></body></html>`;
 
-    await new Promise((resolve) => window.setTimeout(resolve, 800));
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    // Use a hidden iframe: mobile browsers block window.open popups.
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.position = "fixed";
+    frame.style.right = "0";
+    frame.style.bottom = "0";
+    frame.style.width = "0";
+    frame.style.height = "0";
+    frame.style.border = "0";
+    document.body.appendChild(frame);
+
+    const frameDoc = frame.contentWindow?.document;
+    if (!frameDoc) {
+      document.body.removeChild(frame);
+      return;
+    }
+    frameDoc.open();
+    frameDoc.write(html);
+    frameDoc.close();
+
+    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    try {
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+    } catch {
+      /* printing unavailable */
+    }
+    window.setTimeout(() => {
+      if (frame.parentNode) frame.parentNode.removeChild(frame);
+    }, 3000);
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
