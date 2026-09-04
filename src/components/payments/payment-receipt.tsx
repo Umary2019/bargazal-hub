@@ -25,12 +25,22 @@ type PaymentReceiptProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+function getImageUrl(value: string | null | undefined) {
+  if (!value) return "";
+  const driveMatch = value.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (driveMatch?.[1]) {
+    return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(driveMatch[1])}`;
+  }
+  return value;
+}
+
 export function PaymentReceipt({ invoice, payments, open, onOpenChange }: PaymentReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const { data: settings } = useBusinessSettings();
   const { data: client } = useClient(invoice.client_id);
   const payment = payments[0];
-  const logo = settings?.logo_url || "/company-logo.png";
+  const logo = getImageUrl(settings?.logo_url) || "/company-logo.png";
+  const signature = getImageUrl(settings?.signature_url);
   const [qrCode, setQrCode] = useState("");
 
   useEffect(() => {
@@ -198,9 +208,9 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
           </div>
           <div className="mt-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
             <div className="w-56 border-t border-slate-900 pt-2 text-sm">
-              {settings?.signature_url ? (
+              {signature ? (
                 <img
-                  src={settings.signature_url}
+                  src={signature}
                   alt="Authorized signature"
                   className="mb-2 h-14 w-48 object-contain object-left"
                 />
