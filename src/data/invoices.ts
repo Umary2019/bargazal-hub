@@ -75,15 +75,24 @@ export function useInvoice(id: string | undefined) {
 export function useSaveInvoice() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string | undefined; values: InvoiceDraft }): Promise<Invoice> => {
-      const { items, ...header } = values;
+    mutationFn: async ({
+      id,
+      values,
+    }: {
+      id?: string | undefined;
+      values: InvoiceDraft;
+    }): Promise<Invoice> => {
+      const { items, ...rest } = values;
       const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+      const header = Object.fromEntries(
+        Object.entries(rest).filter(([, value]) => value !== undefined),
+      ) as Record<string, unknown>;
 
       let invoiceId = id;
       if (id) {
         const { error } = await supabase
           .from("invoices")
-          .update({ ...header, subtotal })
+          .update({ ...header, subtotal } as never)
           .eq("id", id);
         if (error) throw error;
         const { error: delError } = await supabase
@@ -94,12 +103,13 @@ export function useSaveInvoice() {
       } else {
         const { data, error } = await supabase
           .from("invoices")
-          .insert({ ...header, subtotal, invoice_number: "" })
+          .insert({ ...header, subtotal, invoice_number: "" } as never)
           .select()
           .single();
         if (error) throw error;
         invoiceId = data.id;
       }
+
 
       if (items.length > 0) {
         const { error } = await supabase.from("invoice_items").insert(
