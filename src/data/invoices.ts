@@ -19,14 +19,14 @@ export type InvoiceItemDraft = {
 
 export type InvoiceDraft = {
   client_id: string;
-  project_id?: string | null;
+  project_id?: string | null | undefined;
   issue_date: string;
-  due_date?: string | null;
+  due_date?: string | null | undefined;
   status: Database["public"]["Enums"]["invoice_status"];
   discount: number;
   tax: number;
-  amount_paid?: number;
-  notes?: string | null;
+  amount_paid?: number | undefined;
+  notes?: string | null | undefined;
   items: InvoiceItemDraft[];
 };
 
