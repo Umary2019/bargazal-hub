@@ -148,7 +148,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl print-receipt-dialog">
+      <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto print-receipt-dialog">
         <DialogHeader data-print-hide>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" /> Payment Receipt
