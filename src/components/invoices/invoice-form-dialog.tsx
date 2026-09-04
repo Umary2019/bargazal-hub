@@ -121,6 +121,32 @@ export function InvoiceFormDialog({
             onChange={(event) => setAmount(event.target.value)}
             required
           />
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="amount-paid">
+              Amount paid
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id="amount-paid"
+                aria-label="Amount paid"
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                placeholder="0"
+                value={amountPaid}
+                onChange={(event) => setAmountPaid(event.target.value)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="whitespace-nowrap"
+                onClick={() => setAmountPaid(amount || "0")}
+              >
+                Mark fully paid
+              </Button>
+            </div>
+          </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Total amount</div>
@@ -129,20 +155,18 @@ export function InvoiceFormDialog({
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Amount paid</div>
               <div className="mt-1 font-semibold">
-                ₦{Number(invoice?.amount_paid ?? 0).toLocaleString()}
+                ₦{Number(amountPaid || 0).toLocaleString()}
               </div>
             </div>
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Remaining balance</div>
               <div className="mt-1 font-semibold">
                 ₦
-                {Math.max(
-                  Number(amount || 0) - Number(invoice?.amount_paid ?? 0),
-                  0,
-                ).toLocaleString()}
+                {Math.max(Number(amount || 0) - Number(amountPaid || 0), 0).toLocaleString()}
               </div>
             </div>
           </div>
+
           <DialogFooter>
             <Button type="submit" disabled={saveInvoice.isPending || !clientId}>
               {saveInvoice.isPending ? "Saving..." : invoice ? "Save Changes" : "Create Invoice"}
