@@ -84,20 +84,13 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
       .catch(() => setQrCode(""));
   }, [client, invoice, payment, payments, settings]);
 
-  function printReceipt() {
+  async function printReceipt() {
     if (!receiptRef.current) return;
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    const printWindow = window.open("", "_blank");
     if (!printWindow) return;
     const stylesheet =
       document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href ?? "";
     const receiptMarkup = receiptRef.current.innerHTML;
-    printWindow.onload = () => {
-      window.setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    };
     printWindow.document.open();
     printWindow.document.write(`
       <!doctype html>
@@ -121,6 +114,11 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
         .footer { border-top: 1px solid #d8dee4; color: #5f6b76; margin-top: 48px; padding-top: 14px; text-align: center; font-size: 12px; }
       </style></head><body><div class="receipt">${receiptMarkup}</div></body></html>`);
     printWindow.document.close();
+
+    await new Promise((resolve) => window.setTimeout(resolve, 800));
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   }
 
   return (
