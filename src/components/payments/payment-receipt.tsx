@@ -218,7 +218,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             {payment?.payment_method || "Payment received"}
           </div>
           <div className="mt-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
-            <div className="w-56 border-t border-slate-900 pt-2 text-sm">
+            <div className="w-56 text-sm">
               {signatureUrl && !signatureFailed ? (
                 <img
                   src={signatureUrl}
@@ -235,7 +235,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
                   Signature image unavailable. Check that the Drive file is shared publicly.
                 </div>
               ) : null}
-              Authorized signature
+              <div className="border-t border-slate-900 pt-2">Authorized signature</div>
             </div>
             {qrCode ? (
               <div className="text-center text-xs text-slate-500">
