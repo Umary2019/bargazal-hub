@@ -57,15 +57,14 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
   useEffect(() => {
     const receiptDetails = [
       "PAYMENT RECEIPT",
-      `Business: ${settings?.business_name || "Bargazal and Sons Tech Solution"}`,
+      `Business: ${settings?.business_name || "Bargazal and Sons Tech Solutions"}`,
       `Receipt number: ${payment?.payment_number || invoice.invoice_number}`,
       `Payment date: ${formatDate(payment?.payment_date)}`,
       `Issued to: ${client?.full_name || invoice.clients?.full_name || "Client"}`,
       client?.company ? `Company: ${client.company}` : "",
       `Invoice number: ${invoice.invoice_number}`,
       `Invoice total: ${formatCurrency(invoice.total)}`,
-      `Total paid: ${formatCurrency(invoice.amount_paid)}`,
-      `Amount still owed: ${formatCurrency(invoice.balance)}`,
+      `Amount paid: ${formatCurrency(invoice.amount_paid)}`,
       `Payment method: ${payment?.payment_method || "Payment received"}`,
       ...payments.map(
         (item) =>
@@ -140,7 +139,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
               <img src={logo} alt="Company logo" className="h-16 w-16 object-contain" />
               <div>
                 <h1 className="text-xl font-bold">
-                  {settings?.business_name || "Bargazal and Sons Tech Solution"}
+                  {settings?.business_name || "Bargazal and Sons Tech Solutions"}
                 </h1>
                 <p className="mt-1 whitespace-pre-line text-xs leading-5 text-slate-500">
                   {settings?.address || "Business address"}
@@ -212,12 +211,8 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
               <strong>{formatCurrency(invoice.total)}</strong>
             </div>
             <div className="flex justify-between py-1.5">
-              <span>Total paid</span>
+              <span>Amount paid</span>
               <strong>{formatCurrency(invoice.amount_paid)}</strong>
-            </div>
-            <div className="flex justify-between border-t-2 border-slate-900 pt-3 text-lg font-bold">
-              <span>Amount still owed</span>
-              <span>{formatCurrency(invoice.balance)}</span>
             </div>
           </div>
           <div className="mt-6 bg-emerald-50 p-3 text-center font-bold text-emerald-700">
