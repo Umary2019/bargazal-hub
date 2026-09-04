@@ -25,13 +25,17 @@ type PaymentReceiptProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-function getImageUrl(value: string | null | undefined) {
-  if (!value) return "";
-  const driveMatch = value.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+function getImageUrls(value: string | null | undefined) {
+  if (!value) return [];
+  const driveMatch = value.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([^/?]+)/);
   if (driveMatch?.[1]) {
-    return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(driveMatch[1])}`;
+    const id = encodeURIComponent(driveMatch[1]);
+    return [
+      `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,
+      `https://drive.google.com/uc?export=view&id=${id}`,
+    ];
   }
-  return value;
+  return [value];
 }
 
 export function PaymentReceipt({ invoice, payments, open, onOpenChange }: PaymentReceiptProps) {
@@ -39,9 +43,16 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
   const { data: settings } = useBusinessSettings();
   const { data: client } = useClient(invoice.client_id);
   const payment = payments[0];
-  const logo = getImageUrl(settings?.logo_url) || "/company-logo.png";
-  const signature = getImageUrl(settings?.signature_url);
+  const logo = getImageUrls(settings?.logo_url)[0] || "/company-logo.png";
+  const signatureUrls = getImageUrls(settings?.signature_url);
+  const [signatureUrl, setSignatureUrl] = useState(signatureUrls[0] || "");
+  const [signatureFailed, setSignatureFailed] = useState(false);
   const [qrCode, setQrCode] = useState("");
+
+  useEffect(() => {
+    setSignatureUrl(getImageUrls(settings?.signature_url)[0] || "");
+    setSignatureFailed(false);
+  }, [settings?.signature_url]);
 
   useEffect(() => {
     const receiptDetails = [
@@ -208,12 +219,21 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
           </div>
           <div className="mt-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
             <div className="w-56 border-t border-slate-900 pt-2 text-sm">
-              {signature ? (
+              {signatureUrl && !signatureFailed ? (
                 <img
-                  src={signature}
+                  src={signatureUrl}
                   alt="Authorized signature"
                   className="mb-2 h-14 w-48 object-contain object-left"
+                  onError={() => {
+                    const nextUrl = signatureUrls.find((url) => url !== signatureUrl);
+                    if (nextUrl) setSignatureUrl(nextUrl);
+                    else setSignatureFailed(true);
+                  }}
                 />
+              ) : signatureFailed ? (
+                <div className="mb-2 text-xs text-slate-500">
+                  Signature image unavailable. Check that the Drive file is shared publicly.
+                </div>
               ) : null}
               Authorized signature
             </div>
