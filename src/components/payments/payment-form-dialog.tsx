@@ -32,9 +32,11 @@ const methods: Database["public"]["Enums"]["payment_method"][] = [
 export function PaymentFormDialog({
   open,
   onOpenChange,
+  onFullPayment,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onFullPayment?: (invoiceId: string) => void;
 }) {
   const { data: clients = [] } = useClients();
   const recordPayment = useRecordPayment();
@@ -66,11 +68,14 @@ export function PaymentFormDialog({
         payment_number: "",
       },
     });
+    const completedInvoiceId =
+      selectedInvoice && remainingAfterPayment === 0 ? selectedInvoice.id : null;
     setClientId("");
     setInvoiceId("");
     setAmount("");
     setMethod("Cash");
     onOpenChange(false);
+    if (completedInvoiceId) onFullPayment?.(completedInvoiceId);
   }
 
   return (

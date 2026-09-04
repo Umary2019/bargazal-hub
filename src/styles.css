@@ -63,8 +63,7 @@
 
 :root {
   --radius: 0.5rem;
-  --font-sans:
-    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --background: oklch(0.985 0.003 250);
   --foreground: oklch(0.21 0.03 254);
@@ -197,8 +196,18 @@
     border: none !important;
   }
 
+  .print-receipt-dialog {
+    max-width: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .receipt-printable {
+    border: none !important;
+    padding: 0 !important;
+  }
+
   body {
     background: #fff;
   }
 }
-

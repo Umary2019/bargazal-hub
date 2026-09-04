@@ -6,13 +6,20 @@ import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { usePayments } from "@/data/payments";
 import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
 import { PaymentFormDialog } from "@/components/payments/payment-form-dialog";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/payments")({
   component: PaymentsPage,
@@ -22,10 +29,12 @@ function PaymentsPage() {
   const { data: payments = [], isLoading } = usePayments();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const filteredPayments = payments.filter((payment) =>
-    payment.payment_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (payment.clients?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+  const filteredPayments = payments.filter(
+    (payment) =>
+      payment.payment_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (payment.clients?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ?? false),
   );
 
   const totalPayments = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -108,9 +117,13 @@ function PaymentsPage() {
                   <TableBody>
                     {filteredPayments.map((payment) => (
                       <TableRow key={payment.id}>
-                        <TableCell className="font-mono text-sm">{payment.payment_number}</TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {payment.payment_number}
+                        </TableCell>
                         <TableCell>{payment.clients?.full_name || "-"}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(payment.amount)}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline">{payment.payment_method}</Badge>
                         </TableCell>
@@ -120,10 +133,14 @@ function PaymentsPage() {
                         <TableCell className="text-right">
                           {payment.invoice_id ? (
                             <Link to="/invoices/$id" params={{ id: payment.invoice_id }}>
-                              <Button variant="ghost" size="sm">View Invoice</Button>
+                              <Button variant="ghost" size="sm">
+                                View Invoice
+                              </Button>
                             </Link>
                           ) : (
-                            <Button variant="ghost" size="sm" disabled>No Invoice</Button>
+                            <Button variant="ghost" size="sm" disabled>
+                              No Invoice
+                            </Button>
                           )}
                         </TableCell>
                       </TableRow>
@@ -135,7 +152,11 @@ function PaymentsPage() {
           </CardContent>
         </Card>
       </div>
-      <PaymentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <PaymentFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onFullPayment={(invoiceId) => navigate({ to: "/invoices/$id", params: { id: invoiceId } })}
+      />
     </ProtectedRoute>
   );
 }

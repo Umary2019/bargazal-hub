@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CreditCard, ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, CreditCard, ExternalLink, Pencil, Printer, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
@@ -13,6 +13,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { InvoiceFormDialog } from "@/components/invoices/invoice-form-dialog";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
+import { PaymentReceipt } from "@/components/payments/payment-receipt";
 
 export const Route = createFileRoute("/invoices/$id")({ component: InvoiceDetailPage });
 
@@ -22,6 +23,7 @@ function InvoiceDetailPage() {
   const { data: invoice, isLoading, error } = useInvoice(id);
   const { data: payments = [] } = usePayments({ invoiceId: id });
   const [editOpen, setEditOpen] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const deleteInvoice = useDeleteInvoice();
 
   if (isLoading) {
@@ -46,7 +48,7 @@ function InvoiceDetailPage() {
 
   return (
     <ProtectedRoute>
-      <div className="space-y-6">
+      <div className="space-y-6" data-print-hide>
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
           <div>
             <Button
@@ -69,6 +71,11 @@ function InvoiceDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1 h-4 w-4" /> Edit
             </Button>
+            {Number(invoice.balance) === 0 && payments.length > 0 && (
+              <Button variant="outline" size="sm" onClick={() => setReceiptOpen(true)}>
+                <Printer className="mr-1 h-4 w-4" /> Receipt
+              </Button>
+            )}
             <ConfirmDialog
               trigger={
                 <Button variant="destructive" size="sm">
@@ -200,6 +207,14 @@ function InvoiceDetailPage() {
         </div>
       </div>
       <InvoiceFormDialog open={editOpen} onOpenChange={setEditOpen} invoice={invoice} />
+      {Number(invoice.balance) === 0 && payments.length > 0 && (
+        <PaymentReceipt
+          invoice={invoice}
+          payments={payments}
+          open={receiptOpen}
+          onOpenChange={setReceiptOpen}
+        />
+      )}
     </ProtectedRoute>
   );
 }
