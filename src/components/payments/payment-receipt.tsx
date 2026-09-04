@@ -168,15 +168,9 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
               Receipt issued to
             </div>
             <div className="mt-3 space-y-1.5">
-              <div>
-                <span className="font-semibold">Name:</span>{" "}
+              <div className="text-base font-bold">
                 {client?.full_name || invoice.clients?.full_name || "Client"}
               </div>
-              {client?.company ? (
-                <div>
-                  <span className="font-semibold">Company:</span> {client.company}
-                </div>
-              ) : null}
               {client?.address || client?.city || client?.state ? (
                 <div>
                   <span className="font-semibold">Address:</span>{" "}
