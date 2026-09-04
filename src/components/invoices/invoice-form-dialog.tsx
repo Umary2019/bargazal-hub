@@ -50,6 +50,13 @@ export function InvoiceFormDialog({
     event.preventDefault();
     const total = Number(amount);
     if (!clientId || !description.trim() || total <= 0) return;
+    const paid = Math.min(Math.max(Number(amountPaid || 0), 0), total);
+    const status: Database["public"]["Enums"]["invoice_status"] =
+      paid >= total && total > 0
+        ? "Paid"
+        : paid > 0
+          ? "Partially Paid"
+          : (invoice?.status ?? "Draft");
     await saveInvoice.mutateAsync({
       id: invoice?.id,
       values: {
@@ -57,10 +64,10 @@ export function InvoiceFormDialog({
         project_id: invoice?.project_id,
         issue_date: invoice?.issue_date ?? new Date().toISOString().slice(0, 10),
         due_date: invoice?.due_date,
-        status: invoice?.status ?? ("Draft" as Database["public"]["Enums"]["invoice_status"]),
+        status,
         discount: invoice?.discount ?? 0,
         tax: invoice?.tax ?? 0,
-        amount_paid: invoice?.amount_paid ?? 0,
+        amount_paid: paid,
         notes: invoice?.notes,
         items: [{ description: description.trim(), quantity: 1, unit_price: Number(amount) }],
       },
@@ -68,8 +75,10 @@ export function InvoiceFormDialog({
     setClientId("");
     setDescription("");
     setAmount("");
+    setAmountPaid("0");
     onOpenChange(false);
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
