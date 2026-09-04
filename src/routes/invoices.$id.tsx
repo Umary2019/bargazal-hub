@@ -71,7 +71,7 @@ function InvoiceDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1 h-4 w-4" /> Edit
             </Button>
-            {Number(invoice.balance) === 0 && payments.length > 0 && (
+            {Number(invoice.amount_paid) > 0 && (
               <Button variant="outline" size="sm" onClick={() => setReceiptOpen(true)}>
                 <Printer className="mr-1 h-4 w-4" /> Receipt
               </Button>
