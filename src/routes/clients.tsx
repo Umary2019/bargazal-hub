@@ -97,7 +97,6 @@ function ClientsCollection() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -115,7 +114,6 @@ function ClientsCollection() {
                           {client.full_name}
                         </Link>
                       </TableCell>
-                      <TableCell>{client.company || "-"}</TableCell>
                       <TableCell className="text-sm">{client.email || "-"}</TableCell>
                       <TableCell className="text-sm">{client.phone || "-"}</TableCell>
                       <TableCell className="text-right">

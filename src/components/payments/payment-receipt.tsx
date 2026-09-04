@@ -65,7 +65,6 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
       `Receipt number: ${payment?.payment_number || invoice.invoice_number}`,
       `Payment date: ${formatDate(payment?.payment_date)}`,
       `Issued to: ${client?.full_name || invoice.clients?.full_name || "Client"}`,
-      client?.company ? `Company: ${client.company}` : "",
       `Invoice number: ${invoice.invoice_number}`,
       `Invoice total: ${formatCurrency(invoice.total)}`,
       `Amount paid: ${formatCurrency(invoice.amount_paid)}`,

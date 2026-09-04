@@ -28,7 +28,6 @@ const clientSchema = z.object({
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().optional().or(z.literal("")),
   whatsapp: z.string().optional().or(z.literal("")),
-  company: z.string().optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
   city: z.string().optional().or(z.literal("")),
   state: z.string().optional().or(z.literal("")),
@@ -56,7 +55,6 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
       email: client?.email ?? "",
       phone: client?.phone ?? "",
       whatsapp: client?.whatsapp ?? "",
-      company: client?.company ?? "",
       address: client?.address ?? "",
       city: client?.city ?? "",
       state: client?.state ?? "",
@@ -142,20 +140,6 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
                       <FormLabel>WhatsApp</FormLabel>
                       <FormControl>
                         <Input placeholder="+234..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Company name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
