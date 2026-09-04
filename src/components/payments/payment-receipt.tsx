@@ -167,16 +167,32 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Receipt issued to
             </div>
-            <strong className="mt-1 block text-base">
-              {client?.full_name || invoice.clients?.full_name || "Client"}
-            </strong>
-            <div className="text-slate-500">
-              {[client?.company, client?.address, client?.city, client?.state]
-                .filter(Boolean)
-                .join(", ")}
-            </div>
-            <div className="text-slate-500">
-              {[client?.phone, client?.email].filter(Boolean).join(" · ")}
+            <div className="mt-3 space-y-1.5">
+              <div>
+                <span className="font-semibold">Name:</span>{" "}
+                {client?.full_name || invoice.clients?.full_name || "Client"}
+              </div>
+              {client?.company ? (
+                <div>
+                  <span className="font-semibold">Company:</span> {client.company}
+                </div>
+              ) : null}
+              {client?.address || client?.city || client?.state ? (
+                <div>
+                  <span className="font-semibold">Address:</span>{" "}
+                  {[client?.address, client?.city, client?.state].filter(Boolean).join(", ")}
+                </div>
+              ) : null}
+              {client?.phone ? (
+                <div>
+                  <span className="font-semibold">Phone No:</span> {client.phone}
+                </div>
+              ) : null}
+              {client?.email ? (
+                <div>
+                  <span className="font-semibold">Email:</span> {client.email}
+                </div>
+              ) : null}
             </div>
           </div>
 
