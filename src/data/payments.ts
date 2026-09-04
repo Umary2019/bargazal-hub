@@ -9,7 +9,7 @@ import type { PaymentInput, PaymentWithRelations } from "./types";
 const KEY = ["payments"] as const;
 const SELECT = "*, clients(id, full_name), invoices(id, invoice_number), projects(id, title)";
 
-export function usePayments(options?: { clientId?: string; invoiceId?: string }) {
+export function usePayments(options?: { clientId?: string | undefined; invoiceId?: string | undefined }) {
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.invoiceId ?? "all"],
     queryFn: async (): Promise<PaymentWithRelations[]> => {
@@ -30,7 +30,7 @@ export function usePayments(options?: { clientId?: string; invoiceId?: string })
 export function useRecordPayment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: PaymentInput }) => {
+    mutationFn: async ({ id, values }: { id?: string | undefined; values: PaymentInput }) => {
       if (id) {
         const { data, error } = await supabase
           .from("payments")
