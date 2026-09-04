@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -19,7 +20,13 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -45,6 +52,7 @@ const businessSettingsSchema = z.object({
   currency: z.string().default("NGN"),
   tax_rate: z.coerce.number().min(0).max(100).default(0),
   invoice_prefix: z.string().default("BTS-INV"),
+  signature_url: z.string().optional(),
 });
 
 type BusinessSettingsForm = z.infer<typeof businessSettingsSchema>;
@@ -56,10 +64,14 @@ function SettingsPage() {
   const { data: accessUsers = [], isLoading: accessUsersLoading } = useQuery({
     queryKey: ["admin_users"],
     queryFn: async (): Promise<UserAccessRecord[]> => {
-      const [{ data: profiles, error: profilesError }, { data: roles, error: rolesError }] = await Promise.all([
-        supabase.from("profiles").select("id, email, full_name").order("full_name", { ascending: true }),
-        supabase.from("user_roles").select("user_id, role"),
-      ]);
+      const [{ data: profiles, error: profilesError }, { data: roles, error: rolesError }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id, email, full_name")
+            .order("full_name", { ascending: true }),
+          supabase.from("user_roles").select("user_id, role"),
+        ]);
 
       if (profilesError) throw profilesError;
       if (rolesError) throw rolesError;
@@ -84,10 +96,15 @@ function SettingsPage() {
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: "admin" | "staff" }) => {
-      const { error: deleteError } = await supabase.from("user_roles").delete().eq("user_id", userId);
+      const { error: deleteError } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
       if (deleteError) throw deleteError;
 
-      const { error: insertError } = await supabase.from("user_roles").insert({ user_id: userId, role });
+      const { error: insertError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role });
       if (insertError) throw insertError;
     },
     onSuccess: () => {
@@ -121,6 +138,7 @@ function SettingsPage() {
       currency: settings?.currency || "NGN",
       tax_rate: settings?.tax_rate || 0,
       invoice_prefix: settings?.invoice_prefix || "BTS-INV",
+      signature_url: settings?.signature_url || "",
     },
   });
 
@@ -165,7 +183,9 @@ function SettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Team & Access</CardTitle>
-                <CardDescription>Manage user roles and access permissions for the admin workspace.</CardDescription>
+                <CardDescription>
+                  Manage user roles and access permissions for the admin workspace.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -177,14 +197,22 @@ function SettingsPage() {
                     </div>
                   ) : (
                     accessUsers.map((user) => (
-                      <div key={user.id} className="flex flex-col gap-3 rounded-xl border p-4 md:flex-row md:items-center md:justify-between">
+                      <div
+                        key={user.id}
+                        className="flex flex-col gap-3 rounded-xl border p-4 md:flex-row md:items-center md:justify-between"
+                      >
                         <div>
                           <div className="font-medium">{user.full_name || "Unnamed user"}</div>
-                          <div className="text-sm text-muted-foreground">{user.email || "No email"}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {user.email || "No email"}
+                          </div>
                           <div className="mt-2 flex flex-wrap gap-2">
                             {user.roles.length > 0 ? (
                               user.roles.map((role) => (
-                                <Badge key={`${user.id}-${role}`} variant={role === "admin" ? "default" : "secondary"}>
+                                <Badge
+                                  key={`${user.id}-${role}`}
+                                  variant={role === "admin" ? "default" : "secondary"}
+                                >
                                   {role}
                                 </Badge>
                               ))
@@ -198,7 +226,10 @@ function SettingsPage() {
                           <Select
                             defaultValue={user.roles.includes("admin") ? "admin" : "staff"}
                             onValueChange={(value) => {
-                              updateUserRole.mutate({ userId: user.id, role: value as "admin" | "staff" });
+                              updateUserRole.mutate({
+                                userId: user.id,
+                                role: value as "admin" | "staff",
+                              });
                             }}
                           >
                             <SelectTrigger className="w-full">
@@ -311,6 +342,24 @@ function SettingsPage() {
                           <FormControl>
                             <Textarea placeholder="Full business address" {...field} />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="signature_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Default Signature Image URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://.../signature.png" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Add this once and it will appear on every receipt. Use a transparent PNG
+                            or JPG URL.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

@@ -1,5 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileText, Printer } from "lucide-react";
+import QRCode from "qrcode";
 
 import { useBusinessSettings } from "@/data/settings";
 import { useClient } from "@/data/clients";
@@ -30,6 +31,49 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
   const { data: client } = useClient(invoice.client_id);
   const payment = payments[0];
   const logo = settings?.logo_url || "/company-logo.png";
+  const [qrCode, setQrCode] = useState("");
+
+  useEffect(() => {
+    const receiptDetails = {
+      type: "payment_receipt",
+      receipt_number: payment?.payment_number || invoice.invoice_number,
+      issued_at: payment?.payment_date,
+      business: {
+        name: settings?.business_name,
+        phone: settings?.phone,
+        email: settings?.email,
+        address: settings?.address,
+      },
+      client: {
+        name: client?.full_name || invoice.clients?.full_name,
+        company: client?.company,
+        phone: client?.phone,
+        email: client?.email,
+        address: client?.address,
+      },
+      invoice: {
+        number: invoice.invoice_number,
+        total: Number(invoice.total),
+        amount_paid: Number(invoice.amount_paid),
+        balance: Number(invoice.balance),
+        items: invoice.invoice_items.map((item) => ({
+          description: item.description,
+          quantity: Number(item.quantity),
+          unit_price: Number(item.unit_price),
+        })),
+      },
+      payments: payments.map((item) => ({
+        number: item.payment_number,
+        amount: Number(item.amount),
+        method: item.payment_method,
+        date: item.payment_date,
+        reference: item.reference,
+      })),
+    };
+    QRCode.toDataURL(JSON.stringify(receiptDetails), { margin: 1, width: 180 })
+      .then(setQrCode)
+      .catch(() => setQrCode(""));
+  }, [client, invoice, payment, payments, settings]);
 
   function printReceipt() {
     if (!receiptRef.current) return;
@@ -105,7 +149,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
 
           <div className="mt-6 rounded-md border border-slate-200 p-4 text-sm">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Received from
+              Payment received from
             </div>
             <strong className="mt-1 block text-base">
               {client?.full_name || invoice.clients?.full_name || "Client"}
@@ -122,7 +166,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
 
           <div className="mt-7">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Payment applied to
+              Payment summary
             </div>
             <table className="mt-2 w-full text-sm">
               <thead>
@@ -148,15 +192,15 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
 
           <div className="mt-5 ml-auto max-w-xs text-sm">
             <div className="flex justify-between py-1.5">
-              <span>Invoice total</span>
+              <span>Total amount due</span>
               <strong>{formatCurrency(invoice.total)}</strong>
             </div>
             <div className="flex justify-between py-1.5">
-              <span>Amount received</span>
+              <span>Total paid</span>
               <strong>{formatCurrency(invoice.amount_paid)}</strong>
             </div>
             <div className="flex justify-between border-t-2 border-slate-900 pt-3 text-lg font-bold">
-              <span>Balance</span>
+              <span>Amount still owed</span>
               <span>{formatCurrency(invoice.balance)}</span>
             </div>
           </div>
@@ -164,8 +208,27 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             PAID IN FULL · Invoice {invoice.invoice_number} ·{" "}
             {payment?.payment_method || "Payment received"}
           </div>
-          <div className="mt-16 w-56 border-t border-slate-900 pt-2 text-sm">
-            Authorized signature
+          <div className="mt-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
+            <div className="w-56 border-t border-slate-900 pt-2 text-sm">
+              {settings?.signature_url ? (
+                <img
+                  src={settings.signature_url}
+                  alt="Authorized signature"
+                  className="mb-2 h-14 w-48 object-contain object-left"
+                />
+              ) : null}
+              Authorized signature
+            </div>
+            {qrCode ? (
+              <div className="text-center text-xs text-slate-500">
+                <img
+                  src={qrCode}
+                  alt="Scan to view receipt details"
+                  className="mx-auto h-32 w-32"
+                />
+                <div className="mt-1">Scan to verify receipt details</div>
+              </div>
+            ) : null}
           </div>
           <div className="mt-12 border-t border-slate-200 pt-3 text-center text-xs text-slate-500">
             Thank you for your business.
