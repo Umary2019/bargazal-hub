@@ -91,10 +91,11 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
     const stylesheet =
       document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href ?? "";
     const receiptMarkup = receiptRef.current.innerHTML;
+    const businessName = settings?.business_name || "Bargazal and Sons Tech Solutions";
     printWindow.document.open();
     printWindow.document.write(`
       <!doctype html>
-      <html><head><title>Receipt ${payment?.payment_number || invoice.invoice_number}</title><link rel="stylesheet" href="${stylesheet}">
+      <html><head><title>${businessName} - Receipt ${payment?.payment_number || invoice.invoice_number}</title><link rel="stylesheet" href="${stylesheet}">
       <style>
         @page { size: A4; margin: 16mm; }
         * { box-sizing: border-box; }
@@ -255,6 +256,9 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             ) : null}
           </div>
           <div className="mt-12 border-t border-slate-200 pt-3 text-center text-xs leading-5 text-slate-500">
+            <strong className="block text-slate-700">
+              {settings?.business_name || "Bargazal and Sons Tech Solutions"}
+            </strong>
             Thank you for choosing us. We truly value your trust and look forward to serving you
             again soon.
           </div>
