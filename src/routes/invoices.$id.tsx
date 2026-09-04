@@ -207,7 +207,7 @@ function InvoiceDetailPage() {
         </div>
       </div>
       <InvoiceFormDialog open={editOpen} onOpenChange={setEditOpen} invoice={invoice} />
-      {Number(invoice.balance) === 0 && payments.length > 0 && (
+      {Number(invoice.amount_paid) > 0 && (
         <PaymentReceipt
           invoice={invoice}
           payments={payments}
