@@ -7,8 +7,7 @@ import { logActivity } from "./activity";
 import type { PaymentInput, PaymentWithRelations } from "./types";
 
 const KEY = ["payments"] as const;
-const SELECT =
-  "*, clients(id, full_name), invoices(id, invoice_number), projects(id, title)";
+const SELECT = "*, clients(id, full_name), invoices(id, invoice_number), projects(id, title)";
 
 export function usePayments(options?: { clientId?: string; invoiceId?: string }) {
   return useQuery({
@@ -54,7 +53,9 @@ export function useRecordPayment() {
     },
     onSuccess: (_data, variables) => {
       invalidateMoney(qc);
-      toast.success(variables.id ? "Payment updated successfully" : "Payment recorded successfully");
+      toast.success(
+        variables.id ? "Payment updated successfully" : "Payment recorded successfully",
+      );
     },
     onError: (error) => notifyError(error, "Could not record payment"),
   });
@@ -75,8 +76,36 @@ export function useDeletePayment() {
   });
 }
 
+export function useDeleteAllPayments() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("payments").delete().not("id", "is", null);
+      if (error) throw error;
+      const { error: invoiceError } = await supabase
+        .from("invoices")
+        .update({ amount_paid: 0 })
+        .not("id", "is", null);
+      if (invoiceError) throw invoiceError;
+    },
+    onSuccess: () => {
+      invalidateMoney(qc);
+      toast.success("All payment records cleared");
+    },
+    onError: (error) => notifyError(error, "Could not clear payment records"),
+  });
+}
+
 function invalidateMoney(qc: ReturnType<typeof useQueryClient>) {
-  for (const key of [["payments"], ["invoices"], ["invoice"], ["projects"], ["project"], ["dashboard"], ["activity"]]) {
+  for (const key of [
+    ["payments"],
+    ["invoices"],
+    ["invoice"],
+    ["projects"],
+    ["project"],
+    ["dashboard"],
+    ["activity"],
+  ]) {
     qc.invalidateQueries({ queryKey: key });
   }
 }

@@ -35,7 +35,6 @@ export function InvoiceFormDialog({
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [amountPaid, setAmountPaid] = useState("0");
 
   useEffect(() => {
     if (!open) return;
@@ -43,14 +42,12 @@ export function InvoiceFormDialog({
     setClientId(invoice?.client_id ?? "");
     setDescription(firstItem?.description ?? "");
     setAmount(firstItem ? String(firstItem.unit_price) : "");
-    setAmountPaid(invoice ? String(invoice.amount_paid ?? 0) : "0");
   }, [open, invoice]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const total = Number(amount);
-    const paid = Number(amountPaid) || 0;
-    if (!clientId || !description.trim() || total <= 0 || paid < 0 || paid > total) return;
+    if (!clientId || !description.trim() || total <= 0) return;
     await saveInvoice.mutateAsync({
       id: invoice?.id,
       values: {
@@ -61,7 +58,7 @@ export function InvoiceFormDialog({
         status: invoice?.status ?? ("Draft" as Database["public"]["Enums"]["invoice_status"]),
         discount: invoice?.discount ?? 0,
         tax: invoice?.tax ?? 0,
-        amount_paid: paid,
+        amount_paid: invoice?.amount_paid ?? 0,
         notes: invoice?.notes,
         items: [{ description: description.trim(), quantity: 1, unit_price: Number(amount) }],
       },
@@ -69,7 +66,6 @@ export function InvoiceFormDialog({
     setClientId("");
     setDescription("");
     setAmount("");
-    setAmountPaid("0");
     onOpenChange(false);
   }
 
@@ -121,15 +117,9 @@ export function InvoiceFormDialog({
             </div>
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Amount paid</div>
-              <Input
-                className="mt-1 h-8 bg-background"
-                type="number"
-                min="0"
-                step="0.01"
-                value={amountPaid}
-                onChange={(event) => setAmountPaid(event.target.value)}
-                aria-label="Amount paid"
-              />
+              <div className="mt-1 font-semibold">
+                ₦{Number(invoice?.amount_paid ?? 0).toLocaleString()}
+              </div>
             </div>
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Remaining balance</div>
@@ -138,11 +128,6 @@ export function InvoiceFormDialog({
               </div>
             </div>
           </div>
-          {Number(amountPaid) > Number(amount) && (
-            <p className="text-sm text-destructive">
-              Amount paid cannot be greater than the total amount.
-            </p>
-          )}
           <DialogFooter>
             <Button type="submit" disabled={saveInvoice.isPending || !clientId}>
               {saveInvoice.isPending ? "Saving..." : invoice ? "Save Changes" : "Create Invoice"}
