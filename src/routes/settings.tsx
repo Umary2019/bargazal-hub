@@ -127,7 +127,7 @@ function SettingsPage() {
   });
 
   const form = useForm<BusinessSettingsForm>({
-    resolver: zodResolver(businessSettingsSchema),
+    resolver: zodResolver(businessSettingsSchema) as never,
     defaultValues: {
       business_name: settings?.business_name || "Bargazal and Sons Tech Solution",
       phone: settings?.phone || "",
@@ -148,7 +148,7 @@ function SettingsPage() {
       if (settings?.id) {
         const { error } = await supabase
           .from("business_settings")
-          .update(data)
+          .update(data as never)
           .eq("id", settings.id);
         if (error) throw error;
       }
