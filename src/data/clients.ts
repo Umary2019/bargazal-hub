@@ -38,7 +38,7 @@ export function useClient(id: string | undefined) {
 export function useSaveClient() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: ClientInput }) => {
+    mutationFn: async ({ id, values }: { id?: string | undefined; values: ClientInput }) => {
       if (id) {
         const { data, error } = await supabase
           .from("clients")

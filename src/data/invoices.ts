@@ -38,7 +38,7 @@ export function computeInvoiceTotals(items: InvoiceItemDraft[], discount: number
   return { subtotal, tax, total };
 }
 
-export function useInvoices(options?: { clientId?: string; projectId?: string }) {
+export function useInvoices(options?: { clientId?: string | undefined; projectId?: string | undefined }) {
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.projectId ?? "all"],
     queryFn: async (): Promise<InvoiceWithRelations[]> => {

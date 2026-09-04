@@ -9,7 +9,7 @@ import type { Project, ProjectInput, ProjectWithRelations } from "./types";
 const KEY = ["projects"] as const;
 const SELECT = "*, clients(id, full_name), services(id, name)";
 
-export function useProjects(options?: { clientId?: string; finalYearOnly?: boolean }) {
+export function useProjects(options?: { clientId?: string | undefined; finalYearOnly?: boolean | undefined }) {
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.finalYearOnly ?? false],
     queryFn: async (): Promise<ProjectWithRelations[]> => {
@@ -42,7 +42,7 @@ export function useProject(id: string | undefined) {
 export function useSaveProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: ProjectInput }): Promise<Project> => {
+    mutationFn: async ({ id, values }: { id?: string | undefined; values: ProjectInput }): Promise<Project> => {
       if (id) {
         const { data, error } = await supabase
           .from("projects")

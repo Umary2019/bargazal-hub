@@ -26,7 +26,7 @@ export function useExpenses() {
 export function useSaveExpense() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: ExpenseInput }) => {
+    mutationFn: async ({ id, values }: { id?: string | undefined; values: ExpenseInput }) => {
       if (id) {
         const { data, error } = await supabase
           .from("expenses")
