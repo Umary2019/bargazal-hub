@@ -34,43 +34,31 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
   const [qrCode, setQrCode] = useState("");
 
   useEffect(() => {
-    const receiptDetails = {
-      type: "payment_receipt",
-      receipt_number: payment?.payment_number || invoice.invoice_number,
-      issued_at: payment?.payment_date,
-      business: {
-        name: settings?.business_name,
-        phone: settings?.phone,
-        email: settings?.email,
-        address: settings?.address,
-      },
-      client: {
-        name: client?.full_name || invoice.clients?.full_name,
-        company: client?.company,
-        phone: client?.phone,
-        email: client?.email,
-        address: client?.address,
-      },
-      invoice: {
-        number: invoice.invoice_number,
-        total: Number(invoice.total),
-        amount_paid: Number(invoice.amount_paid),
-        balance: Number(invoice.balance),
-        items: invoice.invoice_items.map((item) => ({
-          description: item.description,
-          quantity: Number(item.quantity),
-          unit_price: Number(item.unit_price),
-        })),
-      },
-      payments: payments.map((item) => ({
-        number: item.payment_number,
-        amount: Number(item.amount),
-        method: item.payment_method,
-        date: item.payment_date,
-        reference: item.reference,
-      })),
-    };
-    QRCode.toDataURL(JSON.stringify(receiptDetails), { margin: 1, width: 180 })
+    const receiptDetails = [
+      "PAYMENT RECEIPT",
+      `Business: ${settings?.business_name || "Bargazal and Sons Tech Solution"}`,
+      `Receipt number: ${payment?.payment_number || invoice.invoice_number}`,
+      `Payment date: ${formatDate(payment?.payment_date)}`,
+      `Issued to: ${client?.full_name || invoice.clients?.full_name || "Client"}`,
+      client?.company ? `Company: ${client.company}` : "",
+      `Invoice number: ${invoice.invoice_number}`,
+      `Invoice total: ${formatCurrency(invoice.total)}`,
+      `Total paid: ${formatCurrency(invoice.amount_paid)}`,
+      `Amount still owed: ${formatCurrency(invoice.balance)}`,
+      `Payment method: ${payment?.payment_method || "Payment received"}`,
+      ...payments.map(
+        (item) =>
+          `Payment: ${item.payment_number}, ${formatCurrency(item.amount)}, ${item.payment_method}, ${formatDate(item.payment_date)}`,
+      ),
+      "STATUS: PAID IN FULL",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    QRCode.toDataURL(receiptDetails, {
+      errorCorrectionLevel: "L",
+      margin: 2,
+      width: 300,
+    })
       .then(setQrCode)
       .catch(() => setQrCode(""));
   }, [client, invoice, payment, payments, settings]);
@@ -149,7 +137,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
 
           <div className="mt-6 rounded-md border border-slate-200 p-4 text-sm">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              Payment received from
+              Receipt issued to
             </div>
             <strong className="mt-1 block text-base">
               {client?.full_name || invoice.clients?.full_name || "Client"}
@@ -224,9 +212,9 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
                 <img
                   src={qrCode}
                   alt="Scan to view receipt details"
-                  className="mx-auto h-32 w-32"
+                  className="mx-auto h-44 w-44"
                 />
-                <div className="mt-1">Scan to verify receipt details</div>
+                <div className="mt-1">Scan to view receipt details</div>
               </div>
             ) : null}
           </div>
