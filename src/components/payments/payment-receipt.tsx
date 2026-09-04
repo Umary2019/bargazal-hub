@@ -90,6 +90,15 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
     if (!printWindow) return;
     const stylesheet =
       document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href ?? "";
+    const receiptMarkup = receiptRef.current.innerHTML;
+    printWindow.onload = () => {
+      window.setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
+    printWindow.document.open();
     printWindow.document.write(`
       <!doctype html>
       <html><head><title>Receipt ${payment?.payment_number || invoice.invoice_number}</title><link rel="stylesheet" href="${stylesheet}">
@@ -110,8 +119,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
         .paid { background: #e7f5ed; color: #17663b; font-weight: bold; padding: 12px; text-align: center; margin-top: 24px; }
         .signature { margin-top: 64px; width: 220px; border-top: 1px solid #17202a; padding-top: 8px; }
         .footer { border-top: 1px solid #d8dee4; color: #5f6b76; margin-top: 48px; padding-top: 14px; text-align: center; font-size: 12px; }
-      </style></head><body><div class="receipt">${receiptRef.current.innerHTML}</div>
-      <script>window.onload = function () { window.print(); window.close(); };</script></body></html>`);
+      </style></head><body><div class="receipt">${receiptMarkup}</div></body></html>`);
     printWindow.document.close();
   }
 
@@ -147,7 +155,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             </div>
             <div className="sm:text-right">
               <h2 className="text-2xl font-bold tracking-widest">RECEIPT</h2>
-              <p className="mt-2 text-sm">
+              <p className="mt-2 whitespace-nowrap text-sm">
                 <strong>Receipt no:</strong> {payment?.payment_number || "Generated payment"}
               </p>
               <p className="text-sm">
@@ -248,8 +256,9 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
               </div>
             ) : null}
           </div>
-          <div className="mt-12 border-t border-slate-200 pt-3 text-center text-xs text-slate-500">
-            Thank you for your business.
+          <div className="mt-12 border-t border-slate-200 pt-3 text-center text-xs leading-5 text-slate-500">
+            Thank you for choosing us. We truly value your trust and look forward to serving you
+            again soon.
           </div>
         </div>
         <DialogFooter data-print-hide>
