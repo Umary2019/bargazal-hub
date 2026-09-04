@@ -35,6 +35,7 @@ export function InvoiceFormDialog({
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
+  const [amountPaid, setAmountPaid] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +43,7 @@ export function InvoiceFormDialog({
     setClientId(invoice?.client_id ?? "");
     setDescription(firstItem?.description ?? "");
     setAmount(firstItem ? String(firstItem.unit_price) : "");
+    setAmountPaid(invoice ? String(invoice.amount_paid ?? 0) : "0");
   }, [open, invoice]);
 
   async function submit(event: React.FormEvent) {
