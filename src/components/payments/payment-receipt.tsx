@@ -45,6 +45,10 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
   const payment = payments[0];
   const logo = getImageUrls(settings?.logo_url)[0] || "/company-logo.png";
   const signatureUrls = getImageUrls(settings?.signature_url);
+  const businessName =
+    settings?.business_name === "Bargazal and Sons Tech Solution"
+      ? "Bargazal and Sons Tech Solutions"
+      : settings?.business_name || "Bargazal and Sons Tech Solutions";
   const [signatureUrl, setSignatureUrl] = useState(signatureUrls[0] || "");
   const [signatureFailed, setSignatureFailed] = useState(false);
   const [qrCode, setQrCode] = useState("");
@@ -57,7 +61,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
   useEffect(() => {
     const receiptDetails = [
       "PAYMENT RECEIPT",
-      `Business: ${settings?.business_name || "Bargazal and Sons Tech Solutions"}`,
+      `Business: ${businessName}`,
       `Receipt number: ${payment?.payment_number || invoice.invoice_number}`,
       `Payment date: ${formatDate(payment?.payment_date)}`,
       `Issued to: ${client?.full_name || invoice.clients?.full_name || "Client"}`,
@@ -81,7 +85,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
     })
       .then(setQrCode)
       .catch(() => setQrCode(""));
-  }, [client, invoice, payment, payments, settings]);
+  }, [businessName, client, invoice, payment, payments, settings]);
 
   async function printReceipt() {
     if (!receiptRef.current) return;
@@ -90,7 +94,6 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
     const stylesheet =
       document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href ?? "";
     const receiptMarkup = receiptRef.current.innerHTML;
-    const businessName = settings?.business_name || "Bargazal and Sons Tech Solutions";
     printWindow.document.open();
     printWindow.document.write(`
       <!doctype html>
@@ -138,9 +141,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             <div className="flex items-center gap-4">
               <img src={logo} alt="Company logo" className="h-16 w-16 object-contain" />
               <div>
-                <h1 className="text-xl font-bold">
-                  {settings?.business_name || "Bargazal and Sons Tech Solutions"}
-                </h1>
+                <h1 className="text-xl font-bold">{businessName}</h1>
                 <p className="mt-1 whitespace-pre-line text-xs leading-5 text-slate-500">
                   {settings?.address || "Business address"}
                 </p>
@@ -210,9 +211,9 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
               <span>Total amount due</span>
               <strong>{formatCurrency(invoice.total)}</strong>
             </div>
-            <div className="flex justify-between py-1.5">
+            <div className="mt-2 flex justify-between border-t border-slate-300 pt-3 font-semibold">
               <span>Amount paid</span>
-              <strong>{formatCurrency(invoice.amount_paid)}</strong>
+              <strong className="text-base">{formatCurrency(invoice.amount_paid)}</strong>
             </div>
           </div>
           <div className="mt-6 bg-emerald-50 p-3 text-center font-bold text-emerald-700">
@@ -251,9 +252,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             ) : null}
           </div>
           <div className="mt-12 border-t border-slate-200 pt-3 text-center text-xs leading-5 text-slate-500">
-            <strong className="block text-slate-700">
-              {settings?.business_name || "Bargazal and Sons Tech Solutions"}
-            </strong>
+            <strong className="block text-slate-700">{businessName}</strong>
             Thank you for choosing us. We truly value your trust and look forward to serving you
             again soon.
           </div>
