@@ -31,7 +31,7 @@ export function useDashboard(range: DashboardRange = "allTime") {
       const [paymentsRes, expensesRes, invoicesRes, clientsRes, projectsRes] = await Promise.all([
         supabase.from("payments").select("amount, payment_date").limit(5000),
         supabase.from("expenses").select("amount, expense_date").limit(5000),
-        supabase.from("invoices").select("total, amount_paid, status, due_date").limit(5000),
+        supabase.from("invoices").select("total, amount_paid, balance, status, due_date").limit(5000),
         supabase.from("clients").select("id", { count: "exact", head: true }),
         supabase
           .from("projects")
@@ -69,8 +69,12 @@ export function useDashboard(range: DashboardRange = "allTime") {
       const revenue = periodPayments.reduce((sum, row) => sum + toNumber(row.amount), 0);
       const expenseTotal = periodExpenses.reduce((sum, row) => sum + toNumber(row.amount), 0);
       const outstanding = invoices
-        .filter((row) => row.status !== "Cancelled" && row.status !== "Draft")
-        .reduce((sum, row) => sum + Math.max(toNumber(row.total) - toNumber(row.amount_paid), 0), 0);
+        .filter((row) => row.status !== "Cancelled")
+        .reduce(
+          (sum, row) =>
+            sum + Math.max(toNumber(row.balance ?? row.total - row.amount_paid), 0),
+          0,
+        );
 
       const today = new Date().toISOString().slice(0, 10);
       const overdueInvoices = invoices.filter(
