@@ -65,13 +65,29 @@ function LoginPage() {
   async function onSubmit(data: LoginForm) {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
       if (error) {
         toast.error(error.message || "Login failed. Please check your credentials.");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await (supabase as any)
+        .from("profiles")
+        .select("approval_status, is_active")
+        .eq("id", authData.user.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      if (profile?.approval_status !== "Approved" || profile.is_active === false) {
+        await supabase.auth.signOut();
+        toast.error(
+          profile?.approval_status === "Rejected"
+            ? "Your registration was rejected. Contact the administrator."
+            : "Your registration is awaiting administrator approval.",
+        );
         return;
       }
 
@@ -192,7 +208,7 @@ function LoginPage() {
                   onClick={() => navigate({ to: "/register" })}
                   className="w-full text-center text-sm font-medium text-slate-600 transition hover:text-slate-900"
                 >
-                  Register as a client
+                  Register as a client or staff member
                 </button>
               </form>
             </Form>
