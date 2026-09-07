@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
     roles: ["admin"],
   },
   {
-    label: "My Work",
+    label: "Work dashboard",
     href: "/work",
     icon: <LayoutDashboard className="w-5 h-5" />,
     roles: ["staff"],
