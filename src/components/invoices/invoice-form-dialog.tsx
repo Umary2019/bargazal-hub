@@ -35,7 +35,6 @@ export function InvoiceFormDialog({
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [amountPaid, setAmountPaid] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -43,20 +42,13 @@ export function InvoiceFormDialog({
     setClientId(invoice?.client_id ?? "");
     setDescription(firstItem?.description ?? "");
     setAmount(firstItem ? String(firstItem.unit_price) : "");
-    setAmountPaid(invoice ? String(invoice.amount_paid ?? 0) : "0");
   }, [open, invoice]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const total = Number(amount);
     if (!clientId || !description.trim() || total <= 0) return;
-    const paid = Math.min(Math.max(Number(amountPaid || 0), 0), total);
-    const status: Database["public"]["Enums"]["invoice_status"] =
-      paid >= total && total > 0
-        ? "Paid"
-        : paid > 0
-          ? "Partially Paid"
-          : (invoice?.status ?? "Draft");
+    const status: Database["public"]["Enums"]["invoice_status"] = invoice?.status ?? "Draft";
     await saveInvoice.mutateAsync({
       id: invoice?.id,
       values: {
@@ -67,7 +59,6 @@ export function InvoiceFormDialog({
         status,
         discount: invoice?.discount ?? 0,
         tax: invoice?.tax ?? 0,
-        amount_paid: paid,
         notes: invoice?.notes,
         items: [{ description: description.trim(), quantity: 1, unit_price: Number(amount) }],
       },
@@ -75,7 +66,6 @@ export function InvoiceFormDialog({
     setClientId("");
     setDescription("");
     setAmount("");
-    setAmountPaid("0");
     onOpenChange(false);
   }
 
@@ -121,48 +111,15 @@ export function InvoiceFormDialog({
             onChange={(event) => setAmount(event.target.value)}
             required
           />
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="amount-paid">
-              Amount paid
-            </label>
-            <div className="flex gap-2">
-              <Input
-                id="amount-paid"
-                aria-label="Amount paid"
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                placeholder="0"
-                value={amountPaid}
-                onChange={(event) => setAmountPaid(event.target.value)}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="whitespace-nowrap"
-                onClick={() => setAmountPaid(amount || "0")}
-              >
-                Mark fully paid
-              </Button>
-            </div>
-          </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Total amount</div>
               <div className="mt-1 font-semibold">₦{Number(amount || 0).toLocaleString()}</div>
             </div>
             <div className="rounded-md border bg-muted/30 p-3">
-              <div className="text-xs text-muted-foreground">Amount paid</div>
-              <div className="mt-1 font-semibold">
-                ₦{Number(amountPaid || 0).toLocaleString()}
-              </div>
-            </div>
-            <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Remaining balance</div>
               <div className="mt-1 font-semibold">
-                ₦
-                {Math.max(Number(amount || 0) - Number(amountPaid || 0), 0).toLocaleString()}
+                ₦{Number(amount || 0).toLocaleString()}
               </div>
             </div>
           </div>

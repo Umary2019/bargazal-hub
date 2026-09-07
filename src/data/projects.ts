@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/lib/errors";
 import { logActivity } from "./activity";
 import type { Project, ProjectInput, ProjectWithRelations } from "./types";
+import { fetchAllPages } from "@/lib/paginate";
 
 const KEY = ["projects"] as const;
 const SELECT = "*, clients(id, full_name), services(id, name)";
@@ -13,16 +14,13 @@ export function useProjects(options?: { clientId?: string | undefined; finalYear
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.finalYearOnly ?? false],
     queryFn: async (): Promise<ProjectWithRelations[]> => {
-      let query = supabase
-        .from("projects")
-        .select(SELECT)
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      if (options?.clientId) query = query.eq("client_id", options.clientId);
-      if (options?.finalYearOnly) query = query.eq("is_final_year", true);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as ProjectWithRelations[];
+      const rows = await fetchAllPages((from, to) => {
+        let query = supabase.from("projects").select(SELECT).order("created_at", { ascending: false }).range(from, to);
+        if (options?.clientId) query = query.eq("client_id", options.clientId);
+        if (options?.finalYearOnly) query = query.eq("is_final_year", true);
+        return query;
+      });
+      return rows as ProjectWithRelations[];
     },
   });
 }

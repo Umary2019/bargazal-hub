@@ -266,6 +266,15 @@ function ReportsPage() {
                 <p className="text-sm text-muted-foreground mt-2">Total clients on record</p>
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader><CardTitle>Revenue by Client</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {dashboard.revenueByClient.map((client) => (
+                  <div key={client.name} className="flex justify-between gap-4 text-sm"><span>{client.name}</span><strong>{formatCurrency(client.revenue)}</strong></div>
+                ))}
+                {dashboard.revenueByClient.length === 0 && <p className="text-sm text-muted-foreground">No revenue recorded for this period.</p>}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Services Report */}
@@ -291,6 +300,10 @@ function ReportsPage() {
                 )}
               </CardContent>
             </Card>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card><CardHeader><CardTitle>Expenses by Category</CardTitle></CardHeader><CardContent className="space-y-2">{dashboard.expensesByCategory.map((item) => <div key={item.name} className="flex justify-between text-sm"><span>{item.name}</span><strong>{formatCurrency(item.total)}</strong></div>)}</CardContent></Card>
+              <Card><CardHeader><CardTitle>Payments by Method</CardTitle></CardHeader><CardContent className="space-y-2">{dashboard.paymentsByMethod.map((item) => <div key={item.name} className="flex justify-between text-sm"><span>{item.name}</span><strong>{formatCurrency(item.total)}</strong></div>)}</CardContent></Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

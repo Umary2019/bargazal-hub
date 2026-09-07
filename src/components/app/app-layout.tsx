@@ -46,6 +46,11 @@ const navItems: NavItem[] = [
     icon: <FileText className="w-5 h-5" />,
   },
   {
+    label: "Quotations",
+    href: "/quotes",
+    icon: <ClipboardList className="w-5 h-5" />,
+  },
+  {
     label: "Payments",
     href: "/payments",
     icon: <CreditCard className="w-5 h-5" />,
@@ -77,6 +82,7 @@ import {
   TrendingDown,
   BarChart,
   Settings,
+  ClipboardList,
 } from "lucide-react";
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -110,7 +116,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           isMobile
             ? "fixed inset-y-0 left-0 z-40 w-[min(18rem,85vw)] bg-slate-900 transition-transform"
             : "w-64 shrink-0 border-r"
-        } ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        } ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} print:hidden`}
       >
         <div id="app-navigation" className="flex flex-col h-full">
           {/* Logo */}
@@ -164,7 +170,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="border-b bg-background">
+        <header className="border-b bg-background print:hidden">
           <div className="flex items-center justify-between px-4 py-3 sm:px-6">
             {isMobile && (
               <button

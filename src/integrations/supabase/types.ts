@@ -315,6 +315,8 @@ export type Database = {
           payment_number: string
           project_id: string | null
           reference: string | null
+          void_reason: string | null
+          voided_at: string | null
         }
         Insert: {
           amount: number
@@ -328,6 +330,8 @@ export type Database = {
           payment_number: string
           project_id?: string | null
           reference?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
         }
         Update: {
           amount?: number
@@ -341,6 +345,8 @@ export type Database = {
           payment_number?: string
           project_id?: string | null
           reference?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
         }
         Relationships: [
           {

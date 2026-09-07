@@ -6,6 +6,7 @@ import { notifyError } from "@/lib/errors";
 import { logActivity } from "./activity";
 import type { Invoice, InvoiceItem, InvoiceWithRelations } from "./types";
 import type { Database } from "@/integrations/supabase/types";
+import { fetchAllPages } from "@/lib/paginate";
 
 const KEY = ["invoices"] as const;
 const SELECT = "*, clients(id, full_name), projects(id, title, project_number)";
@@ -25,7 +26,6 @@ export type InvoiceDraft = {
   status: Database["public"]["Enums"]["invoice_status"];
   discount: number;
   tax: number;
-  amount_paid?: number | undefined;
   notes?: string | null | undefined;
   items: InvoiceItemDraft[];
 };
@@ -42,16 +42,13 @@ export function useInvoices(options?: { clientId?: string | undefined; projectId
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.projectId ?? "all"],
     queryFn: async (): Promise<InvoiceWithRelations[]> => {
-      let query = supabase
-        .from("invoices")
-        .select(SELECT)
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      if (options?.clientId) query = query.eq("client_id", options.clientId);
-      if (options?.projectId) query = query.eq("project_id", options.projectId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as InvoiceWithRelations[];
+      const rows = await fetchAllPages((from, to) => {
+        let query = supabase.from("invoices").select(SELECT).order("created_at", { ascending: false }).range(from, to);
+        if (options?.clientId) query = query.eq("client_id", options.clientId);
+        if (options?.projectId) query = query.eq("project_id", options.projectId);
+        return query;
+      });
+      return rows as InvoiceWithRelations[];
     },
   });
 }

@@ -44,6 +44,8 @@ export function PaymentFormDialog({
   const [amount, setAmount] = useState("");
   const [invoiceId, setInvoiceId] = useState("");
   const [method, setMethod] = useState<Database["public"]["Enums"]["payment_method"]>("Cash");
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
+  const [reference, setReference] = useState("");
   const { data: invoices = [] } = useInvoices({ clientId: clientId || undefined });
   const selectedInvoice = invoices.find((invoice) => invoice.id === invoiceId);
   const remainingAfterPayment = Math.max(
@@ -65,6 +67,8 @@ export function PaymentFormDialog({
         invoice_id: invoiceId || null,
         amount: Number(amount),
         payment_method: method,
+        payment_date: paymentDate,
+        reference: reference.trim() || null,
         payment_number: "",
       },
     });
@@ -74,6 +78,8 @@ export function PaymentFormDialog({
     setInvoiceId("");
     setAmount("");
     setMethod("Cash");
+    setPaymentDate(new Date().toISOString().slice(0, 10));
+    setReference("");
     onOpenChange(false);
     if (completedInvoiceId) onFullPayment?.(completedInvoiceId);
   }
@@ -126,6 +132,21 @@ export function PaymentFormDialog({
             onChange={(event) => setAmount(event.target.value)}
             required
           />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              aria-label="Payment date"
+              type="date"
+              value={paymentDate}
+              onChange={(event) => setPaymentDate(event.target.value)}
+              required
+            />
+            <Input
+              aria-label="Payment reference"
+              placeholder="Bank or receipt reference (optional)"
+              value={reference}
+              onChange={(event) => setReference(event.target.value)}
+            />
+          </div>
           {selectedInvoice && (
             <div className="grid gap-3 rounded-md border bg-muted/30 p-3 sm:grid-cols-2">
               <div>

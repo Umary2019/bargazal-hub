@@ -38,7 +38,6 @@ export function ProjectFormDialog({
   const [clientId, setClientId] = useState("");
   const [title, setTitle] = useState("");
   const [budget, setBudget] = useState("");
-  const [amountPaid, setAmountPaid] = useState("0");
   const [serviceId, setServiceId] = useState("");
   const [status, setStatus] = useState<Database["public"]["Enums"]["project_status"]>("Pending");
   const [priority, setPriority] =
@@ -62,7 +61,6 @@ export function ProjectFormDialog({
     setClientId(project?.client_id ?? "");
     setTitle(project?.title ?? "");
     setBudget(project ? String(project.budget ?? 0) : "");
-    setAmountPaid(project ? String(project.amount_paid ?? 0) : "0");
     setServiceId(project?.service_id ?? "");
     setStatus(project?.status ?? "Pending");
     setPriority(project?.priority ?? "Medium");
@@ -84,16 +82,14 @@ export function ProjectFormDialog({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const total = Number(budget) || 0;
-    const paid = Number(amountPaid) || 0;
     const currentProgress = Math.min(Math.max(Number(progress) || 0, 0), 100);
-    if (!clientId || !title.trim() || total < 0 || paid < 0 || paid > total) return;
+    if (!clientId || !title.trim() || total < 0) return;
     await saveProject.mutateAsync({
       id: project?.id,
       values: {
         client_id: clientId,
         title: title.trim(),
         budget: Number(budget) || 0,
-        amount_paid: paid,
         project_number: project?.project_number ?? "",
         service_id: serviceId || null,
         status,
@@ -115,7 +111,6 @@ export function ProjectFormDialog({
     });
     setTitle("");
     setBudget("");
-    setAmountPaid("0");
     setClientId("");
     setServiceId("");
     onOpenChange(false);
@@ -211,35 +206,16 @@ export function ProjectFormDialog({
             value={budget}
             onChange={(event) => setBudget(event.target.value)}
           />
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Total budget</div>
               <div className="mt-1 font-semibold">₦{Number(budget || 0).toLocaleString()}</div>
             </div>
             <div className="rounded-md border bg-muted/30 p-3">
-              <div className="text-xs text-muted-foreground">Amount paid</div>
-              <Input
-                className="mt-1 h-8 bg-background"
-                type="number"
-                min="0"
-                step="0.01"
-                value={amountPaid}
-                onChange={(event) => setAmountPaid(event.target.value)}
-                aria-label="Amount paid"
-              />
-            </div>
-            <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Remaining balance</div>
-              <div className="mt-1 font-semibold">
-                ₦{Math.max(Number(budget || 0) - (Number(amountPaid) || 0), 0).toLocaleString()}
-              </div>
+              <div className="mt-1 font-semibold">Payment records determine this balance.</div>
             </div>
           </div>
-          {Number(amountPaid) > Number(budget) && (
-            <p className="text-sm text-destructive">
-              Amount paid cannot be greater than the total budget.
-            </p>
-          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
               placeholder="Institution"

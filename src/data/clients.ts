@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/lib/errors";
 import { logActivity } from "./activity";
 import type { Client, ClientInput } from "./types";
+import { fetchAllPages } from "@/lib/paginate";
 
 const KEY = ["clients"] as const;
 
@@ -12,13 +13,7 @@ export function useClients() {
   return useQuery({
     queryKey: KEY,
     queryFn: async (): Promise<Client[]> => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      if (error) throw error;
-      return data ?? [];
+      return fetchAllPages((from, to) => supabase.from("clients").select("*").order("created_at", { ascending: false }).range(from, to));
     },
   });
 }

@@ -43,6 +43,12 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
   const { data: settings } = useBusinessSettings();
   const { data: client } = useClient(invoice.client_id);
   const payment = payments[0];
+  const isPaidInFull = Number(invoice.balance) <= 0;
+  const receiptStatus = isPaidInFull
+    ? "PAID IN FULL"
+    : Number(invoice.amount_paid) > 0
+      ? "PARTIALLY PAID"
+      : "PAYMENT RECEIVED";
   const logo = getImageUrls(settings?.logo_url)[0] || "/company-logo.png";
   const signatureUrls = getImageUrls(settings?.signature_url);
   const businessName =
@@ -73,7 +79,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
         (item) =>
           `Payment: ${item.payment_number}, ${formatCurrency(item.amount)}, ${item.payment_method}, ${formatDate(item.payment_date)}`,
       ),
-      "STATUS: PAID IN FULL",
+      `STATUS: ${receiptStatus}`,
     ]
       .filter(Boolean)
       .join("\n");
@@ -249,7 +255,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
             </div>
           </div>
           <div className="mt-6 bg-emerald-50 p-3 text-center font-bold text-emerald-700">
-            PAID IN FULL · Invoice {invoice.invoice_number} ·{" "}
+            {receiptStatus} · Invoice {invoice.invoice_number} ·{" "}
             {payment?.payment_method || "Payment received"}
           </div>
           <div className="mt-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-end">

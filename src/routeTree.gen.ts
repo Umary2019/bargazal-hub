@@ -18,6 +18,7 @@ import { Route as LandingRouteImport } from './routes/landing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PaymentsRouteImport } from './routes/payments'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as QuotesRouteImport } from './routes/quotes'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -70,6 +71,11 @@ const ProjectsRoute = ProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuotesRoute = QuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/payments': typeof PaymentsRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/quotes': typeof QuotesRoute
   '/reports': typeof ReportsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/payments': typeof PaymentsRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/quotes': typeof QuotesRoute
   '/reports': typeof ReportsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/payments': typeof PaymentsRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/quotes': typeof QuotesRoute
   '/reports': typeof ReportsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/payments'
     | '/projects'
+    | '/quotes'
     | '/reports'
     | '/services'
     | '/settings'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/payments'
     | '/projects'
+    | '/quotes'
     | '/reports'
     | '/services'
     | '/settings'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/payments'
     | '/projects'
+    | '/quotes'
     | '/reports'
     | '/services'
     | '/settings'
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PaymentsRoute: typeof PaymentsRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
+  QuotesRoute: typeof QuotesRoute
   ReportsRoute: typeof ReportsRoute
   ServicesRoute: typeof ServicesRoute
   SettingsRoute: typeof SettingsRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quotes': {
+      id: '/quotes'
+      path: '/quotes'
+      fullPath: '/quotes'
+      preLoaderRoute: typeof QuotesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -377,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PaymentsRoute: PaymentsRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
+  QuotesRoute: QuotesRoute,
   ReportsRoute: ReportsRoute,
   ServicesRoute: ServicesRoute,
   SettingsRoute: SettingsRoute,

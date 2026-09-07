@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CreditCard, ExternalLink, Pencil, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, CreditCard, ExternalLink, Mail, MessageCircle, Pencil, Printer, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
@@ -14,6 +14,7 @@ import { InvoiceFormDialog } from "@/components/invoices/invoice-form-dialog";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
 import { PaymentReceipt } from "@/components/payments/payment-receipt";
+import { useClient } from "@/data/clients";
 
 export const Route = createFileRoute("/invoices/$id")({ component: InvoiceDetailPage });
 
@@ -22,6 +23,7 @@ function InvoiceDetailPage() {
   const navigate = useNavigate();
   const { data: invoice, isLoading, error } = useInvoice(id);
   const { data: payments = [] } = usePayments({ invoiceId: id });
+  const { data: client } = useClient(invoice?.client_id);
   const [editOpen, setEditOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const deleteInvoice = useDeleteInvoice();
@@ -48,8 +50,8 @@ function InvoiceDetailPage() {
 
   return (
     <ProtectedRoute>
-      <div className="space-y-6" data-print-hide>
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
+      <div className="space-y-6">
+        <div className="print:hidden flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
           <div>
             <Button
               variant="ghost"
@@ -71,9 +73,26 @@ function InvoiceDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1 h-4 w-4" /> Edit
             </Button>
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="mr-1 h-4 w-4" /> Print invoice
+            </Button>
             {Number(invoice.amount_paid) > 0 && (
               <Button variant="outline" size="sm" onClick={() => setReceiptOpen(true)}>
                 <Printer className="mr-1 h-4 w-4" /> Receipt
+              </Button>
+            )}
+            {client?.email && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={`mailto:${client.email}?subject=Invoice ${invoice.invoice_number}&body=Your invoice total is ${formatCurrency(invoice.total)}. Balance due: ${formatCurrency(invoice.balance)}.`}>
+                  <Mail className="mr-1 h-4 w-4" /> Email
+                </a>
+              </Button>
+            )}
+            {client?.whatsapp && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Invoice ${invoice.invoice_number}: ${formatCurrency(invoice.total)} total, ${formatCurrency(invoice.balance)} balance due.`)}`} target="_blank" rel="noreferrer">
+                  <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
+                </a>
               </Button>
             )}
             <ConfirmDialog

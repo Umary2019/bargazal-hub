@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/lib/errors";
 import { logActivity } from "./activity";
 import type { Expense, ExpenseInput } from "./types";
+import { fetchAllPages } from "@/lib/paginate";
 
 const KEY = ["expenses"] as const;
 
@@ -12,13 +13,7 @@ export function useExpenses() {
   return useQuery({
     queryKey: KEY,
     queryFn: async (): Promise<Expense[]> => {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .order("expense_date", { ascending: false })
-        .limit(1000);
-      if (error) throw error;
-      return data ?? [];
+      return fetchAllPages((from, to) => supabase.from("expenses").select("*").order("expense_date", { ascending: false }).range(from, to));
     },
   });
 }

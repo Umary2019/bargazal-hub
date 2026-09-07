@@ -11,6 +11,7 @@ import { useProject } from "@/data/projects";
 import { useDeleteProject } from "@/data/projects";
 import { formatDate } from "@/lib/format";
 import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
+import { ProjectDeliveryBoard } from "@/components/projects/project-delivery-board";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -86,6 +87,8 @@ function ProjectDetailPage() {
         </div>
 
         <ProjectDetailsCard project={project} />
+
+        <ProjectDeliveryBoard projectId={project.id} />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>

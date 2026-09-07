@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/lib/errors";
 import { logActivity } from "./activity";
 import type { PaymentInput, PaymentWithRelations } from "./types";
+import { fetchAllPages } from "@/lib/paginate";
 
 const KEY = ["payments"] as const;
 const SELECT = "*, clients(id, full_name), invoices(id, invoice_number), projects(id, title)";
@@ -13,16 +14,13 @@ export function usePayments(options?: { clientId?: string | undefined; invoiceId
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.invoiceId ?? "all"],
     queryFn: async (): Promise<PaymentWithRelations[]> => {
-      let query = supabase
-        .from("payments")
-        .select(SELECT)
-        .order("payment_date", { ascending: false })
-        .limit(1000);
-      if (options?.clientId) query = query.eq("client_id", options.clientId);
-      if (options?.invoiceId) query = query.eq("invoice_id", options.invoiceId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as PaymentWithRelations[];
+      const rows = await fetchAllPages((from, to) => {
+        let query = supabase.from("payments").select(SELECT).order("payment_date", { ascending: false }).is("voided_at", null).range(from, to);
+        if (options?.clientId) query = query.eq("client_id", options.clientId);
+        if (options?.invoiceId) query = query.eq("invoice_id", options.invoiceId);
+        return query;
+      });
+      return rows as PaymentWithRelations[];
     },
   });
 }
@@ -76,17 +74,35 @@ export function useDeletePayment() {
   });
 }
 
+export function useVoidPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const { data, error } = await supabase
+        .from("payments")
+        .update({ voided_at: new Date().toISOString(), void_reason: reason.trim() || "Voided" })
+        .eq("id", id)
+        .is("voided_at", null)
+        .select()
+        .single();
+      if (error) throw error;
+      await logActivity("payment", data.id, "voided", reason);
+      return data;
+    },
+    onSuccess: () => {
+      invalidateMoney(qc);
+      toast.success("Payment voided and balances recalculated");
+    },
+    onError: (error) => notifyError(error, "Could not void payment"),
+  });
+}
+
 export function useDeleteAllPayments() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("payments").delete().not("id", "is", null);
       if (error) throw error;
-      const { error: invoiceError } = await supabase
-        .from("invoices")
-        .update({ amount_paid: 0 })
-        .not("id", "is", null);
-      if (invoiceError) throw invoiceError;
     },
     onSuccess: () => {
       invalidateMoney(qc);
