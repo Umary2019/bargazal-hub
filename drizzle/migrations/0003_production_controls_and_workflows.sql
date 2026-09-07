@@ -141,13 +141,25 @@ CREATE TRIGGER projects_prevent_manual_payment_change
 
 CREATE OR REPLACE FUNCTION public.validate_payment_amount()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
-DECLARE already_paid NUMERIC(14,2); invoice_total NUMERIC(14,2);
+DECLARE already_paid NUMERIC(14,2); invoice_total NUMERIC(14,2); invoice_client UUID; invoice_project UUID;
 BEGIN
-  IF NEW.invoice_id IS NULL OR NEW.voided_at IS NOT NULL THEN
+  IF NEW.invoice_id IS NULL THEN
+    RAISE EXCEPTION 'An invoice is required before recording a payment';
+  END IF;
+  IF NEW.voided_at IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
-  SELECT total INTO invoice_total FROM public.invoices WHERE id = NEW.invoice_id FOR UPDATE;
+  SELECT total, client_id, project_id
+  INTO invoice_total, invoice_client, invoice_project
+  FROM public.invoices
+  WHERE id = NEW.invoice_id
+  FOR UPDATE;
+  IF invoice_total IS NULL THEN
+    RAISE EXCEPTION 'The selected invoice does not exist';
+  END IF;
+  NEW.client_id := invoice_client;
+  NEW.project_id := invoice_project;
   SELECT COALESCE(SUM(amount), 0) INTO already_paid
   FROM public.payments
   WHERE invoice_id = NEW.invoice_id

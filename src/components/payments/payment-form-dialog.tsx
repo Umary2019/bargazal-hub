@@ -76,6 +76,7 @@ export function PaymentFormDialog({
     event.preventDefault();
     if (
       !clientId ||
+      !invoiceId ||
       Number(amount) <= 0 ||
       (selectedInvoice && Number(amount) > availableBalance)
     )
@@ -133,7 +134,7 @@ export function PaymentFormDialog({
           </Select>
           <Select value={invoiceId} onValueChange={setInvoiceId}>
             <SelectTrigger aria-label="Invoice">
-              <SelectValue placeholder="Link to invoice (optional)" />
+              <SelectValue placeholder="Select invoice (required)" />
             </SelectTrigger>
             <SelectContent>
               {invoices.map((invoice) => (
@@ -144,7 +145,7 @@ export function PaymentFormDialog({
             </SelectContent>
           </Select>
           <Select value={projectId} onValueChange={setProjectId}>
-            <SelectTrigger aria-label="Project"><SelectValue placeholder="Link to project (optional)" /></SelectTrigger>
+            <SelectTrigger aria-label="Project"><SelectValue placeholder="Project is linked from invoice" /></SelectTrigger>
             <SelectContent>{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.project_number} - {project.title}</SelectItem>)}</SelectContent>
           </Select>
           <Input
@@ -209,6 +210,7 @@ export function PaymentFormDialog({
               disabled={
                 recordPayment.isPending ||
                 !clientId ||
+                !invoiceId ||
                 Boolean(selectedInvoice && Number(amount) > availableBalance)
               }
             >
