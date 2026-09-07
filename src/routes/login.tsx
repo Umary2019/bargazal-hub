@@ -187,6 +187,13 @@ function LoginPage() {
                 >
                   Forgot password?
                 </button>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/register" })}
+                  className="w-full text-center text-sm font-medium text-slate-600 transition hover:text-slate-900"
+                >
+                  Register as a client
+                </button>
               </form>
             </Form>
           ) : (

@@ -19,9 +19,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as PaymentsRouteImport } from './routes/payments'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as QuotesRouteImport } from './routes/quotes'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StaffRouteImport } from './routes/staff'
+import { Route as WorkRouteImport } from './routes/work'
 import { Route as ClientsIdRouteImport } from './routes/clients.$id'
 import { Route as InvoicesIdRouteImport } from './routes/invoices.$id'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
@@ -77,9 +81,19 @@ const QuotesRoute = QuotesRouteImport.update({
   path: '/quotes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRoute = ServicesRouteImport.update({
@@ -90,6 +104,16 @@ const ServicesRoute = ServicesRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkRoute = WorkRouteImport.update({
+  id: '/work',
+  path: '/work',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsIdRoute = ClientsIdRouteImport.update({
@@ -124,9 +148,13 @@ export interface FileRoutesByFullPath {
   '/payments': typeof PaymentsRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/quotes': typeof QuotesRoute
+  '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
+  '/requests': typeof RequestsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
+  '/staff': typeof StaffRoute
+  '/work': typeof WorkRoute
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
@@ -143,9 +171,13 @@ export interface FileRoutesByTo {
   '/payments': typeof PaymentsRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/quotes': typeof QuotesRoute
+  '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
+  '/requests': typeof RequestsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
+  '/staff': typeof StaffRoute
+  '/work': typeof WorkRoute
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
@@ -163,9 +195,13 @@ export interface FileRoutesById {
   '/payments': typeof PaymentsRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/quotes': typeof QuotesRoute
+  '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
+  '/requests': typeof RequestsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
+  '/staff': typeof StaffRoute
+  '/work': typeof WorkRoute
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
@@ -184,9 +220,13 @@ export interface FileRouteTypes {
     | '/payments'
     | '/projects'
     | '/quotes'
+    | '/register'
     | '/reports'
+    | '/requests'
     | '/services'
     | '/settings'
+    | '/staff'
+    | '/work'
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
@@ -203,9 +243,13 @@ export interface FileRouteTypes {
     | '/payments'
     | '/projects'
     | '/quotes'
+    | '/register'
     | '/reports'
+    | '/requests'
     | '/services'
     | '/settings'
+    | '/staff'
+    | '/work'
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
@@ -222,9 +266,13 @@ export interface FileRouteTypes {
     | '/payments'
     | '/projects'
     | '/quotes'
+    | '/register'
     | '/reports'
+    | '/requests'
     | '/services'
     | '/settings'
+    | '/staff'
+    | '/work'
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
@@ -242,9 +290,13 @@ export interface RootRouteChildren {
   PaymentsRoute: typeof PaymentsRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   QuotesRoute: typeof QuotesRoute
+  RegisterRoute: typeof RegisterRoute
   ReportsRoute: typeof ReportsRoute
+  RequestsRoute: typeof RequestsRoute
   ServicesRoute: typeof ServicesRoute
   SettingsRoute: typeof SettingsRoute
+  StaffRoute: typeof StaffRoute
+  WorkRoute: typeof WorkRoute
   PublicInvoicesTokenRoute: typeof PublicInvoicesTokenRoute
 }
 
@@ -320,11 +372,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuotesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports': {
       id: '/reports'
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services': {
@@ -339,6 +405,20 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff': {
+      id: '/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/work': {
+      id: '/work'
+      path: '/work'
+      fullPath: '/work'
+      preLoaderRoute: typeof WorkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clients/$id': {
@@ -418,9 +498,13 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsRoute: PaymentsRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   QuotesRoute: QuotesRoute,
+  RegisterRoute: RegisterRoute,
   ReportsRoute: ReportsRoute,
+  RequestsRoute: RequestsRoute,
   ServicesRoute: ServicesRoute,
   SettingsRoute: SettingsRoute,
+  StaffRoute: StaffRoute,
+  WorkRoute: WorkRoute,
   PublicInvoicesTokenRoute: PublicInvoicesTokenRoute,
 }
 export const routeTree = rootRouteImport

@@ -5,6 +5,8 @@ import { ProtectedRoute } from "@/components/app/protected-route";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboard } from "@/data/dashboard";
 import { formatCurrency } from "@/lib/format";
+import { useAuth } from "@/hooks/useAuth";
+import { ClientPortal } from "@/components/portals/client-portal";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 export const Route = createFileRoute("/dashboard")({
@@ -12,6 +14,14 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardPage() {
+  const { role } = useAuth();
+  if (role === "client") {
+    return <ProtectedRoute><ClientPortal /></ProtectedRoute>;
+  }
+  return <OperationsDashboard />;
+}
+
+function OperationsDashboard() {
   const { data: dashboard, isLoading, error } = useDashboard();
 
   if (isLoading) {

@@ -1114,6 +1114,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+<<<<<<< HEAD
       convert_quote_to_invoice: { Args: { _quote_id: string }; Returns: string }
       create_invoice_public_token: {
         Args: { _invoice_id: string }
@@ -1121,6 +1122,18 @@ export type Database = {
       }
       current_client_id: { Args: never; Returns: string }
       get_public_invoice: { Args: { _token: string }; Returns: Json }
+=======
+      finalize_client_registration: {
+        Args: {
+          _address: string
+          _city: string
+          _full_name: string
+          _phone: string
+          _state: string
+        }
+        Returns: string
+      }
+>>>>>>> ccf033c (feat: add client and staff portals with service requests and account management)
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
