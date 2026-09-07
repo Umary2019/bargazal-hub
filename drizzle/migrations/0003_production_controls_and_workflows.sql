@@ -244,7 +244,7 @@ CREATE POLICY "quote_items_update_staff" ON public.quote_items FOR UPDATE TO aut
 CREATE POLICY "quote_items_delete_admin" ON public.quote_items FOR DELETE TO authenticated USING (public.is_admin());
 
 -- Project delivery records.
-CREATE TABLE public.project_milestones (
+CREATE TABLE IF NOT EXISTS public.project_milestones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -255,7 +255,7 @@ CREATE TABLE public.project_milestones (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE TABLE public.project_tasks (
+CREATE TABLE IF NOT EXISTS public.project_tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
   milestone_id UUID REFERENCES public.project_milestones(id) ON DELETE SET NULL,
@@ -266,7 +266,7 @@ CREATE TABLE public.project_tasks (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE TABLE public.project_files (
+CREATE TABLE IF NOT EXISTS public.project_files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
   milestone_id UUID REFERENCES public.project_milestones(id) ON DELETE SET NULL,
