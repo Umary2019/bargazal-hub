@@ -19,7 +19,7 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
       return;
     }
     if (!loading && session && !roleLoading && roles && role && !roles.includes(role)) {
-      navigate({ to: homeRouteForRole(role) });
+      navigate({ to: homeRouteForRole(role) as any });
     }
   }, [session, loading, roleLoading, role, roles, navigate]);
 

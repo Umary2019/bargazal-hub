@@ -1114,7 +1114,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-<<<<<<< HEAD
       convert_quote_to_invoice: { Args: { _quote_id: string }; Returns: string }
       create_invoice_public_token: {
         Args: { _invoice_id: string }
@@ -1122,7 +1121,6 @@ export type Database = {
       }
       current_client_id: { Args: never; Returns: string }
       get_public_invoice: { Args: { _token: string }; Returns: Json }
-=======
       finalize_client_registration: {
         Args: {
           _address: string
@@ -1133,7 +1131,6 @@ export type Database = {
         }
         Returns: string
       }
->>>>>>> ccf033c (feat: add client and staff portals with service requests and account management)
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1146,7 +1143,7 @@ export type Database = {
       is_staff_or_admin: { Args: { _user_id?: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "staff"
+      app_role: "admin" | "staff" | "client"
       invoice_status:
         | "Draft"
         | "Sent"
@@ -1307,7 +1304,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "staff"],
+      app_role: ["admin", "staff", "client"],
       invoice_status: [
         "Draft",
         "Sent",

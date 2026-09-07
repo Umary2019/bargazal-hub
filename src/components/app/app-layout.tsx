@@ -1,91 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-<<<<<<< HEAD
-=======
-import { Menu, X, LogOut } from "lucide-react";
-
-import { UserPlus, ListChecks } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { ThemeToggle } from "@/components/app/theme-toggle";
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-}
-
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-const operationsNavItems: NavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: <BarChart3 className="w-5 h-5" />,
-  },
-  {
-    label: "Clients",
-    href: "/clients",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    label: "Services",
-    href: "/services",
-    icon: <Briefcase className="w-5 h-5" />,
-  },
-  {
-    label: "Projects",
-    href: "/projects",
-    icon: <FolderOpen className="w-5 h-5" />,
-  },
-  {
-    label: "Invoices",
-    href: "/invoices",
-    icon: <FileText className="w-5 h-5" />,
-  },
-  {
-    label: "Quotations",
-    href: "/quotes",
-    icon: <ClipboardList className="w-5 h-5" />,
-  },
-  {
-    label: "Payments",
-    href: "/payments",
-    icon: <CreditCard className="w-5 h-5" />,
-  },
-  {
-    label: "Expenses",
-    href: "/expenses",
-    icon: <TrendingDown className="w-5 h-5" />,
-  },
-  {
-    label: "Reports",
-    href: "/reports",
-    icon: <BarChart className="w-5 h-5" />,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: <Settings className="w-5 h-5" />,
-  },
-  { label: "Requests", href: "/requests", icon: <ListChecks className="w-5 h-5" /> },
-  { label: "Staff", href: "/staff", icon: <UserPlus className="w-5 h-5" /> },
-];
-
-const clientNavItems: NavItem[] = [
-  { label: "My workspace", href: "/dashboard", icon: <BarChart3 className="w-5 h-5" /> },
-];
-
-const staffNavItems: NavItem[] = [
-  { label: "My work", href: "/work", icon: <FolderOpen className="w-5 h-5" /> },
-];
-
->>>>>>> ccf033c (feat: add client and staff portals with service requests and account management)
 import {
   Menu,
   X,
@@ -126,7 +40,7 @@ interface AppLayoutProps {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: <BarChart3 className="w-5 h-5" />, roles: ["admin"] },
   { label: "My Work", href: "/staff", icon: <LayoutDashboard className="w-5 h-5" />, roles: ["staff"] },
-  { label: "My Portal", href: "/portal", icon: <LayoutDashboard className="w-5 h-5" />, roles: ["client"] },
+  { label: "My Portal", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, roles: ["client"] },
   { label: "Requests", href: "/requests", icon: <Inbox className="w-5 h-5" />, roles: ["admin"] },
   { label: "Clients", href: "/clients", icon: <Users className="w-5 h-5" />, roles: ["admin"] },
   { label: "Services", href: "/services", icon: <Briefcase className="w-5 h-5" />, roles: ["admin"] },
@@ -136,7 +50,7 @@ const navItems: NavItem[] = [
   { label: "Payments", href: "/payments", icon: <CreditCard className="w-5 h-5" />, roles: ["admin", "staff"] },
   { label: "Expenses", href: "/expenses", icon: <TrendingDown className="w-5 h-5" />, roles: ["admin"] },
   { label: "Reports", href: "/reports", icon: <BarChart className="w-5 h-5" />, roles: ["admin"] },
-  { label: "Staff", href: "/team", icon: <UserPlus className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Staff", href: "/staff", icon: <UserPlus className="w-5 h-5" />, roles: ["admin"] },
   { label: "Settings", href: "/settings", icon: <Settings className="w-5 h-5" />, roles: ["admin"] },
 ];
 
@@ -170,7 +84,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   const visibleNav = navItems.filter((item) => (role ? item.roles.includes(role) : false));
-  const homeHref = role === "client" ? "/portal" : role === "staff" ? "/staff" : "/dashboard";
+  const homeHref = role === "client" ? "/dashboard" : role === "staff" ? "/work" : "/dashboard";
 
   return (
     <div className="flex h-screen min-w-0 bg-background">
@@ -200,11 +114,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
-<<<<<<< HEAD
             {visibleNav.map((item) => (
-=======
-            {(role === "client" ? clientNavItems : role === "staff" ? staffNavItems : operationsNavItems).map((item) => (
->>>>>>> ccf033c (feat: add client and staff portals with service requests and account management)
               <Link
                 key={item.href}
                 to={item.href}
@@ -225,13 +135,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="border-t p-4 space-y-2">
             <div className="px-2 py-1">
               <p className="text-sm font-medium">{fullName || session?.user?.email}</p>
-<<<<<<< HEAD
               <p className="text-xs text-muted-foreground">
                 {role ? roleLabel[role] : "Pending access"}
               </p>
-=======
-              <p className="text-xs capitalize text-muted-foreground">{role ?? "User"}</p>
->>>>>>> ccf033c (feat: add client and staff portals with service requests and account management)
             </div>
             <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
               <LogOut className="w-4 h-4" />
