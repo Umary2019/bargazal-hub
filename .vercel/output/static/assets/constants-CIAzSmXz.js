@@ -1,0 +1,1 @@
+var e=[`Fixed`,`Starting From`,`Hourly`,`Custom`],t=[`Active`,`Inactive`],n=[`Internet`,`Hosting`,`Domain`,`Transportation`,`Equipment`,`Software`,`Marketing`,`Office`,`Utilities`,`Maintenance`,`Other`],r=[`Planning`,`Requirements`,`Design`,`Development`,`Testing`,`Client Review`];export{t as i,n,e as r,r as t};

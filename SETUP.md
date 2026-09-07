@@ -213,7 +213,7 @@ npm run dev
 npm run build
 ```
 
-Output: `dist/` folder ready for deployment
+Output: `.vercel/output/` with the SSR function and static assets ready for Vercel.
 
 ### Deploy to Vercel
 
@@ -230,6 +230,8 @@ Output: `dist/` folder ready for deployment
    - Configure environment variables:
      - `VITE_SUPABASE_URL`
      - `VITE_SUPABASE_PUBLISHABLE_KEY`
+    - Set the build command to `npm run build`.
+    - Leave the output directory managed by the Nitro Vercel preset.
    - Click **Deploy**
 
 3. **Your app is live!**
