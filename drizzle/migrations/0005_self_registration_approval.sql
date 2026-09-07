@@ -4,6 +4,14 @@ ALTER TABLE public.profiles
     CHECK (approval_status IN ('Pending', 'Approved', 'Rejected'));
 
 -- Existing accounts, including the initial administrator, remain usable.
+UPDATE public.clients
+SET approval_status = CASE lower(approval_status)
+  WHEN 'approved' THEN 'Approved'
+  WHEN 'rejected' THEN 'Rejected'
+  ELSE 'Pending'
+END
+WHERE approval_status IS NOT NULL;
+
 UPDATE public.profiles
 SET approval_status = 'Approved'
 WHERE approval_status IS NULL OR approval_status = 'Pending';

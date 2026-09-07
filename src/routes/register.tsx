@@ -10,7 +10,6 @@ export const Route = createFileRoute("/register")({ component: RegisterPage });
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const [accountType, setAccountType] = useState<"client" | "staff">("client");
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -19,7 +18,6 @@ function RegisterPage() {
     address: "",
     city: "",
     state: "",
-    jobTitle: "",
   });
   const [loading, setLoading] = useState(false);
   const update = (key: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement>) =>
@@ -35,9 +33,8 @@ function RegisterPage() {
         options: {
           data: {
             full_name: form.fullName,
-            account_type: accountType,
+            account_type: "client",
             phone: form.phone,
-            job_title: form.jobTitle,
             address: form.address,
             city: form.city,
             state: form.state,
@@ -52,20 +49,13 @@ function RegisterPage() {
         navigate({ to: "/login" });
         return;
       }
-      const { error: profileError } =
-        accountType === "client"
-          ? await (supabase as any).rpc("finalize_client_registration", {
-              _full_name: form.fullName,
-              _phone: form.phone,
-              _address: form.address,
-              _city: form.city,
-              _state: form.state,
-            })
-          : await (supabase as any).rpc("finalize_staff_registration", {
-              _full_name: form.fullName,
-              _phone: form.phone,
-              _job_title: form.jobTitle,
-            });
+      const { error: profileError } = await (supabase as any).rpc("finalize_client_registration", {
+        _full_name: form.fullName,
+        _phone: form.phone,
+        _address: form.address,
+        _city: form.city,
+        _state: form.state,
+      });
       if (profileError) throw profileError;
       await supabase.auth.signOut();
       toast.success("Registration submitted for administrator approval.");
@@ -88,14 +78,6 @@ function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-            <select
-              className="h-10 rounded-md border bg-background px-3 text-sm sm:col-span-2"
-              value={accountType}
-              onChange={(event) => setAccountType(event.target.value as "client" | "staff")}
-            >
-              <option value="client">Client</option>
-              <option value="staff">Staff</option>
-            </select>
             <Input
               className="sm:col-span-2"
               placeholder="Full name"
@@ -119,25 +101,14 @@ function RegisterPage() {
               required
             />
             <Input placeholder="Phone" value={form.phone} onChange={update("phone")} required />
-            {accountType === "staff" ? (
-              <Input
-                placeholder="Job title"
-                value={form.jobTitle}
-                onChange={update("jobTitle")}
-                required
-              />
-            ) : (
-              <>
-                <Input
-                  placeholder="Address"
-                  value={form.address}
-                  onChange={update("address")}
-                  required
-                />
-                <Input placeholder="City" value={form.city} onChange={update("city")} required />
-                <Input placeholder="State" value={form.state} onChange={update("state")} required />
-              </>
-            )}
+            <Input
+              placeholder="Address"
+              value={form.address}
+              onChange={update("address")}
+              required
+            />
+            <Input placeholder="City" value={form.city} onChange={update("city")} required />
+            <Input placeholder="State" value={form.state} onChange={update("state")} required />
             <Button className="sm:col-span-2" type="submit" disabled={loading}>
               {loading ? "Submitting..." : "Submit registration"}
             </Button>

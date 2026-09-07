@@ -81,10 +81,11 @@ function LoginPage() {
         .eq("id", authData.user.id)
         .maybeSingle();
       if (profileError) throw profileError;
-      if (profile?.approval_status !== "Approved" || profile.is_active === false) {
+      const approvalStatus = String(profile?.approval_status ?? "").toLowerCase();
+      if (approvalStatus !== "approved" || profile.is_active === false) {
         await supabase.auth.signOut();
         toast.error(
-          profile?.approval_status === "Rejected"
+          approvalStatus === "rejected"
             ? "Your registration was rejected. Contact the administrator."
             : "Your registration is awaiting administrator approval.",
         );

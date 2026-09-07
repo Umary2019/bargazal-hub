@@ -5,6 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type PortalRole = "admin" | "staff" | "client" | null;
 
+function normalizeApprovalStatus(status: string | null | undefined): string | null {
+  if (!status) return null;
+  const normalized = status.toLowerCase();
+  if (normalized === "approved") return "Approved";
+  if (normalized === "rejected") return "Rejected";
+  if (normalized === "pending") return "Pending";
+  return status;
+}
+
 async function ensureProfile(user: User) {
   const email = user.email ?? "";
   const fullName = user.user_metadata?.["full_name"] ?? user.email?.split("@")[0] ?? "User";
@@ -127,13 +136,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAdmin(admin);
         setIsStaff(staff);
         setClientId(clientRes.data?.id ?? null);
-        setClientStatus(clientRes.data?.approval_status ?? null);
+        const clientApproval = normalizeApprovalStatus(clientRes.data?.approval_status);
+        const profileApproval = normalizeApprovalStatus(profileRes.data?.approval_status);
+        setClientStatus(clientApproval);
         setApprovalStatus(
           admin
             ? "Approved"
             : profileRes.data?.is_active === false
               ? "Inactive"
-              : (clientRes.data?.approval_status ?? profileRes.data?.approval_status ?? null),
+              : (clientApproval ?? profileApproval),
         );
         setRole(admin ? "admin" : staff ? "staff" : clientRes.data ? "client" : null);
         setFullName(
@@ -175,7 +186,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [session, loading, roleLoading, isAdmin, isStaff, role, clientId, clientStatus, fullName],
+    [
+      session,
+      loading,
+      roleLoading,
+      isAdmin,
+      isStaff,
+      role,
+      clientId,
+      clientStatus,
+      approvalStatus,
+      fullName,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

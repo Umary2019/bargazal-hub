@@ -22,6 +22,14 @@ import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/clients")({
   component: ClientsPage,
@@ -40,6 +48,8 @@ function ClientsCollection() {
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | undefined>();
+  const [promoteId, setPromoteId] = useState<string | null>(null);
+  const [jobTitle, setJobTitle] = useState("Staff");
 
   async function setApproval(id: string, approved: boolean) {
     const { error } = await supabase.rpc("approve_client", { _client_id: id, _approved: approved });
@@ -48,6 +58,22 @@ function ClientsCollection() {
       return;
     }
     toast.success(approved ? "Client approved" : "Client rejected");
+    void queryClient.invalidateQueries({ queryKey: ["clients"] });
+  }
+
+  async function promoteClient() {
+    if (!promoteId) return;
+    const { error } = await (supabase as any).rpc("promote_client_to_staff", {
+      _client_id: promoteId,
+      _job_title: jobTitle,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Client promoted to staff");
+    setPromoteId(null);
+    setJobTitle("Staff");
     void queryClient.invalidateQueries({ queryKey: ["clients"] });
   }
 
@@ -154,6 +180,16 @@ function ClientsCollection() {
                               Approve
                             </Button>
                           )}
+                          {client.approval_status === "Approved" &&
+                            Boolean((client as any).auth_user_id) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setPromoteId(client.id)}
+                              >
+                                Promote to staff
+                              </Button>
+                            )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -194,6 +230,28 @@ function ClientsCollection() {
         }}
         isLoading={deleteClient.isPending}
       />
+      <Dialog open={Boolean(promoteId)} onOpenChange={(open) => !open && setPromoteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Promote client to staff</DialogTitle>
+            <DialogDescription>
+              This grants the client staff access using the same login. Their client history is
+              preserved.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={jobTitle}
+            onChange={(event) => setJobTitle(event.target.value)}
+            placeholder="Job title"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPromoteId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void promoteClient()}>Promote to staff</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedRoute>
   );
 }
