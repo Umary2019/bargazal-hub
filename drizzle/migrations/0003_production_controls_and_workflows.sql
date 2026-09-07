@@ -458,3 +458,23 @@ GRANT SELECT ON public.notification_deliveries TO authenticated;
 DROP POLICY IF EXISTS "notification_deliveries_read_staff" ON public.notification_deliveries;
 CREATE POLICY "notification_deliveries_read_staff" ON public.notification_deliveries FOR SELECT TO authenticated
   USING (public.is_staff_or_admin());
+
+-- Always derive invoice payment status from the payment ledger.
+CREATE OR REPLACE FUNCTION public.sync_invoice_total()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.total := GREATEST(NEW.subtotal - NEW.discount + NEW.tax, 0);
+  IF NEW.status <> 'Cancelled' THEN
+    IF NEW.amount_paid >= NEW.total AND NEW.total > 0 THEN
+      NEW.status := 'Paid';
+    ELSIF NEW.amount_paid > 0 THEN
+      NEW.status := 'Partially Paid';
+    ELSIF NEW.due_date IS NOT NULL AND NEW.due_date < CURRENT_DATE THEN
+      NEW.status := 'Overdue';
+    ELSE
+      NEW.status := 'Draft';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;

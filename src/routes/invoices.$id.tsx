@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBusinessSettings } from "@/data/settings";
 import { downloadInvoicePdf } from "@/lib/pdf";
+import { getInvoicePaymentStatus } from "@/lib/invoice-status";
 
 export const Route = createFileRoute("/invoices/$id")({ component: InvoiceDetailPage });
 
@@ -107,7 +108,7 @@ function InvoiceDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="px-3 py-1.5 text-base">
-              {invoice.status}
+              {getInvoicePaymentStatus(invoice)}
             </Badge>
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1 h-4 w-4" /> Edit

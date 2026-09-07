@@ -26,6 +26,7 @@ import { useInvoices } from "@/data/invoices";
 import { formatCurrency } from "@/lib/format";
 import { Link } from "@tanstack/react-router";
 import { InvoiceFormDialog } from "@/components/invoices/invoice-form-dialog";
+import { getInvoicePaymentStatus } from "@/lib/invoice-status";
 
 export const Route = createFileRoute("/invoices")({
   component: InvoicesPage,
@@ -171,7 +172,7 @@ function InvoicesCollection() {
                         <TableCell>{formatCurrency(invoice.amount_paid)}</TableCell>
                         <TableCell>{formatCurrency(invoice.balance)}</TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+                          <Badge className={getStatusColor(getInvoicePaymentStatus(invoice))}>{getInvoicePaymentStatus(invoice)}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <Link to="/invoices/$id" params={{ id: invoice.id }}>
