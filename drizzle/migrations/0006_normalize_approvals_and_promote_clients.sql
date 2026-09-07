@@ -22,6 +22,37 @@ SET approval_status = c.approval_status,
 FROM public.clients c
 WHERE c.auth_user_id = p.id;
 
+-- Staff access must only be granted by an administrator.
+REVOKE EXECUTE ON FUNCTION public.finalize_staff_registration(TEXT, TEXT, TEXT) FROM authenticated;
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, approval_status)
+  VALUES (NEW.id, NEW.email, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email), 'Pending')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (NEW.id, 'client')
+  ON CONFLICT (user_id, role) DO NOTHING;
+
+  INSERT INTO public.clients (auth_user_id, full_name, email, phone, address, city, state, approval_status)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+    NEW.email,
+    NEW.raw_user_meta_data->>'phone',
+    NEW.raw_user_meta_data->>'address',
+    NEW.raw_user_meta_data->>'city',
+    NEW.raw_user_meta_data->>'state',
+    'Pending'
+  )
+  ON CONFLICT (auth_user_id) WHERE auth_user_id IS NOT NULL DO NOTHING;
+
+  RETURN NEW;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION public.promote_client_to_staff(
   _client_id UUID,
   _job_title TEXT DEFAULT 'Staff'
