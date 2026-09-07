@@ -1,1 +1,0 @@
-async function e(e){let t=[],n=0;for(;;){let{data:r,error:i}=await e(n,n+500-1);if(i)throw i;let a=r??[];if(t.push(...a),a.length<500)return t;n+=500}}export{e as t};
