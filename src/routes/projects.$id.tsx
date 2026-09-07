@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink, FolderOpen, Info, Link2, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { ProjectDetailsCard } from "@/components/projects/project-details-card";
 import { useProject } from "@/data/projects";
+import { useInvoices } from "@/data/invoices";
+import { usePayments } from "@/data/payments";
+import { formatCurrency } from "@/lib/format";
 import { useDeleteProject } from "@/data/projects";
 import { formatDate } from "@/lib/format";
 import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
@@ -23,6 +26,8 @@ function ProjectDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { data: project, isLoading, error } = useProject(id);
+  const { data: linkedInvoices = [] } = useInvoices({ projectId: id });
+  const { data: linkedPayments = [] } = usePayments({ clientId: project?.client_id });
   const [editOpen, setEditOpen] = useState(false);
   const deleteProject = useDeleteProject();
 
@@ -89,6 +94,29 @@ function ProjectDetailPage() {
         <ProjectDetailsCard project={project} />
 
         <ProjectDeliveryBoard projectId={project.id} />
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader><CardTitle>Linked invoices</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {linkedInvoices.filter((invoice) => invoice.project_id === project.id).map((invoice) => (
+                <Link key={invoice.id} to="/invoices/$id" params={{ id: invoice.id }} className="flex justify-between rounded-md border p-3 text-sm hover:bg-muted">
+                  <span>{invoice.invoice_number}</span><span>{formatCurrency(invoice.total)} · {invoice.status}</span>
+                </Link>
+              ))}
+              {linkedInvoices.length === 0 && <p className="text-sm text-muted-foreground">No invoices linked to this project.</p>}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Linked payments</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {linkedPayments.filter((payment) => payment.project_id === project.id).map((payment) => (
+                <div key={payment.id} className="flex justify-between rounded-md border p-3 text-sm"><span>{payment.payment_number}</span><span>{formatCurrency(payment.amount)} · {formatDate(payment.payment_date)}</span></div>
+              ))}
+              {linkedPayments.filter((payment) => payment.project_id === project.id).length === 0 && <p className="text-sm text-muted-foreground">No payments linked to this project.</p>}
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>

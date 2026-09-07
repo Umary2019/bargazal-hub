@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Pencil, Plus, Search } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useDeleteAllPayments, usePayments } from "@/data/payments";
+import type { Payment } from "@/data/types";
 import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
 import { PaymentFormDialog } from "@/components/payments/payment-form-dialog";
@@ -30,6 +31,7 @@ function PaymentsPage() {
   const { data: payments = [], isLoading } = usePayments();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | undefined>();
   const navigate = useNavigate();
   const deleteAllPayments = useDeleteAllPayments();
 
@@ -59,7 +61,7 @@ function PaymentsPage() {
               isLoading={deleteAllPayments.isPending}
               onConfirm={() => deleteAllPayments.mutate()}
             />
-            <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+            <Button className="gap-2" onClick={() => { setSelectedPayment(undefined); setDialogOpen(true); }}>
               <Plus className="w-4 h-4" />
               Record Payment
             </Button>
@@ -143,6 +145,9 @@ function PaymentsPage() {
                           {format(new Date(payment.payment_date), "MMM dd, yyyy")}
                         </TableCell>
                         <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => { setSelectedPayment(payment); setDialogOpen(true); }} aria-label={`Edit ${payment.payment_number}`}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           {payment.invoice_id ? (
                             <Link to="/invoices/$id" params={{ id: payment.invoice_id }}>
                               <Button variant="ghost" size="sm">
@@ -166,7 +171,8 @@ function PaymentsPage() {
       </div>
       <PaymentFormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => { setDialogOpen(open); if (!open) setSelectedPayment(undefined); }}
+        payment={selectedPayment}
         onFullPayment={(invoiceId) => navigate({ to: "/invoices/$id", params: { id: invoiceId } })}
       />
     </ProtectedRoute>

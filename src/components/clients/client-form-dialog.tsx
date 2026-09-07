@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,7 +41,7 @@ type ClientFormData = z.infer<typeof clientSchema>;
 interface ClientFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clientId?: string;
+  clientId?: string | undefined;
 }
 
 export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDialogProps) {
@@ -62,6 +63,22 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
       notes: client?.notes ?? "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        full_name: client?.full_name ?? "",
+        email: client?.email ?? "",
+        phone: client?.phone ?? "",
+        whatsapp: client?.whatsapp ?? "",
+        address: client?.address ?? "",
+        city: client?.city ?? "",
+        state: client?.state ?? "",
+        institution: client?.institution ?? "",
+        notes: client?.notes ?? "",
+      });
+    }
+  }, [client, form, open]);
 
   async function onSubmit(data: ClientFormData) {
     await saveClient.mutateAsync({

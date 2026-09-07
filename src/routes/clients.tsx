@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ function ClientsCollection() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | undefined>();
 
   const filteredClients = clients.filter(
     (client) =>
@@ -121,6 +122,14 @@ function ClientsCollection() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => setEditId(client.id)}
+                            aria-label={`Edit ${client.full_name}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setDeleteId(client.id)}
                             className="text-red-600 hover:bg-red-50"
                           >
@@ -139,6 +148,11 @@ function ClientsCollection() {
 
       {/* Dialogs */}
       <ClientFormDialog open={showForm} onOpenChange={setShowForm} />
+      <ClientFormDialog
+        open={Boolean(editId)}
+        onOpenChange={(open) => !open && setEditId(undefined)}
+        clientId={editId}
+      />
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
