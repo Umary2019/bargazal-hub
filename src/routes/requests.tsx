@@ -74,7 +74,7 @@ function RequestsPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute roles={["admin"]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Requests</h1>

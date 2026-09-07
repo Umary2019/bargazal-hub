@@ -171,7 +171,7 @@ function SettingsPage() {
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute roles={["admin"]}>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -374,11 +374,62 @@ function SettingsPage() {
                     />
 
                     <div className="grid gap-4 md:grid-cols-3">
-                      <FormField control={form.control} name="bank_name" render={({ field }) => <FormItem><FormLabel>Bank name</FormLabel><FormControl><Input placeholder="Bank name" {...field} /></FormControl><FormMessage /></FormItem>} />
-                      <FormField control={form.control} name="bank_account_name" render={({ field }) => <FormItem><FormLabel>Account name</FormLabel><FormControl><Input placeholder="Account name" {...field} /></FormControl><FormMessage /></FormItem>} />
-                      <FormField control={form.control} name="bank_account_number" render={({ field }) => <FormItem><FormLabel>Account number</FormLabel><FormControl><Input placeholder="Account number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                      <FormField
+                        control={form.control}
+                        name="bank_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bank name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Bank name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bank_account_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Account name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Account name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bank_account_number"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Account number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Account number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                    <FormField control={form.control} name="payment_instructions" render={({ field }) => <FormItem><FormLabel>Payment instructions</FormLabel><FormControl><Textarea placeholder="Payment instructions shown on invoices" {...field} /></FormControl><FormMessage /></FormItem>} />
+                    <FormField
+                      control={form.control}
+                      name="payment_instructions"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Payment instructions</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Payment instructions shown on invoices"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <Button type="submit" disabled={isLoading}>
                       {isLoading ? "Saving..." : "Save Changes"}

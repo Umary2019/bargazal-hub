@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth, homeRouteForRole, type PortalRole } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/app/app-layout";
+import { Button } from "@/components/ui/button";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
-  const { session, loading, roleLoading, role } = useAuth();
+  const { session, loading, roleLoading, role, isAdmin, approvalStatus, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +34,32 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
 
   if (!session) {
     return null;
+  }
+
+  if (!roleLoading && !isAdmin && approvalStatus !== "Approved") {
+    const rejected = approvalStatus === "Rejected";
+    return (
+      <AppLayout>
+        <div className="mx-auto flex min-h-[60vh] max-w-xl items-center justify-center">
+          <div className="w-full rounded-xl border bg-card p-8 text-center shadow-sm">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Account review
+            </p>
+            <h1 className="mt-3 text-2xl font-semibold">
+              {rejected ? "Registration not approved" : "Waiting for administrator approval"}
+            </h1>
+            <p className="mt-3 text-muted-foreground">
+              {rejected
+                ? "Your registration was not approved. Contact the administrator for assistance."
+                : "Your account is registered, but access will be enabled after an administrator reviews it."}
+            </p>
+            <Button className="mt-6" variant="outline" onClick={() => void signOut()}>
+              Sign out
+            </Button>
+          </div>
+        </div>
+      </AppLayout>
+    );
   }
 
   if (roles && (!role || !roles.includes(role))) {

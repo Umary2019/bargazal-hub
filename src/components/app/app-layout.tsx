@@ -38,20 +38,70 @@ interface AppLayoutProps {
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: <BarChart3 className="w-5 h-5" />, roles: ["admin"] },
-  { label: "My Work", href: "/staff", icon: <LayoutDashboard className="w-5 h-5" />, roles: ["staff"] },
-  { label: "My Portal", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, roles: ["client"] },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: <BarChart3 className="w-5 h-5" />,
+    roles: ["admin"],
+  },
+  {
+    label: "My Work",
+    href: "/work",
+    icon: <LayoutDashboard className="w-5 h-5" />,
+    roles: ["staff"],
+  },
+  {
+    label: "My Portal",
+    href: "/dashboard",
+    icon: <LayoutDashboard className="w-5 h-5" />,
+    roles: ["client"],
+  },
   { label: "Requests", href: "/requests", icon: <Inbox className="w-5 h-5" />, roles: ["admin"] },
   { label: "Clients", href: "/clients", icon: <Users className="w-5 h-5" />, roles: ["admin"] },
-  { label: "Services", href: "/services", icon: <Briefcase className="w-5 h-5" />, roles: ["admin"] },
-  { label: "Projects", href: "/projects", icon: <FolderOpen className="w-5 h-5" />, roles: ["admin"] },
-  { label: "Invoices", href: "/invoices", icon: <FileText className="w-5 h-5" />, roles: ["admin", "staff"] },
-  { label: "Quotations", href: "/quotes", icon: <ClipboardList className="w-5 h-5" />, roles: ["admin"] },
-  { label: "Payments", href: "/payments", icon: <CreditCard className="w-5 h-5" />, roles: ["admin", "staff"] },
-  { label: "Expenses", href: "/expenses", icon: <TrendingDown className="w-5 h-5" />, roles: ["admin"] },
+  {
+    label: "Services",
+    href: "/services",
+    icon: <Briefcase className="w-5 h-5" />,
+    roles: ["admin"],
+  },
+  {
+    label: "Projects",
+    href: "/projects",
+    icon: <FolderOpen className="w-5 h-5" />,
+    roles: ["admin"],
+  },
+  {
+    label: "Invoices",
+    href: "/invoices",
+    icon: <FileText className="w-5 h-5" />,
+    roles: ["admin", "staff"],
+  },
+  {
+    label: "Quotations",
+    href: "/quotes",
+    icon: <ClipboardList className="w-5 h-5" />,
+    roles: ["admin"],
+  },
+  {
+    label: "Payments",
+    href: "/payments",
+    icon: <CreditCard className="w-5 h-5" />,
+    roles: ["admin", "staff"],
+  },
+  {
+    label: "Expenses",
+    href: "/expenses",
+    icon: <TrendingDown className="w-5 h-5" />,
+    roles: ["admin"],
+  },
   { label: "Reports", href: "/reports", icon: <BarChart className="w-5 h-5" />, roles: ["admin"] },
   { label: "Staff", href: "/staff", icon: <UserPlus className="w-5 h-5" />, roles: ["admin"] },
-  { label: "Settings", href: "/settings", icon: <Settings className="w-5 h-5" />, roles: ["admin"] },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: <Settings className="w-5 h-5" />,
+    roles: ["admin"],
+  },
 ];
 
 const roleLabel: Record<string, string> = {

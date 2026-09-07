@@ -1,5 +1,7 @@
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
@@ -19,6 +21,7 @@ import { useClients, useDeleteClient } from "@/data/clients";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/clients")({
   component: ClientsPage,
@@ -32,10 +35,21 @@ function ClientsPage() {
 function ClientsCollection() {
   const { data: clients = [], isLoading } = useClients();
   const deleteClient = useDeleteClient();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | undefined>();
+
+  async function setApproval(id: string, approved: boolean) {
+    const { error } = await supabase.rpc("approve_client", { _client_id: id, _approved: approved });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(approved ? "Client approved" : "Client rejected");
+    void queryClient.invalidateQueries({ queryKey: ["clients"] });
+  }
 
   const filteredClients = clients.filter(
     (client) =>
@@ -45,7 +59,7 @@ function ClientsCollection() {
   );
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute roles={["admin"]}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -100,6 +114,7 @@ function ClientsCollection() {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -117,6 +132,13 @@ function ClientsCollection() {
                       </TableCell>
                       <TableCell className="text-sm">{client.email || "-"}</TableCell>
                       <TableCell className="text-sm">{client.phone || "-"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={client.approval_status === "Approved" ? "default" : "outline"}
+                        >
+                          {client.approval_status ?? "Approved"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -127,6 +149,11 @@ function ClientsCollection() {
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
+                          {client.approval_status !== "Approved" && (
+                            <Button size="sm" onClick={() => setApproval(client.id, true)}>
+                              Approve
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"

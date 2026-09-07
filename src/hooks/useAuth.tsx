@@ -28,6 +28,7 @@ type AuthState = {
   role: PortalRole;
   clientId: string | null;
   clientStatus: string | null;
+  approvalStatus: string | null;
   fullName: string;
   signOut: () => Promise<void>;
 };
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<PortalRole>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientStatus, setClientStatus] = useState<string | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
@@ -79,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       setClientId(null);
       setClientStatus(null);
+      setApprovalStatus(null);
       setFullName("");
       setRoleLoading(false);
       return;
@@ -91,7 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const metadata = session.user.user_metadata;
-        const registration = metadata?.["client_registration"] as Record<string, string> | undefined;
+        const registration = metadata?.["client_registration"] as
+          Record<string, string> | undefined;
         if (registration) {
           await (supabase as any).rpc("finalize_client_registration", {
             _full_name: registration.fullName,
@@ -104,12 +108,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const [adminRes, staffRes, clientRes, profileRes] = await Promise.all([
           supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
           supabase.rpc("has_role", { _user_id: userId, _role: "staff" }),
-          supabase
+          (supabase as any)
             .from("clients")
             .select("id, approval_status, full_name")
             .eq("auth_user_id", userId)
             .maybeSingle(),
-          supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+          (supabase as any)
+            .from("profiles")
+            .select("full_name, approval_status, is_active")
+            .eq("id", userId)
+            .maybeSingle(),
         ]);
 
         if (cancelled) return;
@@ -120,6 +128,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsStaff(staff);
         setClientId(clientRes.data?.id ?? null);
         setClientStatus(clientRes.data?.approval_status ?? null);
+        setApprovalStatus(
+          admin
+            ? "Approved"
+            : profileRes.data?.is_active === false
+              ? "Inactive"
+              : (clientRes.data?.approval_status ?? profileRes.data?.approval_status ?? null),
+        );
         setRole(admin ? "admin" : staff ? "staff" : clientRes.data ? "client" : null);
         setFullName(
           profileRes.data?.full_name ?? clientRes.data?.full_name ?? session?.user?.email ?? "",
@@ -130,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAdmin(false);
           setIsStaff(false);
           setRole(null);
+          setApprovalStatus(null);
           setFullName(session?.user?.email ?? "");
         }
       } finally {
@@ -153,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       clientId,
       clientStatus,
+      approvalStatus,
       fullName,
       signOut: async () => {
         await supabase.auth.signOut();
