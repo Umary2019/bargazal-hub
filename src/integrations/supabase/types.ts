@@ -110,6 +110,7 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          approval_status: string
           city: string | null
           created_at: string
           email: string | null
@@ -120,10 +121,12 @@ export type Database = {
           phone: string | null
           state: string | null
           updated_at: string
+          user_id: string | null
           whatsapp: string | null
         }
         Insert: {
           address?: string | null
+          approval_status?: string
           city?: string | null
           created_at?: string
           email?: string | null
@@ -134,10 +137,12 @@ export type Database = {
           phone?: string | null
           state?: string | null
           updated_at?: string
+          user_id?: string | null
           whatsapp?: string | null
         }
         Update: {
           address?: string | null
+          approval_status?: string
           city?: string | null
           created_at?: string
           email?: string | null
@@ -148,6 +153,7 @@ export type Database = {
           phone?: string | null
           state?: string | null
           updated_at?: string
+          user_id?: string | null
           whatsapp?: string | null
         }
         Relationships: []
@@ -681,6 +687,7 @@ export type Database = {
       projects: {
         Row: {
           amount_paid: number
+          assigned_staff_id: string | null
           balance: number | null
           budget: number
           client_id: string
@@ -709,6 +716,7 @@ export type Database = {
         }
         Insert: {
           amount_paid?: number
+          assigned_staff_id?: string | null
           balance?: number | null
           budget?: number
           client_id: string
@@ -737,6 +745,7 @@ export type Database = {
         }
         Update: {
           amount_paid?: number
+          assigned_staff_id?: string | null
           balance?: number | null
           budget?: number
           client_id?: string
@@ -956,6 +965,76 @@ export type Database = {
         }
         Relationships: []
       }
+      service_requests: {
+        Row: {
+          admin_note: string | null
+          budget: number
+          client_id: string
+          created_at: string
+          details: string | null
+          id: string
+          institution: string | null
+          preferred_deadline: string | null
+          project_id: string | null
+          service_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          budget?: number
+          client_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          institution?: string | null
+          preferred_deadline?: string | null
+          project_id?: string | null
+          service_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          budget?: number
+          client_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          institution?: string | null
+          preferred_deadline?: string | null
+          project_id?: string | null
+          service_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           category_id: string
@@ -1040,6 +1119,7 @@ export type Database = {
         Args: { _invoice_id: string }
         Returns: string
       }
+      current_client_id: { Args: never; Returns: string }
       get_public_invoice: { Args: { _token: string }; Returns: Json }
       has_role: {
         Args: {
@@ -1049,6 +1129,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id?: string }; Returns: boolean }
+      is_approved_client: { Args: never; Returns: boolean }
       is_staff_or_admin: { Args: { _user_id?: string }; Returns: boolean }
     }
     Enums: {
