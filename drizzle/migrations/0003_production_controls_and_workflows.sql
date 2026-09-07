@@ -199,6 +199,14 @@ CREATE TABLE IF NOT EXISTS public.quote_items (
   total NUMERIC(14,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS public.quote_status_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_id UUID NOT NULL REFERENCES public.quotes(id) ON DELETE CASCADE,
+  from_status public.quote_status,
+  to_status public.quote_status NOT NULL,
+  changed_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 CREATE OR REPLACE FUNCTION public.set_quote_number()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
@@ -223,9 +231,25 @@ $$;
 DROP TRIGGER IF EXISTS quote_items_recalc ON public.quote_items;
 CREATE TRIGGER quote_items_recalc AFTER INSERT OR UPDATE OR DELETE ON public.quote_items
   FOR EACH ROW EXECUTE FUNCTION public.recalc_quote_totals();
+CREATE OR REPLACE FUNCTION public.record_quote_status_change()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR NEW.status IS DISTINCT FROM OLD.status THEN
+    INSERT INTO public.quote_status_history (quote_id, from_status, to_status, changed_by)
+    VALUES (NEW.id, CASE WHEN TG_OP = 'INSERT' THEN NULL ELSE OLD.status END, NEW.status, auth.uid());
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS quote_status_history_record ON public.quotes;
+CREATE TRIGGER quote_status_history_record
+  AFTER INSERT OR UPDATE OF status ON public.quotes FOR EACH ROW
+  EXECUTE FUNCTION public.record_quote_status_change();
 ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quote_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quote_status_history ENABLE ROW LEVEL SECURITY;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.quotes, public.quote_items TO authenticated;
+GRANT SELECT ON public.quote_status_history TO authenticated;
 DROP POLICY IF EXISTS "quotes_read_staff" ON public.quotes;
 DROP POLICY IF EXISTS "quotes_write_staff" ON public.quotes;
 DROP POLICY IF EXISTS "quotes_update_staff" ON public.quotes;
@@ -234,6 +258,7 @@ DROP POLICY IF EXISTS "quote_items_read_staff" ON public.quote_items;
 DROP POLICY IF EXISTS "quote_items_write_staff" ON public.quote_items;
 DROP POLICY IF EXISTS "quote_items_update_staff" ON public.quote_items;
 DROP POLICY IF EXISTS "quote_items_delete_admin" ON public.quote_items;
+DROP POLICY IF EXISTS "quote_history_read_staff" ON public.quote_status_history;
 CREATE POLICY "quotes_read_staff" ON public.quotes FOR SELECT TO authenticated USING (public.is_staff_or_admin());
 CREATE POLICY "quotes_write_staff" ON public.quotes FOR INSERT TO authenticated WITH CHECK (public.is_staff_or_admin());
 CREATE POLICY "quotes_update_staff" ON public.quotes FOR UPDATE TO authenticated USING (public.is_staff_or_admin()) WITH CHECK (public.is_staff_or_admin());
@@ -242,6 +267,35 @@ CREATE POLICY "quote_items_read_staff" ON public.quote_items FOR SELECT TO authe
 CREATE POLICY "quote_items_write_staff" ON public.quote_items FOR INSERT TO authenticated WITH CHECK (public.is_staff_or_admin());
 CREATE POLICY "quote_items_update_staff" ON public.quote_items FOR UPDATE TO authenticated USING (public.is_staff_or_admin()) WITH CHECK (public.is_staff_or_admin());
 CREATE POLICY "quote_items_delete_admin" ON public.quote_items FOR DELETE TO authenticated USING (public.is_admin());
+CREATE POLICY "quote_history_read_staff" ON public.quote_status_history FOR SELECT TO authenticated USING (public.is_staff_or_admin());
+
+CREATE OR REPLACE FUNCTION public.convert_quote_to_invoice(_quote_id UUID)
+RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE source_quote public.quotes%ROWTYPE; new_invoice UUID;
+BEGIN
+  SELECT * INTO source_quote FROM public.quotes WHERE id = _quote_id FOR UPDATE;
+  IF source_quote.id IS NULL THEN RAISE EXCEPTION 'Quote not found'; END IF;
+  IF source_quote.status IN ('Rejected', 'Expired', 'Converted') THEN
+    RAISE EXCEPTION 'Quote cannot be converted from its current status';
+  END IF;
+
+  INSERT INTO public.invoices (
+    invoice_number, client_id, project_id, issue_date, due_date,
+    discount, tax, status, notes
+  ) VALUES (
+    '', source_quote.client_id, source_quote.project_id, CURRENT_DATE, source_quote.expiry_date,
+    source_quote.discount, source_quote.tax, 'Draft', source_quote.notes
+  ) RETURNING id INTO new_invoice;
+
+  INSERT INTO public.invoice_items (invoice_id, service_id, description, quantity, unit_price)
+  SELECT new_invoice, service_id, description, quantity, unit_price
+  FROM public.quote_items WHERE quote_id = _quote_id;
+
+  UPDATE public.quotes SET status = 'Converted', updated_at = now() WHERE id = _quote_id;
+  RETURN new_invoice;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.convert_quote_to_invoice(UUID) TO authenticated;
 
 -- Project delivery records.
 CREATE TABLE IF NOT EXISTS public.project_milestones (

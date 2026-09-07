@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { FileText, Plus } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ type Quote = { id: string; quote_number: string; client_id: string; total: numbe
 
 function QuotesPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data: clients = [] } = useClients();
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
@@ -44,6 +45,26 @@ function QuotesPage() {
     onError: () => toast.error("Could not create quote"),
   });
   const canCreate = Boolean(clientId && description.trim() && Number(amount) > 0);
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("quotes" as never).update({ status } as never).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["quotes"] }),
+  });
+  const convertQuote = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.rpc("convert_quote_to_invoice" as never, { _quote_id: id } as never);
+      if (error) throw error;
+      return data as unknown as string;
+    },
+    onSuccess: (invoiceId) => {
+      void queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      toast.success("Quote converted to invoice");
+      navigate({ to: "/invoices/$id", params: { id: invoiceId } });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not convert quote"),
+  });
 
   return <ProtectedRoute><div className="space-y-6">
     <div className="flex items-center justify-between"><div><h1 className="text-3xl font-bold tracking-tight">Quotations</h1><p className="text-muted-foreground">Prepare, track, and convert client quotations.</p></div></div>
@@ -54,6 +75,6 @@ function QuotesPage() {
       <Input type="date" aria-label="Quote expiry date" value={expiryDate} onChange={(event) => setExpiryDate(event.target.value)} />
       <Button disabled={!canCreate || createQuote.isPending} onClick={() => createQuote.mutate()}>Create quote</Button>
     </CardContent></Card>
-    <Card><CardHeader><CardTitle>Quote register</CardTitle></CardHeader><CardContent className="space-y-2">{quotesQuery.data?.length ? quotesQuery.data.map((quote) => <div key={quote.id} className="flex flex-wrap items-center gap-3 rounded-md border p-3"><FileText className="h-4 w-4" /><span className="font-medium">{quote.quote_number}</span><span className="flex-1">{formatCurrency(quote.total)}</span><span>{quote.status}</span><span className="text-sm text-muted-foreground">{quote.expiry_date ? `Expires ${formatDate(quote.expiry_date)}` : "No expiry"}</span></div>) : <p className="py-8 text-center text-muted-foreground">No quotations yet.</p>}</CardContent></Card>
+    <Card><CardHeader><CardTitle>Quote register</CardTitle></CardHeader><CardContent className="space-y-2">{quotesQuery.data?.length ? quotesQuery.data.map((quote) => <div key={quote.id} className="flex flex-wrap items-center gap-3 rounded-md border p-3"><FileText className="h-4 w-4" /><span className="font-medium">{quote.quote_number}</span><span className="flex-1">{formatCurrency(quote.total)}</span><Select value={quote.status} onValueChange={(status) => updateStatus.mutate({ id: quote.id, status })}><SelectTrigger className="w-32"><SelectValue /></SelectTrigger><SelectContent>{["Draft", "Sent", "Accepted", "Rejected", "Expired", "Converted"].map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select><span className="text-sm text-muted-foreground">{quote.expiry_date ? `Expires ${formatDate(quote.expiry_date)}` : "No expiry"}</span>{quote.status === "Accepted" && <Button size="sm" disabled={convertQuote.isPending} onClick={() => convertQuote.mutate(quote.id)}>Convert to invoice</Button>}</div>) : <p className="py-8 text-center text-muted-foreground">No quotations yet.</p>}</CardContent></Card>
   </div></ProtectedRoute>;
 }
