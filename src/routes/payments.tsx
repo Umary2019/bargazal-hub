@@ -15,12 +15,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useDeleteAllPayments, usePayments } from "@/data/payments";
+import { usePayments } from "@/data/payments";
 import type { Payment } from "@/data/types";
 import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
 import { PaymentFormDialog } from "@/components/payments/payment-form-dialog";
-import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/payments")({
@@ -33,7 +32,6 @@ function PaymentsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | undefined>();
   const navigate = useNavigate();
-  const deleteAllPayments = useDeleteAllPayments();
 
   const filteredPayments = payments.filter(
     (payment) =>
@@ -53,14 +51,6 @@ function PaymentsPage() {
             <p className="text-muted-foreground">Record and track client payments</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <ConfirmDialog
-              trigger={<Button variant="outline">Clear all records</Button>}
-              title="Clear all payment records?"
-              description="This permanently deletes every payment record and resets linked invoice payment totals. This cannot be undone."
-              confirmLabel="Clear all records"
-              isLoading={deleteAllPayments.isPending}
-              onConfirm={() => deleteAllPayments.mutate()}
-            />
             <Button className="gap-2" onClick={() => { setSelectedPayment(undefined); setDialogOpen(true); }}>
               <Plus className="w-4 h-4" />
               Record Payment

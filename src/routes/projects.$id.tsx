@@ -27,7 +27,7 @@ function ProjectDetailPage() {
   const navigate = useNavigate();
   const { data: project, isLoading, error } = useProject(id);
   const { data: linkedInvoices = [] } = useInvoices({ projectId: id });
-  const { data: linkedPayments = [] } = usePayments({ clientId: project?.client_id });
+  const { data: linkedPayments = [] } = usePayments({ projectId: id });
   const [editOpen, setEditOpen] = useState(false);
   const deleteProject = useDeleteProject();
 
@@ -110,10 +110,10 @@ function ProjectDetailPage() {
           <Card>
             <CardHeader><CardTitle>Linked payments</CardTitle></CardHeader>
             <CardContent className="space-y-2">
-              {linkedPayments.filter((payment) => payment.project_id === project.id).map((payment) => (
+              {linkedPayments.map((payment) => (
                 <div key={payment.id} className="flex justify-between rounded-md border p-3 text-sm"><span>{payment.payment_number}</span><span>{formatCurrency(payment.amount)} · {formatDate(payment.payment_date)}</span></div>
               ))}
-              {linkedPayments.filter((payment) => payment.project_id === project.id).length === 0 && <p className="text-sm text-muted-foreground">No payments linked to this project.</p>}
+              {linkedPayments.length === 0 && <p className="text-sm text-muted-foreground">No payments linked to this project.</p>}
             </CardContent>
           </Card>
         </div>

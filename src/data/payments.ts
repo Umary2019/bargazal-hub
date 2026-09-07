@@ -10,14 +10,15 @@ import { fetchAllPages } from "@/lib/paginate";
 const KEY = ["payments"] as const;
 const SELECT = "*, clients(id, full_name), invoices(id, invoice_number), projects(id, title)";
 
-export function usePayments(options?: { clientId?: string | undefined; invoiceId?: string | undefined }) {
+export function usePayments(options?: { clientId?: string | undefined; invoiceId?: string | undefined; projectId?: string | undefined }) {
   return useQuery({
-    queryKey: [...KEY, options?.clientId ?? "all", options?.invoiceId ?? "all"],
+    queryKey: [...KEY, options?.clientId ?? "all", options?.invoiceId ?? "all", options?.projectId ?? "all"],
     queryFn: async (): Promise<PaymentWithRelations[]> => {
       const rows = await fetchAllPages((from, to) => {
         let query = supabase.from("payments").select(SELECT).order("payment_date", { ascending: false }).is("voided_at", null).range(from, to);
         if (options?.clientId) query = query.eq("client_id", options.clientId);
         if (options?.invoiceId) query = query.eq("invoice_id", options.invoiceId);
+        if (options?.projectId) query = query.eq("project_id", options.projectId);
         return query;
       });
       return rows as PaymentWithRelations[];

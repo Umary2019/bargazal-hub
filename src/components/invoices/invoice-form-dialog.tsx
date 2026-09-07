@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useClients } from "@/data/clients";
+import { useProjects } from "@/data/projects";
 import { useSaveInvoice } from "@/data/invoices";
 import type { Database } from "@/integrations/supabase/types";
 import type { InvoiceItem, InvoiceWithRelations } from "@/data/types";
@@ -35,6 +36,9 @@ export function InvoiceFormDialog({
   const [clientId, setClientId] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const { data: projects = [] } = useProjects({ clientId: clientId || undefined });
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +46,8 @@ export function InvoiceFormDialog({
     setClientId(invoice?.client_id ?? "");
     setDescription(firstItem?.description ?? "");
     setAmount(firstItem ? String(firstItem.unit_price) : "");
+    setProjectId(invoice?.project_id ?? "");
+    setDueDate(invoice?.due_date ?? "");
   }, [open, invoice]);
 
   async function submit(event: React.FormEvent) {
@@ -53,9 +59,9 @@ export function InvoiceFormDialog({
       id: invoice?.id,
       values: {
         client_id: clientId,
-        project_id: invoice?.project_id,
+        project_id: projectId || null,
         issue_date: invoice?.issue_date ?? new Date().toISOString().slice(0, 10),
-        due_date: invoice?.due_date,
+        due_date: dueDate || null,
         status,
         discount: invoice?.discount ?? 0,
         tax: invoice?.tax ?? 0,
@@ -66,6 +72,8 @@ export function InvoiceFormDialog({
     setClientId("");
     setDescription("");
     setAmount("");
+    setProjectId("");
+    setDueDate("");
     onOpenChange(false);
   }
 
@@ -94,6 +102,11 @@ export function InvoiceFormDialog({
               ))}
             </SelectContent>
           </Select>
+          <Select value={projectId} onValueChange={setProjectId}>
+            <SelectTrigger aria-label="Project"><SelectValue placeholder="Link to project (optional)" /></SelectTrigger>
+            <SelectContent>{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.project_number} - {project.title}</SelectItem>)}</SelectContent>
+          </Select>
+          <Input aria-label="Due date" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
           <Input
             aria-label="Item description"
             placeholder="Item description"

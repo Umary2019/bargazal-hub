@@ -47,11 +47,11 @@ function InvoicesCollection() {
     const matchesSearch =
       invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (invoice.clients?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-    const matchesStatus = !statusFilter || invoice.status === statusFilter;
+    const matchesStatus = !statusFilter || getInvoicePaymentStatus(invoice) === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const statuses = Array.from(new Set(invoices.map((i) => i.status)));
+  const statuses = Array.from(new Set(invoices.map((invoice) => getInvoicePaymentStatus(invoice))));
 
   const getStatusColor = (status: string) => {
     switch (status) {
