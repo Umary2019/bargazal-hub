@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CreditCard, ExternalLink, Mail, MessageCircle, Pencil, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, CreditCard, ExternalLink, Mail, MessageCircle, Pencil, Printer, Share2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
@@ -15,6 +15,10 @@ import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
 import { PaymentReceipt } from "@/components/payments/payment-receipt";
 import { useClient } from "@/data/clients";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useBusinessSettings } from "@/data/settings";
+import { downloadInvoicePdf } from "@/lib/pdf";
 
 export const Route = createFileRoute("/invoices/$id")({ component: InvoiceDetailPage });
 
@@ -24,9 +28,44 @@ function InvoiceDetailPage() {
   const { data: invoice, isLoading, error } = useInvoice(id);
   const { data: payments = [] } = usePayments({ invoiceId: id });
   const { data: client } = useClient(invoice?.client_id);
+  const { data: settings } = useBusinessSettings();
   const [editOpen, setEditOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [sending, setSending] = useState<"email" | "whatsapp" | null>(null);
   const deleteInvoice = useDeleteInvoice();
+
+  async function sharePublicInvoice() {
+    setSharing(true);
+    try {
+      const { data, error } = await supabase.rpc("create_invoice_public_token" as never, { _invoice_id: id } as never);
+      if (error || !data) throw error ?? new Error("Could not create invoice link");
+      const link = `${window.location.origin}/public/invoices/${data}`;
+      await navigator.clipboard.writeText(link);
+      toast.success("Secure invoice link copied");
+    } catch (shareError) {
+      toast.error(shareError instanceof Error ? shareError.message : "Could not create invoice link");
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  async function sendNotification(channel: "email" | "whatsapp") {
+    setSending(channel);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-invoice-notification", {
+        body: { invoiceId: id, channels: [channel] },
+      });
+      if (error) throw error;
+      const result = data?.results?.[0];
+      if (result?.status !== "sent") throw new Error(`${channel} delivery was not sent`);
+      toast.success(`${channel === "email" ? "Email" : "WhatsApp"} sent successfully`);
+    } catch (notificationError) {
+      toast.error(notificationError instanceof Error ? notificationError.message : "Notification failed");
+    } finally {
+      setSending(null);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -76,6 +115,12 @@ function InvoiceDetailPage() {
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer className="mr-1 h-4 w-4" /> Print invoice
             </Button>
+            <Button variant="outline" size="sm" onClick={() => downloadInvoicePdf({ invoice, items: invoice.invoice_items, clientName: client?.full_name ?? invoice.clients?.full_name ?? "Client", businessName: settings?.business_name ?? "Bargazal and Sons Tech Solution", businessEmail: settings?.email, businessPhone: settings?.phone, paymentInstructions: settings?.payment_instructions })}>
+              Download PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => void sharePublicInvoice()} disabled={sharing}>
+              <Share2 className="mr-1 h-4 w-4" /> {sharing ? "Creating..." : "Share link"}
+            </Button>
             {Number(invoice.amount_paid) > 0 && (
               <Button variant="outline" size="sm" onClick={() => setReceiptOpen(true)}>
                 <Printer className="mr-1 h-4 w-4" /> Receipt
@@ -88,11 +133,21 @@ function InvoiceDetailPage() {
                 </a>
               </Button>
             )}
+            {client?.email && (
+              <Button variant="outline" size="sm" onClick={() => void sendNotification("email")} disabled={sending !== null}>
+                <Mail className="mr-1 h-4 w-4" /> {sending === "email" ? "Sending..." : "Send email"}
+              </Button>
+            )}
             {client?.whatsapp && (
               <Button variant="outline" size="sm" asChild>
                 <a href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Invoice ${invoice.invoice_number}: ${formatCurrency(invoice.total)} total, ${formatCurrency(invoice.balance)} balance due.`)}`} target="_blank" rel="noreferrer">
                   <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
                 </a>
+              </Button>
+            )}
+            {client?.whatsapp && (
+              <Button variant="outline" size="sm" onClick={() => void sendNotification("whatsapp")} disabled={sending !== null}>
+                <MessageCircle className="mr-1 h-4 w-4" /> {sending === "whatsapp" ? "Sending..." : "Send WhatsApp"}
               </Button>
             )}
             <ConfirmDialog

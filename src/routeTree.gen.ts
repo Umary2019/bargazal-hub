@@ -25,6 +25,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ClientsIdRouteImport } from './routes/clients.$id'
 import { Route as InvoicesIdRouteImport } from './routes/invoices.$id'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
+import { Route as PublicInvoicesTokenRouteImport } from './routes/public.invoices.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -106,6 +107,11 @@ const ProjectsIdRoute = ProjectsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ProjectsRoute,
 } as any)
+const PublicInvoicesTokenRoute = PublicInvoicesTokenRouteImport.update({
+  id: '/public/invoices/$token',
+  path: '/public/invoices/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/public/invoices/$token': typeof PublicInvoicesTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/public/invoices/$token': typeof PublicInvoicesTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/public/invoices/$token': typeof PublicInvoicesTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
+    | '/public/invoices/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
+    | '/public/invoices/$token'
   id:
     | '__root__'
     | '/'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
+    | '/public/invoices/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   ServicesRoute: typeof ServicesRoute
   SettingsRoute: typeof SettingsRoute
+  PublicInvoicesTokenRoute: typeof PublicInvoicesTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIdRouteImport
       parentRoute: typeof ProjectsRoute
     }
+    '/public/invoices/$token': {
+      id: '/public/invoices/$token'
+      path: '/public/invoices/$token'
+      fullPath: '/public/invoices/$token'
+      preLoaderRoute: typeof PublicInvoicesTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -401,6 +421,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   ServicesRoute: ServicesRoute,
   SettingsRoute: SettingsRoute,
+  PublicInvoicesTokenRoute: PublicInvoicesTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

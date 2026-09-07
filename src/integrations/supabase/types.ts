@@ -47,6 +47,10 @@ export type Database = {
       business_settings: {
         Row: {
           address: string | null
+            bank_account_name: string | null
+            bank_account_number: string | null
+            bank_name: string | null
+            payment_instructions: string | null
           business_name: string
           created_at: string
           currency: string
@@ -63,6 +67,10 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+            bank_account_name?: string | null
+            bank_account_number?: string | null
+            bank_name?: string | null
+          payment_instructions?: string | null
           business_name?: string
           created_at?: string
           currency?: string
@@ -79,6 +87,10 @@ export type Database = {
         }
         Update: {
           address?: string | null
+            bank_account_name?: string | null
+            bank_account_number?: string | null
+            bank_name?: string | null
+          payment_instructions?: string | null
           business_name?: string
           created_at?: string
           currency?: string

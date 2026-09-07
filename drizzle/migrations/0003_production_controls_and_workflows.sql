@@ -375,3 +375,74 @@ SET amount_paid = COALESCE((
   SELECT SUM(p.amount) FROM public.payments p
   WHERE p.project_id = pr.id AND p.voided_at IS NULL
 ), 0);
+
+-- Business contact defaults supplied for invoice communication.
+ALTER TABLE public.business_settings
+  ADD COLUMN IF NOT EXISTS bank_name TEXT,
+  ADD COLUMN IF NOT EXISTS bank_account_name TEXT,
+  ADD COLUMN IF NOT EXISTS bank_account_number TEXT,
+  ADD COLUMN IF NOT EXISTS payment_instructions TEXT;
+UPDATE public.business_settings
+SET email = COALESCE(NULLIF(email, ''), 'umarkhalifaabubakar0@gmail.com'),
+    whatsapp = COALESCE(NULLIF(whatsapp, ''), '09063406108')
+WHERE id = (SELECT id FROM public.business_settings ORDER BY created_at LIMIT 1);
+
+-- Secure, revocable public invoice links. The token is never derived from the invoice id.
+CREATE TABLE IF NOT EXISTS public.invoice_public_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id UUID NOT NULL REFERENCES public.invoices(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(24), 'hex'),
+  expires_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE public.invoice_public_tokens ENABLE ROW LEVEL SECURITY;
+GRANT SELECT, INSERT, UPDATE ON public.invoice_public_tokens TO authenticated;
+DROP POLICY IF EXISTS "invoice_tokens_staff" ON public.invoice_public_tokens;
+CREATE POLICY "invoice_tokens_staff" ON public.invoice_public_tokens FOR ALL TO authenticated
+  USING (public.is_staff_or_admin()) WITH CHECK (public.is_staff_or_admin());
+
+CREATE OR REPLACE FUNCTION public.create_invoice_public_token(_invoice_id UUID)
+RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE new_token TEXT;
+BEGIN
+  IF NOT public.is_staff_or_admin() THEN RAISE EXCEPTION 'Staff access required'; END IF;
+  INSERT INTO public.invoice_public_tokens (invoice_id, created_by)
+  VALUES (_invoice_id, auth.uid()) RETURNING token INTO new_token;
+  RETURN new_token;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.create_invoice_public_token(UUID) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_public_invoice(_token TEXT)
+RETURNS JSONB LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+  SELECT jsonb_build_object(
+    'invoice', to_jsonb(i),
+    'items', COALESCE((SELECT jsonb_agg(to_jsonb(ii) ORDER BY ii.created_at) FROM public.invoice_items ii WHERE ii.invoice_id = i.id), '[]'::jsonb),
+    'client', to_jsonb(c),
+    'business', (SELECT to_jsonb(bs) FROM public.business_settings bs ORDER BY bs.created_at LIMIT 1)
+  )
+  FROM public.invoice_public_tokens t
+  JOIN public.invoices i ON i.id = t.invoice_id
+  JOIN public.clients c ON c.id = i.client_id
+  WHERE t.token = _token AND t.revoked_at IS NULL AND (t.expires_at IS NULL OR t.expires_at > now());
+$$;
+GRANT EXECUTE ON FUNCTION public.get_public_invoice(TEXT) TO anon, authenticated;
+
+CREATE TABLE IF NOT EXISTS public.notification_deliveries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL,
+  channel TEXT NOT NULL CHECK (channel IN ('email', 'whatsapp', 'sms')),
+  recipient TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('queued', 'sent', 'failed')),
+  provider_message_id TEXT,
+  error_message TEXT,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE public.notification_deliveries ENABLE ROW LEVEL SECURITY;
+GRANT SELECT ON public.notification_deliveries TO authenticated;
+DROP POLICY IF EXISTS "notification_deliveries_read_staff" ON public.notification_deliveries;
+CREATE POLICY "notification_deliveries_read_staff" ON public.notification_deliveries FOR SELECT TO authenticated
+  USING (public.is_staff_or_admin());

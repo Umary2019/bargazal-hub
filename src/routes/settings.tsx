@@ -53,6 +53,10 @@ const businessSettingsSchema = z.object({
   tax_rate: z.coerce.number().min(0).max(100).default(0),
   invoice_prefix: z.string().default("BTS-INV"),
   signature_url: z.string().optional(),
+  bank_name: z.string().optional(),
+  bank_account_name: z.string().optional(),
+  bank_account_number: z.string().optional(),
+  payment_instructions: z.string().optional(),
 });
 
 type BusinessSettingsForm = z.infer<typeof businessSettingsSchema>;
@@ -139,6 +143,10 @@ function SettingsPage() {
       tax_rate: settings?.tax_rate || 0,
       invoice_prefix: settings?.invoice_prefix || "BTS-INV",
       signature_url: settings?.signature_url || "",
+      bank_name: settings?.bank_name || "",
+      bank_account_name: settings?.bank_account_name || "",
+      bank_account_number: settings?.bank_account_number || "",
+      payment_instructions: settings?.payment_instructions || "",
     },
   });
 
@@ -364,6 +372,13 @@ function SettingsPage() {
                         </FormItem>
                       )}
                     />
+
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <FormField control={form.control} name="bank_name" render={({ field }) => <FormItem><FormLabel>Bank name</FormLabel><FormControl><Input placeholder="Bank name" {...field} /></FormControl><FormMessage /></FormItem>} />
+                      <FormField control={form.control} name="bank_account_name" render={({ field }) => <FormItem><FormLabel>Account name</FormLabel><FormControl><Input placeholder="Account name" {...field} /></FormControl><FormMessage /></FormItem>} />
+                      <FormField control={form.control} name="bank_account_number" render={({ field }) => <FormItem><FormLabel>Account number</FormLabel><FormControl><Input placeholder="Account number" {...field} /></FormControl><FormMessage /></FormItem>} />
+                    </div>
+                    <FormField control={form.control} name="payment_instructions" render={({ field }) => <FormItem><FormLabel>Payment instructions</FormLabel><FormControl><Textarea placeholder="Payment instructions shown on invoices" {...field} /></FormControl><FormMessage /></FormItem>} />
 
                     <Button type="submit" disabled={isLoading}>
                       {isLoading ? "Saving..." : "Save Changes"}
