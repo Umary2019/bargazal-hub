@@ -1,78 +1,9 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X, LogOut } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { ThemeToggle } from "@/components/app/theme-toggle";
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-}
-
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-const navItems: NavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: <BarChart3 className="w-5 h-5" />,
-  },
-  {
-    label: "Clients",
-    href: "/clients",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    label: "Services",
-    href: "/services",
-    icon: <Briefcase className="w-5 h-5" />,
-  },
-  {
-    label: "Projects",
-    href: "/projects",
-    icon: <FolderOpen className="w-5 h-5" />,
-  },
-  {
-    label: "Invoices",
-    href: "/invoices",
-    icon: <FileText className="w-5 h-5" />,
-  },
-  {
-    label: "Quotations",
-    href: "/quotes",
-    icon: <ClipboardList className="w-5 h-5" />,
-  },
-  {
-    label: "Payments",
-    href: "/payments",
-    icon: <CreditCard className="w-5 h-5" />,
-  },
-  {
-    label: "Expenses",
-    href: "/expenses",
-    icon: <TrendingDown className="w-5 h-5" />,
-  },
-  {
-    label: "Reports",
-    href: "/reports",
-    icon: <BarChart className="w-5 h-5" />,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: <Settings className="w-5 h-5" />,
-  },
-];
-
 import {
+  Menu,
+  X,
+  LogOut,
   BarChart3,
   Users,
   Briefcase,
@@ -83,10 +14,54 @@ import {
   BarChart,
   Settings,
   ClipboardList,
+  UserPlus,
+  Inbox,
+  LayoutDashboard,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { useAuth, type PortalRole } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { ThemeToggle } from "@/components/app/theme-toggle";
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  roles: Exclude<PortalRole, null>[];
+}
+
+interface AppLayoutProps {
+  children: React.ReactNode;
+}
+
+const navItems: NavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: <BarChart3 className="w-5 h-5" />, roles: ["admin"] },
+  { label: "My Work", href: "/staff", icon: <LayoutDashboard className="w-5 h-5" />, roles: ["staff"] },
+  { label: "My Portal", href: "/portal", icon: <LayoutDashboard className="w-5 h-5" />, roles: ["client"] },
+  { label: "Requests", href: "/requests", icon: <Inbox className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Clients", href: "/clients", icon: <Users className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Services", href: "/services", icon: <Briefcase className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Projects", href: "/projects", icon: <FolderOpen className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Invoices", href: "/invoices", icon: <FileText className="w-5 h-5" />, roles: ["admin", "staff"] },
+  { label: "Quotations", href: "/quotes", icon: <ClipboardList className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Payments", href: "/payments", icon: <CreditCard className="w-5 h-5" />, roles: ["admin", "staff"] },
+  { label: "Expenses", href: "/expenses", icon: <TrendingDown className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Reports", href: "/reports", icon: <BarChart className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Staff", href: "/team", icon: <UserPlus className="w-5 h-5" />, roles: ["admin"] },
+  { label: "Settings", href: "/settings", icon: <Settings className="w-5 h-5" />, roles: ["admin"] },
+];
+
+const roleLabel: Record<string, string> = {
+  admin: "Administrator",
+  staff: "Staff",
+  client: "Client",
+};
+
 export function AppLayout({ children }: AppLayoutProps) {
-  const { session, fullName, signOut } = useAuth();
+  const { session, fullName, role, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -108,6 +83,9 @@ export function AppLayout({ children }: AppLayoutProps) {
     return <>{children}</>;
   }
 
+  const visibleNav = navItems.filter((item) => (role ? item.roles.includes(role) : false));
+  const homeHref = role === "client" ? "/portal" : role === "staff" ? "/staff" : "/dashboard";
+
   return (
     <div className="flex h-screen min-w-0 bg-background">
       {/* Sidebar */}
@@ -121,7 +99,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div id="app-navigation" className="flex flex-col h-full">
           {/* Logo */}
           <div className="border-b px-4 py-4 sm:px-6">
-            <Link to="/dashboard" className="flex items-center gap-2">
+            <Link to={homeHref} className="flex items-center gap-2">
               <img
                 src="/company-logo.png"
                 alt="Bargazal and Sons Tech Solution logo"
@@ -136,7 +114,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
-            {navItems.map((item) => (
+            {visibleNav.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
@@ -157,7 +135,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="border-t p-4 space-y-2">
             <div className="px-2 py-1">
               <p className="text-sm font-medium">{fullName || session?.user?.email}</p>
-              <p className="text-xs text-muted-foreground">Administrator</p>
+              <p className="text-xs text-muted-foreground">
+                {role ? roleLabel[role] : "Pending access"}
+              </p>
             </div>
             <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
               <LogOut className="w-4 h-4" />
