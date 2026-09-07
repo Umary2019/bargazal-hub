@@ -47,10 +47,9 @@ export type Database = {
       business_settings: {
         Row: {
           address: string | null
-            bank_account_name: string | null
-            bank_account_number: string | null
-            bank_name: string | null
-            payment_instructions: string | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_name: string | null
           business_name: string
           created_at: string
           currency: string
@@ -58,6 +57,7 @@ export type Database = {
           id: string
           invoice_prefix: string
           logo_url: string | null
+          payment_instructions: string | null
           phone: string | null
           signature_url: string | null
           tax_rate: number
@@ -67,10 +67,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-            bank_account_name?: string | null
-            bank_account_number?: string | null
-            bank_name?: string | null
-          payment_instructions?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           business_name?: string
           created_at?: string
           currency?: string
@@ -78,6 +77,7 @@ export type Database = {
           id?: string
           invoice_prefix?: string
           logo_url?: string | null
+          payment_instructions?: string | null
           phone?: string | null
           signature_url?: string | null
           tax_rate?: number
@@ -87,10 +87,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
-            bank_account_name?: string | null
-            bank_account_number?: string | null
-            bank_name?: string | null
-          payment_instructions?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           business_name?: string
           created_at?: string
           currency?: string
@@ -98,6 +97,7 @@ export type Database = {
           id?: string
           invoice_prefix?: string
           logo_url?: string | null
+          payment_instructions?: string | null
           phone?: string | null
           signature_url?: string | null
           tax_rate?: number
@@ -242,6 +242,44 @@ export type Database = {
           },
         ]
       }
+      invoice_public_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          invoice_id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          invoice_id: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          invoice_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_public_tokens_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount_paid: number
@@ -310,6 +348,50 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_deliveries: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          invoice_id: string | null
+          provider_message_id: string | null
+          recipient: string
+          status: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          provider_message_id?: string | null
+          recipient: string
+          status: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          provider_message_id?: string | null
+          recipient?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -408,6 +490,101 @@ export type Database = {
         }
         Relationships: []
       }
+      project_files: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          id: string
+          milestone_id: string | null
+          name: string
+          project_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          milestone_id?: string | null
+          name: string
+          project_id: string
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          milestone_id?: string | null
+          name?: string
+          project_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          project_id: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id: string
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_services: {
         Row: {
           created_at: string
@@ -446,6 +623,57 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          milestone_id: string | null
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          milestone_id?: string | null
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          milestone_id?: string | null
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -548,6 +776,155 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          quote_id: string
+          service_id: string | null
+          total: number | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number
+          quote_id: string
+          service_id?: string | null
+          total?: number | null
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          quote_id?: string
+          service_id?: string | null
+          total?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["quote_status"] | null
+          id: string
+          quote_id: string
+          to_status: Database["public"]["Enums"]["quote_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["quote_status"] | null
+          id?: string
+          quote_id: string
+          to_status: Database["public"]["Enums"]["quote_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["quote_status"] | null
+          id?: string
+          quote_id?: string
+          to_status?: Database["public"]["Enums"]["quote_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_status_history_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          client_id: string
+          created_at: string
+          discount: number
+          expiry_date: string | null
+          id: string
+          issue_date: string
+          notes: string | null
+          project_id: string | null
+          quote_number: string
+          status: Database["public"]["Enums"]["quote_status"]
+          subtotal: number
+          tax: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          discount?: number
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          project_id?: string | null
+          quote_number: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          discount?: number
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          project_id?: string | null
+          quote_number?: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -658,6 +1035,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      convert_quote_to_invoice: { Args: { _quote_id: string }; Returns: string }
+      create_invoice_public_token: {
+        Args: { _invoice_id: string }
+        Returns: string
+      }
+      get_public_invoice: { Args: { _token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -665,6 +1048,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { _user_id?: string }; Returns: boolean }
+      is_staff_or_admin: { Args: { _user_id?: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "staff"
@@ -693,6 +1078,13 @@ export type Database = {
         | "Client Review"
         | "Completed"
         | "Cancelled"
+      quote_status:
+        | "Draft"
+        | "Sent"
+        | "Accepted"
+        | "Rejected"
+        | "Expired"
+        | "Converted"
       service_status: "Active" | "Inactive"
     }
     CompositeTypes: {
@@ -849,6 +1241,14 @@ export const Constants = {
         "Client Review",
         "Completed",
         "Cancelled",
+      ],
+      quote_status: [
+        "Draft",
+        "Sent",
+        "Accepted",
+        "Rejected",
+        "Expired",
+        "Converted",
       ],
       service_status: ["Active", "Inactive"],
     },
