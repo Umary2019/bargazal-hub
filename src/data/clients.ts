@@ -58,6 +58,7 @@ export function useSaveClient() {
     onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: KEY });
       qc.invalidateQueries({ queryKey: ["client", data.id] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["activity"] });
       toast.success(variables.id ? "Client updated successfully" : "Client created successfully");
     },
@@ -75,6 +76,7 @@ export function useDeleteClient() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Client deleted");
     },
     onError: (error) => notifyError(error, "Could not delete client"),

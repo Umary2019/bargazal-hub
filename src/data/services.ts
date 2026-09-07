@@ -60,6 +60,7 @@ export function useSaveService() {
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(variables.id ? "Service updated successfully" : "Service created successfully");
     },
     onError: (error) => notifyError(error, "Could not save service"),
@@ -75,6 +76,7 @@ export function useDeleteService() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Service deleted");
     },
     onError: (error) => notifyError(error, "Could not delete service"),

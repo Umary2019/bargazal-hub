@@ -66,6 +66,7 @@ export function useSaveProject() {
     onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: KEY });
       qc.invalidateQueries({ queryKey: ["project", data.id] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["activity"] });
       toast.success(variables.id ? "Project updated successfully" : "Project created successfully");
     },
@@ -82,6 +83,7 @@ export function useDeleteProject() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Project deleted");
     },
     onError: (error) => notifyError(error, "Could not delete project"),

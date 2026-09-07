@@ -27,6 +27,7 @@ function DashboardPage() {
   }
 
   if (error || !dashboard) {
+    const message = error instanceof Error ? error.message : "Please try refreshing the page";
     return (
       <ProtectedRoute>
         <Card className="border-red-200 bg-red-50">
@@ -34,7 +35,7 @@ function DashboardPage() {
             <AlertCircle className="w-5 h-5 text-red-600" />
             <div>
               <p className="font-semibold text-red-900">Unable to load dashboard</p>
-              <p className="text-sm text-red-700">Please try refreshing the page</p>
+              <p className="text-sm text-red-700">{message}</p>
             </div>
           </CardContent>
         </Card>
