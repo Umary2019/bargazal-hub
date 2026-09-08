@@ -183,8 +183,17 @@ function PublicInvoicePage() {
               <span className="font-medium">Status: {invoice.status}</span>
               {invoice.balance <= 0 && <CheckCircle2 className="text-emerald-600" />}
             </div>
-            <div className="flex gap-2 print:hidden">
+            <div className="flex flex-wrap gap-2 print:hidden">
+              {invoice.balance > 0 && (
+                <Button onClick={startPayment} disabled={payLoading || verifying}>
+                  {payLoading || verifying ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  {verifying ? "Confirming payment..." : `Pay ${formatCurrency(invoice.balance)}`}
+                </Button>
+              )}
               <Button
+                variant="outline"
                 onClick={() =>
                   downloadInvoicePdf({
                     invoice,
