@@ -59,6 +59,26 @@
      - activity_logs
      - integration_logs
 
+### Step 2b: Enable Paystack Online Payments
+
+The public invoice link now includes a Paystack payment option for any outstanding balance.
+The Paystack secret key is used only by the Supabase Edge Function and must never be added to
+`VITE_*` variables or committed to the repository.
+
+1. Create or copy a Paystack **Secret Key** from the Paystack Dashboard. Use the test key while testing.
+2. Set the secret in Supabase Edge Function secrets:
+   ```bash
+   supabase secrets set PAYSTACK_SECRET_KEY=sk_test_your_key
+   supabase secrets set PUBLIC_APP_URL=https://your-production-domain.example
+   ```
+3. Deploy the payment function:
+   ```bash
+   supabase functions deploy paystack-payment --no-verify-jwt
+   ```
+4. Apply `drizzle/migrations/0009_paystack_payments.sql` after the previous migrations. It adds an idempotency key for verified Paystack transactions.
+
+Clients need an email address on the invoice client record because Paystack requires one to initialize a transaction. After a successful checkout, the function verifies the transaction directly with Paystack before inserting the linked `Online Payment` record.
+
 ### Step 3: Create Super Admin User
 
 #### Option A: Using Setup Script (Recommended)

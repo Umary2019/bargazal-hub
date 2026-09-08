@@ -2,10 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+<<<<<<< HEAD
 import { toast } from "sonner";
+=======
+>>>>>>> 2b7282f (feat: integrate Paystack payment functionality for online invoices)
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadInvoicePdf } from "@/lib/pdf";
@@ -39,6 +43,10 @@ type PublicInvoice = {
 
 function PublicInvoicePage() {
   const { token } = Route.useParams();
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isPaying, setIsPaying] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const query = useQuery({
     queryKey: ["public-invoice", token],
     queryFn: async () => {
@@ -51,6 +59,7 @@ function PublicInvoicePage() {
     },
   });
 
+<<<<<<< HEAD
   const [payLoading, setPayLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const refetch = query.refetch;
@@ -101,6 +110,24 @@ function PublicInvoicePage() {
       setPayLoading(false);
     }
   }
+=======
+  useEffect(() => {
+    const reference = new URLSearchParams(window.location.search).get("reference");
+    if (!reference || isVerifying) return;
+    setIsVerifying(true);
+    void supabase.functions
+      .invoke("paystack-payment", { body: { action: "verify", token, reference } })
+      .then(({ error }) => {
+        if (error) throw error;
+        void query.refetch();
+        window.history.replaceState({}, "", window.location.pathname);
+      })
+      .catch((error: unknown) => {
+        setPaymentError(error instanceof Error ? error.message : "Could not verify payment");
+      })
+      .finally(() => setIsVerifying(false));
+  }, [isVerifying, query, token]);
+>>>>>>> 2b7282f (feat: integrate Paystack payment functionality for online invoices)
 
   if (query.isLoading)
     return (
@@ -121,6 +148,31 @@ function PublicInvoicePage() {
     );
 
   const { invoice, items, client, business } = query.data;
+  const amount = Number(paymentAmount || invoice.balance);
+
+  async function startPayment() {
+    setPaymentError(null);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > Number(invoice.balance)) {
+      setPaymentError("Enter an amount no more than the outstanding balance.");
+      return;
+    }
+    setIsPaying(true);
+    const { data, error } = await supabase.functions.invoke("paystack-payment", {
+      body: {
+        action: "initialize",
+        token,
+        amount,
+        callbackUrl: window.location.href.split("?")[0],
+      },
+    });
+    if (error || !data?.authorizationUrl) {
+      setPaymentError(error?.message ?? "Could not start payment");
+      setIsPaying(false);
+      return;
+    }
+    window.location.assign(data.authorizationUrl);
+  }
+
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-8">
       <div className="mx-auto max-w-3xl space-y-6">
@@ -183,6 +235,7 @@ function PublicInvoicePage() {
               <span className="font-medium">Status: {invoice.status}</span>
               {invoice.balance <= 0 && <CheckCircle2 className="text-emerald-600" />}
             </div>
+<<<<<<< HEAD
             <div className="flex flex-wrap gap-2 print:hidden">
               {invoice.balance > 0 && (
                 <Button onClick={startPayment} disabled={payLoading || verifying}>
@@ -192,6 +245,36 @@ function PublicInvoicePage() {
                   {verifying ? "Confirming payment..." : `Pay ${formatCurrency(invoice.balance)}`}
                 </Button>
               )}
+=======
+            {Number(invoice.balance) > 0 && (
+              <div className="space-y-3 rounded-md border border-primary/20 bg-primary/5 p-4 print:hidden">
+                <div>
+                  <div className="font-semibold">Pay securely online</div>
+                  <p className="text-sm text-muted-foreground">
+                    Payments are processed securely by Paystack.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    aria-label="Payment amount"
+                    type="number"
+                    min="1"
+                    max={Number(invoice.balance)}
+                    step="0.01"
+                    placeholder={`Full balance: ${formatCurrency(invoice.balance)}`}
+                    value={paymentAmount}
+                    onChange={(event) => setPaymentAmount(event.target.value)}
+                  />
+                  <Button onClick={() => void startPayment()} disabled={isPaying || isVerifying}>
+                    {(isPaying || isVerifying) && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    {isVerifying ? "Confirming..." : "Pay with Paystack"}
+                  </Button>
+                </div>
+                {paymentError && <p className="text-sm text-destructive">{paymentError}</p>}
+              </div>
+            )}
+            <div className="flex gap-2 print:hidden">
+>>>>>>> 2b7282f (feat: integrate Paystack payment functionality for online invoices)
               <Button
                 variant="outline"
                 onClick={() =>
