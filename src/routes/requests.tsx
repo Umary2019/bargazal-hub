@@ -20,12 +20,14 @@ import {
   useServiceRequests,
 } from "@/data/service-requests";
 import { useStaff } from "@/data/staff";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/requests")({ component: RequestsPage });
 function RequestsPage() {
   const queryClient = useQueryClient();
-  const { data: requests = [], isLoading } = useServiceRequests();
-  const { data: staff = [] } = useStaff();
+  const { isAdmin } = useAuth();
+  const { data: requests = [], isLoading, error: requestsError } = useServiceRequests();
+  const { data: staff = [] } = useStaff(isAdmin);
   const approveRequest = useApproveServiceRequest();
   const rejectRequest = useRejectServiceRequest();
   const [assignments, setAssignments] = useState<Record<string, string>>({});
@@ -85,7 +87,7 @@ function RequestsPage() {
   }
 
   return (
-    <ProtectedRoute roles={["admin"]}>
+    <ProtectedRoute roles={["admin", "staff"]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Requests</h1>
@@ -93,6 +95,13 @@ function RequestsPage() {
             Approve staff and client registrations before they can sign in.
           </p>
         </div>
+        {requestsError ? (
+          <Card className="border-destructive">
+            <CardContent className="pt-6 text-sm text-destructive">
+              Could not load client requests: {requestsError.message}
+            </CardContent>
+          </Card>
+        ) : null}
         <Card>
           <CardHeader>
             <CardTitle>Pending client registrations</CardTitle>
@@ -170,7 +179,7 @@ function RequestsPage() {
             <CardTitle>
               {isLoading
                 ? "Loading..."
-                : `${requests.length} service request${requests.length === 1 ? "" : "s"}`}
+                : `${requests.length} client service request${requests.length === 1 ? "" : "s"}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -191,7 +200,7 @@ function RequestsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{request.status}</Badge>
-                    {request.status === "Pending" ? (
+                    {request.status === "Pending" && isAdmin ? (
                       <>
                         <Select
                           value={assignments[request.id] || "unassigned"}
@@ -235,6 +244,8 @@ function RequestsPage() {
                           Reject
                         </Button>
                       </>
+                    ) : request.status === "Pending" ? (
+                      <span className="text-xs text-muted-foreground">Awaiting admin review</span>
                     ) : null}
                   </div>
                 </div>

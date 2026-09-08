@@ -56,7 +56,12 @@ const navItems: NavItem[] = [
     icon: <LayoutDashboard className="w-5 h-5" />,
     roles: ["client"],
   },
-  { label: "Requests", href: "/requests", icon: <Inbox className="w-5 h-5" />, roles: ["admin"] },
+  {
+    label: "Requests",
+    href: "/requests",
+    icon: <Inbox className="w-5 h-5" />,
+    roles: ["admin", "staff"],
+  },
   { label: "Clients", href: "/clients", icon: <Users className="w-5 h-5" />, roles: ["admin"] },
   {
     label: "Services",
