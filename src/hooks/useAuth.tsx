@@ -1,4 +1,4 @@
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -12,19 +12,6 @@ function normalizeApprovalStatus(status: string | null | undefined): string | nu
   if (normalized === "rejected") return "Rejected";
   if (normalized === "pending") return "Pending";
   return status;
-}
-
-async function ensureProfile(user: User) {
-  const email = user.email ?? "";
-  const fullName = user.user_metadata?.["full_name"] ?? user.email?.split("@")[0] ?? "User";
-
-  try {
-    await supabase
-      .from("profiles")
-      .upsert({ id: user.id, email, full_name: fullName }, { onConflict: "id" });
-  } catch (error) {
-    console.warn("Profile bootstrap failed:", error);
-  }
 }
 
 type AuthState = {
@@ -95,8 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoleLoading(false);
       return;
     }
-
-    void ensureProfile(session.user);
 
     let cancelled = false;
     setRoleLoading(true);
