@@ -2,10 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
-<<<<<<< HEAD
-import { toast } from "sonner";
-=======
->>>>>>> 2b7282f (feat: integrate Paystack payment functionality for online invoices)
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,58 +55,6 @@ function PublicInvoicePage() {
     },
   });
 
-<<<<<<< HEAD
-  const [payLoading, setPayLoading] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const refetch = query.refetch;
-
-  // Paystack sends the payer back here with ?reference=... after checkout.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const reference = params.get("reference");
-    if (!reference) return;
-    setVerifying(true);
-    void (async () => {
-      try {
-        const response = await fetch("/api/public/paystack/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reference }),
-        });
-        const result = (await response.json()) as { status?: string };
-        if (result.status === "success") toast.success("Payment received. Thank you!");
-        else toast.error("We could not confirm that payment yet.");
-      } catch {
-        toast.error("We could not confirm that payment yet.");
-      } finally {
-        setVerifying(false);
-        window.history.replaceState({}, "", window.location.pathname);
-        void refetch();
-      }
-    })();
-  }, [refetch]);
-
-  async function startPayment() {
-    setPayLoading(true);
-    try {
-      const response = await fetch("/api/public/paystack/init", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const result = (await response.json()) as { authorizationUrl?: string; error?: string };
-      if (!response.ok || !result.authorizationUrl) {
-        toast.error(result.error ?? "Could not start the payment.");
-        return;
-      }
-      window.location.href = result.authorizationUrl;
-    } catch {
-      toast.error("Could not start the payment.");
-    } finally {
-      setPayLoading(false);
-    }
-  }
-=======
   useEffect(() => {
     const reference = new URLSearchParams(window.location.search).get("reference");
     if (!reference || isVerifying) return;
@@ -127,7 +71,6 @@ function PublicInvoicePage() {
       })
       .finally(() => setIsVerifying(false));
   }, [isVerifying, query, token]);
->>>>>>> 2b7282f (feat: integrate Paystack payment functionality for online invoices)
 
   if (query.isLoading)
     return (
@@ -235,17 +178,6 @@ function PublicInvoicePage() {
               <span className="font-medium">Status: {invoice.status}</span>
               {invoice.balance <= 0 && <CheckCircle2 className="text-emerald-600" />}
             </div>
-<<<<<<< HEAD
-            <div className="flex flex-wrap gap-2 print:hidden">
-              {invoice.balance > 0 && (
-                <Button onClick={startPayment} disabled={payLoading || verifying}>
-                  {payLoading || verifying ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  {verifying ? "Confirming payment..." : `Pay ${formatCurrency(invoice.balance)}`}
-                </Button>
-              )}
-=======
             {Number(invoice.balance) > 0 && (
               <div className="space-y-3 rounded-md border border-primary/20 bg-primary/5 p-4 print:hidden">
                 <div>
@@ -274,7 +206,6 @@ function PublicInvoicePage() {
               </div>
             )}
             <div className="flex gap-2 print:hidden">
->>>>>>> 2b7282f (feat: integrate Paystack payment functionality for online invoices)
               <Button
                 variant="outline"
                 onClick={() =>
