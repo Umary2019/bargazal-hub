@@ -20,8 +20,10 @@ import {
 import { useClients } from "@/data/clients";
 import { useSaveProject } from "@/data/projects";
 import { useServices } from "@/data/services";
+import { useStaff } from "@/data/staff";
 import type { Project } from "@/data/types";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/hooks/useAuth";
 
 export function ProjectFormDialog({
   open,
@@ -34,11 +36,14 @@ export function ProjectFormDialog({
 }) {
   const { data: clients = [] } = useClients();
   const { data: services = [] } = useServices();
+  const { isAdmin } = useAuth();
+  const { data: staff = [] } = useStaff(isAdmin && open);
   const saveProject = useSaveProject();
   const [clientId, setClientId] = useState("");
   const [title, setTitle] = useState("");
   const [budget, setBudget] = useState("");
   const [serviceId, setServiceId] = useState("");
+  const [assignedStaffId, setAssignedStaffId] = useState("");
   const [status, setStatus] = useState<Database["public"]["Enums"]["project_status"]>("Pending");
   const [priority, setPriority] =
     useState<Database["public"]["Enums"]["project_priority"]>("Medium");
@@ -62,6 +67,7 @@ export function ProjectFormDialog({
     setTitle(project?.title ?? "");
     setBudget(project ? String(project.budget ?? 0) : "");
     setServiceId(project?.service_id ?? "");
+    setAssignedStaffId(project?.assigned_staff_id ?? "");
     setStatus(project?.status ?? "Pending");
     setPriority(project?.priority ?? "Medium");
     setProgress(String(project?.progress ?? 0));
@@ -92,6 +98,7 @@ export function ProjectFormDialog({
         budget: Number(budget) || 0,
         project_number: project?.project_number ?? "",
         service_id: serviceId || null,
+        assigned_staff_id: assignedStaffId || null,
         status,
         priority,
         progress: currentProgress,
@@ -159,6 +166,24 @@ export function ProjectFormDialog({
               ))}
             </SelectContent>
           </Select>
+          {isAdmin ? (
+            <Select
+              value={assignedStaffId || "unassigned"}
+              onValueChange={(value) => setAssignedStaffId(value === "unassigned" ? "" : value)}
+            >
+              <SelectTrigger aria-label="Assign staff member">
+                <SelectValue placeholder="Assign to staff member (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">No staff assignment</SelectItem>
+                {staff.map((member) => (
+                  <SelectItem key={member.user_id} value={member.user_id}>
+                    {member.full_name || member.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <Select value={status} onValueChange={(value) => setStatus(value as typeof status)}>
               <SelectTrigger aria-label="Project status">

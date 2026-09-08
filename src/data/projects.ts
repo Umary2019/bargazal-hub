@@ -77,6 +77,7 @@ export function useSaveProject() {
     onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: KEY });
       qc.invalidateQueries({ queryKey: ["project", data.id] });
+      qc.invalidateQueries({ queryKey: ["assigned-work"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["activity"] });
       toast.success(variables.id ? "Project updated successfully" : "Project created successfully");
