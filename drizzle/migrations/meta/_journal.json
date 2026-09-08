@@ -15,6 +15,13 @@
       "when": 1788755855362,
       "tag": "0001_staff_and_client_portal",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788877293076,
+      "tag": "0002_paystack_payments",
+      "breakpoints": true
     }
   ]
 }

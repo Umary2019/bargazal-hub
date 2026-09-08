@@ -30,6 +30,10 @@ import { Route as ClientsIdRouteImport } from './routes/clients.$id'
 import { Route as InvoicesIdRouteImport } from './routes/invoices.$id'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as PublicInvoicesTokenRouteImport } from './routes/public.invoices.$token'
+import { Route as ApiPublicPaystackHealthRouteImport } from './routes/api/public/paystack/health'
+import { Route as ApiPublicPaystackInitRouteImport } from './routes/api/public/paystack/init'
+import { Route as ApiPublicPaystackVerifyRouteImport } from './routes/api/public/paystack/verify'
+import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +140,27 @@ const PublicInvoicesTokenRoute = PublicInvoicesTokenRouteImport.update({
   path: '/public/invoices/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaystackHealthRoute = ApiPublicPaystackHealthRouteImport.update({
+  id: '/api/public/paystack/health',
+  path: '/api/public/paystack/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPaystackInitRoute = ApiPublicPaystackInitRouteImport.update({
+  id: '/api/public/paystack/init',
+  path: '/api/public/paystack/init',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPaystackVerifyRoute = ApiPublicPaystackVerifyRouteImport.update({
+  id: '/api/public/paystack/verify',
+  path: '/api/public/paystack/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPaystackWebhookRoute =
+  ApiPublicPaystackWebhookRouteImport.update({
+    id: '/api/public/paystack/webhook',
+    path: '/api/public/paystack/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,6 +184,10 @@ export interface FileRoutesByFullPath {
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
+  '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
+  '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
+  '/api/public/paystack/verify': typeof ApiPublicPaystackVerifyRoute
+  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +211,10 @@ export interface FileRoutesByTo {
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
+  '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
+  '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
+  '/api/public/paystack/verify': typeof ApiPublicPaystackVerifyRoute
+  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +239,10 @@ export interface FileRoutesById {
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
+  '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
+  '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
+  '/api/public/paystack/verify': typeof ApiPublicPaystackVerifyRoute
+  '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -231,6 +268,10 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/projects/$id'
     | '/public/invoices/$token'
+    | '/api/public/paystack/health'
+    | '/api/public/paystack/init'
+    | '/api/public/paystack/verify'
+    | '/api/public/paystack/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -254,6 +295,10 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/projects/$id'
     | '/public/invoices/$token'
+    | '/api/public/paystack/health'
+    | '/api/public/paystack/init'
+    | '/api/public/paystack/verify'
+    | '/api/public/paystack/webhook'
   id:
     | '__root__'
     | '/'
@@ -277,6 +322,10 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/projects/$id'
     | '/public/invoices/$token'
+    | '/api/public/paystack/health'
+    | '/api/public/paystack/init'
+    | '/api/public/paystack/verify'
+    | '/api/public/paystack/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -298,6 +347,10 @@ export interface RootRouteChildren {
   StaffRoute: typeof StaffRoute
   WorkRoute: typeof WorkRoute
   PublicInvoicesTokenRoute: typeof PublicInvoicesTokenRoute
+  ApiPublicPaystackHealthRoute: typeof ApiPublicPaystackHealthRoute
+  ApiPublicPaystackInitRoute: typeof ApiPublicPaystackInitRoute
+  ApiPublicPaystackVerifyRoute: typeof ApiPublicPaystackVerifyRoute
+  ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -449,6 +502,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicInvoicesTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/paystack/health': {
+      id: '/api/public/paystack/health'
+      path: '/api/public/paystack/health'
+      fullPath: '/api/public/paystack/health'
+      preLoaderRoute: typeof ApiPublicPaystackHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/paystack/init': {
+      id: '/api/public/paystack/init'
+      path: '/api/public/paystack/init'
+      fullPath: '/api/public/paystack/init'
+      preLoaderRoute: typeof ApiPublicPaystackInitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/paystack/verify': {
+      id: '/api/public/paystack/verify'
+      path: '/api/public/paystack/verify'
+      fullPath: '/api/public/paystack/verify'
+      preLoaderRoute: typeof ApiPublicPaystackVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/paystack/webhook': {
+      id: '/api/public/paystack/webhook'
+      path: '/api/public/paystack/webhook'
+      fullPath: '/api/public/paystack/webhook'
+      preLoaderRoute: typeof ApiPublicPaystackWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -506,6 +587,10 @@ const rootRouteChildren: RootRouteChildren = {
   StaffRoute: StaffRoute,
   WorkRoute: WorkRoute,
   PublicInvoicesTokenRoute: PublicInvoicesTokenRoute,
+  ApiPublicPaystackHealthRoute: ApiPublicPaystackHealthRoute,
+  ApiPublicPaystackInitRoute: ApiPublicPaystackInitRoute,
+  ApiPublicPaystackVerifyRoute: ApiPublicPaystackVerifyRoute,
+  ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

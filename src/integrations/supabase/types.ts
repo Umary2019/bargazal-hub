@@ -475,6 +475,79 @@ export type Database = {
           },
         ]
       }
+      paystack_transactions: {
+        Row: {
+          amount: number
+          authorization_url: string | null
+          channel: string | null
+          client_id: string | null
+          created_at: string
+          email: string
+          id: string
+          invoice_id: string
+          paid_at: string | null
+          payment_id: string | null
+          raw: Json | null
+          reference: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          authorization_url?: string | null
+          channel?: string | null
+          client_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invoice_id: string
+          paid_at?: string | null
+          payment_id?: string | null
+          raw?: Json | null
+          reference: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          authorization_url?: string | null
+          channel?: string | null
+          client_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invoice_id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          raw?: Json | null
+          reference?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paystack_transactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paystack_transactions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paystack_transactions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           approval_status: string
@@ -1194,9 +1267,23 @@ export type Database = {
       is_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_approved_client: { Args: never; Returns: boolean }
       is_staff_or_admin: { Args: { _user_id?: string }; Returns: boolean }
+      mark_paystack_failed: {
+        Args: { _raw: Json; _reference: string; _status: string }
+        Returns: undefined
+      }
       promote_client_to_staff: {
         Args: { _client_id: string; _job_title?: string }
         Returns: string
+      }
+      record_paystack_success: {
+        Args: {
+          _amount: number
+          _channel: string
+          _paid_at: string
+          _raw: Json
+          _reference: string
+        }
+        Returns: Json
       }
       save_invoice: {
         Args: {
