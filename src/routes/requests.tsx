@@ -53,7 +53,10 @@ function RequestsPage() {
   });
 
   async function approveClient(id: string, approved: boolean) {
-    const { error } = await supabase.rpc("approve_client", { _client_id: id, _approved: approved });
+    const { error } = await supabase.rpc(
+      "approve_client" as never,
+      { _client_id: id, _approved: approved } as never,
+    );
     if (error) toast.error(error.message);
     else {
       toast.success(approved ? "Client approved" : "Client rejected");

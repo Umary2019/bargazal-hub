@@ -52,7 +52,10 @@ function ClientsCollection() {
   const [jobTitle, setJobTitle] = useState("Staff");
 
   async function setApproval(id: string, approved: boolean) {
-    const { error } = await supabase.rpc("approve_client", { _client_id: id, _approved: approved });
+    const { error } = await supabase.rpc(
+      "approve_client" as never,
+      { _client_id: id, _approved: approved } as never,
+    );
     if (error) {
       toast.error(error.message);
       return;

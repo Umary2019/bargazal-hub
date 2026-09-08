@@ -104,8 +104,9 @@ export function useSaveInvoice() {
       );
       if (error) throw error;
       if (!fresh) throw new Error("Invoice save returned no record");
-      await logActivity("invoice", fresh.id, id ? "updated" : "created", fresh.invoice_number);
-      return fresh;
+      const invoice = fresh as unknown as Invoice;
+      await logActivity("invoice", invoice.id, id ? "updated" : "created", invoice.invoice_number);
+      return invoice;
     },
     onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: KEY });

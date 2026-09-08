@@ -1,4 +1,4 @@
-import type { Session } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -92,11 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           Record<string, string> | undefined;
         if (registration) {
           await (supabase as any).rpc("finalize_client_registration", {
-            _full_name: registration.fullName,
-            _phone: registration.phone,
-            _address: registration.address,
-            _city: registration.city,
-            _state: registration.state,
+            _full_name: registration["fullName"],
+            _phone: registration["phone"],
+            _address: registration["address"],
+            _city: registration["city"],
+            _state: registration["state"],
           });
         }
         const [adminRes, staffRes, clientRes, profileRes] = await Promise.all([
