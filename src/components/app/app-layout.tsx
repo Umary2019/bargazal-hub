@@ -25,6 +25,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/app/theme-toggle";
+import { usePendingServiceRequestsCount } from "@/data/service-requests";
 
 interface NavItem {
   label: string;
@@ -57,7 +58,7 @@ const navItems: NavItem[] = [
     roles: ["client"],
   },
   {
-    label: "Requests",
+    label: "Service Requests",
     href: "/requests",
     icon: <Inbox className="w-5 h-5" />,
     roles: ["admin", "staff"],
@@ -121,6 +122,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { data: pendingCount = 0 } = usePendingServiceRequestsCount();
 
   const handleLogout = async () => {
     try {
@@ -181,7 +183,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                 onClick={() => isMobile && setSidebarOpen(false)}
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {item.href === "/requests" && pendingCount > 0 && (
+                  <span className="inline-flex items-center justify-center rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white shadow-xs">
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

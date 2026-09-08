@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BarChart3, Users, FolderOpen, AlertCircle } from "lucide-react";
+import { BarChart3, Users, FolderOpen, AlertCircle, Inbox, ArrowRight } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboard } from "@/data/dashboard";
+import { usePendingServiceRequestsCount } from "@/data/service-requests";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
 import { ClientPortal } from "@/components/portals/client-portal";
@@ -41,6 +43,7 @@ function DashboardPage() {
 
 function OperationsDashboard() {
   const { data: dashboard, isLoading, error } = useDashboard();
+  const { data: pendingRequests = 0 } = usePendingServiceRequestsCount();
 
   if (isLoading) {
     return (
@@ -84,6 +87,31 @@ function OperationsDashboard() {
           </p>
         </div>
 
+        {/* Pending Requests Alert Banner */}
+        {pendingRequests > 0 && (
+          <div className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50/80 p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between dark:border-amber-700/60 dark:bg-amber-950/40">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-xs">
+                <Inbox className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-amber-950 dark:text-amber-100">
+                  {pendingRequests} Service Request{pendingRequests === 1 ? "" : "s"} Pending Review
+                </p>
+                <p className="text-sm text-amber-800/90 dark:text-amber-300/90">
+                  Clients have submitted project requests waiting for your approval.
+                </p>
+              </div>
+            </div>
+            <Link to="/requests">
+              <Button size="sm" className="gap-2 bg-amber-600 font-medium text-white hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500">
+                Review Requests
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
@@ -113,7 +141,7 @@ function OperationsDashboard() {
         </div>
 
         {/* Business Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             title="Total Clients"
             value={dashboard.clientCount}
@@ -134,6 +162,20 @@ function OperationsDashboard() {
             value={dashboard.overdueInvoices}
             icon={<AlertCircle className="w-5 h-5 text-red-600" />}
           />
+          <Link
+            to="/requests"
+            className="block rounded-lg transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <Card className={pendingRequests > 0 ? "border-amber-300 bg-amber-50/40 dark:border-amber-800 dark:bg-amber-950/20" : ""}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+                <Inbox className={`w-5 h-5 ${pendingRequests > 0 ? "text-amber-600" : "text-slate-600"}`} />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${pendingRequests > 0 ? "text-amber-600" : ""}`}>{pendingRequests}</div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Charts */}

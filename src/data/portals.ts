@@ -63,7 +63,7 @@ export function useCreateServiceRequest() {
       const { description, ...requestValues } = values;
       const { data, error } = await db
         .from("service_requests")
-        .insert({ ...requestValues, details: description })
+        .insert({ ...requestValues, details: description, status: "Pending" })
         .select()
         .single();
       if (error) throw error;
@@ -71,6 +71,8 @@ export function useCreateServiceRequest() {
     },
     onSuccess: (_data, values) => {
       queryClient.invalidateQueries({ queryKey: ["client-portal", values.client_id] });
+      queryClient.invalidateQueries({ queryKey: ["service_requests"] });
+      queryClient.invalidateQueries({ queryKey: ["service_requests", "pending_count"] });
     },
   });
 }

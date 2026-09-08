@@ -1056,6 +1056,8 @@ export type Database = {
       service_requests: {
         Row: {
           admin_note: string | null
+          approved_at: string | null
+          approved_by: string | null
           budget: number
           client_id: string
           created_at: string
@@ -1063,7 +1065,12 @@ export type Database = {
           id: string
           institution: string | null
           preferred_deadline: string | null
+          processed_at: string | null
+          processed_by: string | null
           project_id: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           service_id: string | null
           status: string
           title: string
@@ -1071,6 +1078,8 @@ export type Database = {
         }
         Insert: {
           admin_note?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           budget?: number
           client_id: string
           created_at?: string
@@ -1078,7 +1087,12 @@ export type Database = {
           id?: string
           institution?: string | null
           preferred_deadline?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
           project_id?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           service_id?: string | null
           status?: string
           title: string
@@ -1086,6 +1100,8 @@ export type Database = {
         }
         Update: {
           admin_note?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           budget?: number
           client_id?: string
           created_at?: string
@@ -1093,7 +1109,12 @@ export type Database = {
           id?: string
           institution?: string | null
           preferred_deadline?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
           project_id?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           service_id?: string | null
           status?: string
           title?: string
