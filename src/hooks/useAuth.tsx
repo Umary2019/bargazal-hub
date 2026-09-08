@@ -129,7 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ? "Approved"
             : profileRes.data?.is_active === false
               ? "Inactive"
-              : (clientApproval ?? profileApproval),
+              : staff
+                ? profileApproval
+                : (clientApproval ?? profileApproval),
         );
         setRole(admin ? "admin" : staff ? "staff" : clientRes.data ? "client" : null);
         setFullName(
