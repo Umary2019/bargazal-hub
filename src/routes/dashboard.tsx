@@ -104,7 +104,10 @@ function OperationsDashboard() {
               </div>
             </div>
             <Link to="/requests">
-              <Button size="sm" className="gap-2 bg-amber-600 font-medium text-white hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500">
+              <Button
+                size="sm"
+                className="gap-2 bg-amber-600 font-medium text-white hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500"
+              >
                 Review Requests
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -166,13 +169,25 @@ function OperationsDashboard() {
             to="/requests"
             className="block rounded-lg transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <Card className={pendingRequests > 0 ? "border-amber-300 bg-amber-50/40 dark:border-amber-800 dark:bg-amber-950/20" : ""}>
+            <Card
+              className={
+                pendingRequests > 0
+                  ? "border-amber-300 bg-amber-50/40 dark:border-amber-800 dark:bg-amber-950/20"
+                  : ""
+              }
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-                <Inbox className={`w-5 h-5 ${pendingRequests > 0 ? "text-amber-600" : "text-slate-600"}`} />
+                <Inbox
+                  className={`w-5 h-5 ${pendingRequests > 0 ? "text-amber-600" : "text-slate-600"}`}
+                />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${pendingRequests > 0 ? "text-amber-600" : ""}`}>{pendingRequests}</div>
+                <div
+                  className={`text-2xl font-bold ${pendingRequests > 0 ? "text-amber-600" : ""}`}
+                >
+                  {pendingRequests}
+                </div>
               </CardContent>
             </Card>
           </Link>

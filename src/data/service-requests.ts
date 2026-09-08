@@ -13,7 +13,8 @@ export type ServiceRequest = Database["public"]["Tables"]["service_requests"]["R
 };
 
 const KEY = ["service_requests"] as const;
-const SELECT = "*, clients(id, full_name, email, phone), services(id, name), projects(id, project_number, title, status)";
+const SELECT =
+  "*, clients(id, full_name, email, phone), services(id, name), projects(id, project_number, title, status)";
 
 export function useServiceRequests(options?: { clientId?: string | undefined }) {
   return useQuery({
@@ -125,10 +126,7 @@ export function useApproveServiceRequest() {
           throw rpcError;
         }
       } catch (err: any) {
-        if (
-          !err.message?.includes("does not exist") &&
-          !err.message?.includes("not found")
-        ) {
+        if (!err.message?.includes("does not exist") && !err.message?.includes("not found")) {
           throw err;
         }
       }
@@ -238,10 +236,7 @@ export function useRejectServiceRequest() {
           throw rpcError;
         }
       } catch (err: any) {
-        if (
-          !err.message?.includes("does not exist") &&
-          !err.message?.includes("not found")
-        ) {
+        if (!err.message?.includes("does not exist") && !err.message?.includes("not found")) {
           throw err;
         }
       }

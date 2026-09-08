@@ -77,7 +77,9 @@ function RequestsPage() {
   const rejectRequest = useRejectServiceRequest();
 
   // Filter & Search states
-  const [activeTab, setActiveTab] = useState<"service-requests" | "clients" | "staff">("service-requests");
+  const [activeTab, setActiveTab] = useState<"service-requests" | "clients" | "staff">(
+    "service-requests",
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
@@ -170,8 +172,7 @@ function RequestsPage() {
         const matchesStatus =
           statusFilter === "all" || req.status.toLowerCase() === statusFilter.toLowerCase();
 
-        const matchesService =
-          serviceFilter === "all" || req.service_id === serviceFilter;
+        const matchesService = serviceFilter === "all" || req.service_id === serviceFilter;
 
         return matchesSearch && matchesStatus && matchesService;
       })
@@ -318,7 +319,9 @@ function RequestsPage() {
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               <Card className="shadow-xs">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Requests</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Requests
+                  </CardTitle>
                   <Inbox className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -329,33 +332,49 @@ function RequestsPage() {
 
               <Card className="border-amber-200 bg-amber-50/40 shadow-xs dark:border-amber-800/50 dark:bg-amber-950/20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-300">Pending Review</CardTitle>
+                  <CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-300">
+                    Pending Review
+                  </CardTitle>
                   <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pendingCount}</div>
-                  <p className="text-xs text-amber-800/80 dark:text-amber-400/80">Action required</p>
+                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    {pendingCount}
+                  </div>
+                  <p className="text-xs text-amber-800/80 dark:text-amber-400/80">
+                    Action required
+                  </p>
                 </CardContent>
               </Card>
 
               <Card className="border-emerald-200 bg-emerald-50/40 shadow-xs dark:border-emerald-800/50 dark:bg-emerald-950/20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-emerald-900 dark:text-emerald-300">Approved</CardTitle>
+                  <CardTitle className="text-sm font-medium text-emerald-900 dark:text-emerald-300">
+                    Approved
+                  </CardTitle>
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{approvedCount}</div>
-                  <p className="text-xs text-emerald-800/80 dark:text-emerald-400/80">Converted to projects</p>
+                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {approvedCount}
+                  </div>
+                  <p className="text-xs text-emerald-800/80 dark:text-emerald-400/80">
+                    Converted to projects
+                  </p>
                 </CardContent>
               </Card>
 
               <Card className="border-red-200 bg-red-50/40 shadow-xs dark:border-red-800/50 dark:bg-red-950/20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-red-900 dark:text-red-300">Rejected</CardTitle>
+                  <CardTitle className="text-sm font-medium text-red-900 dark:text-red-300">
+                    Rejected
+                  </CardTitle>
                   <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">{rejectedCount}</div>
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                    {rejectedCount}
+                  </div>
                   <p className="text-xs text-red-800/80 dark:text-red-400/80">Declined requests</p>
                 </CardContent>
               </Card>
@@ -418,7 +437,9 @@ function RequestsPage() {
 
                 {(searchTerm || statusFilter !== "all" || serviceFilter !== "all") && (
                   <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-                    <span>Showing {filteredRequests.length} of {requests.length} request(s)</span>
+                    <span>
+                      Showing {filteredRequests.length} of {requests.length} request(s)
+                    </span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -442,7 +463,8 @@ function RequestsPage() {
                 <div>
                   <CardTitle>Client Service Requests</CardTitle>
                   <CardDescription>
-                    {filteredRequests.length} request{filteredRequests.length === 1 ? "" : "s"} found
+                    {filteredRequests.length} request{filteredRequests.length === 1 ? "" : "s"}{" "}
+                    found
                   </CardDescription>
                 </div>
               </CardHeader>
@@ -622,7 +644,8 @@ function RequestsPage() {
                       <div>
                         <p className="font-semibold text-foreground">{client.full_name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {client.email} · {client.phone || "No phone"} · Registered {formatDate(client.created_at)}
+                          {client.email} · {client.phone || "No phone"} · Registered{" "}
+                          {formatDate(client.created_at)}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -649,9 +672,7 @@ function RequestsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Pending Staff Registrations</CardTitle>
-                <CardDescription>
-                  Review and authorize staff onboarding requests.
-                </CardDescription>
+                <CardDescription>Review and authorize staff onboarding requests.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {pendingStaff.length === 0 ? (
@@ -667,7 +688,8 @@ function RequestsPage() {
                       <div>
                         <p className="font-semibold text-foreground">{member.full_name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {member.email} · Role: {member.job_title ?? "Staff"} · Registered {formatDate(member.created_at)}
+                          {member.email} · Role: {member.job_title ?? "Staff"} · Registered{" "}
+                          {formatDate(member.created_at)}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -691,7 +713,10 @@ function RequestsPage() {
         </Tabs>
 
         {/* MODAL 1: COMPLETE REQUEST DETAILS */}
-        <Dialog open={Boolean(selectedRequest)} onOpenChange={(open) => !open && setSelectedRequest(null)}>
+        <Dialog
+          open={Boolean(selectedRequest)}
+          onOpenChange={(open) => !open && setSelectedRequest(null)}
+        >
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>
               <div className="flex items-center justify-between gap-3 pr-6">
@@ -721,9 +746,13 @@ function RequestsPage() {
               {/* If Rejected: Rejection Reason Callout */}
               {selectedRequest?.status === "Rejected" && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3.5 text-xs text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-                  <p className="font-semibold text-red-800 dark:text-red-300">Rejection Reason (Visible to Client):</p>
+                  <p className="font-semibold text-red-800 dark:text-red-300">
+                    Rejection Reason (Visible to Client):
+                  </p>
                   <p className="mt-1 rounded bg-white/70 p-2 text-sm font-medium text-red-950 dark:bg-black/20 dark:text-red-100">
-                    {selectedRequest?.rejection_reason || selectedRequest?.admin_note || "No reason specified."}
+                    {selectedRequest?.rejection_reason ||
+                      selectedRequest?.admin_note ||
+                      "No reason specified."}
                   </p>
                   {selectedRequest?.rejected_at && (
                     <p className="mt-2 text-xs text-red-700 dark:text-red-400">
@@ -736,7 +765,9 @@ function RequestsPage() {
               {/* If Approved: Approval Info Callout */}
               {selectedRequest?.status === "Approved" && (
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
-                  <p className="font-semibold text-emerald-800 dark:text-emerald-300">Approval Details:</p>
+                  <p className="font-semibold text-emerald-800 dark:text-emerald-300">
+                    Approval Details:
+                  </p>
                   <p className="mt-0.5">
                     This request has been approved and created as an active project.
                   </p>
@@ -763,12 +794,18 @@ function RequestsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border p-3">
                   <span className="text-xs text-muted-foreground">Client Name</span>
-                  <p className="mt-0.5 font-medium">{selectedRequest?.clients?.full_name ?? "Unknown"}</p>
-                  <p className="text-xs text-muted-foreground">{selectedRequest?.clients?.email ?? "-"}</p>
+                  <p className="mt-0.5 font-medium">
+                    {selectedRequest?.clients?.full_name ?? "Unknown"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedRequest?.clients?.email ?? "-"}
+                  </p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <span className="text-xs text-muted-foreground">Service Category</span>
-                  <p className="mt-0.5 font-medium">{selectedRequest?.services?.name ?? "General Service"}</p>
+                  <p className="mt-0.5 font-medium">
+                    {selectedRequest?.services?.name ?? "General Service"}
+                  </p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <span className="text-xs text-muted-foreground">Proposed Budget</span>
@@ -779,7 +816,9 @@ function RequestsPage() {
                 <div className="rounded-lg border p-3">
                   <span className="text-xs text-muted-foreground">Target Deadline</span>
                   <p className="mt-0.5 font-medium">
-                    {selectedRequest?.preferred_deadline ? formatDate(selectedRequest.preferred_deadline) : "Not specified"}
+                    {selectedRequest?.preferred_deadline
+                      ? formatDate(selectedRequest.preferred_deadline)
+                      : "Not specified"}
                   </p>
                 </div>
               </div>
@@ -787,7 +826,9 @@ function RequestsPage() {
               {/* Description */}
               {selectedRequest?.details && (
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-muted-foreground">Requirements & Details</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Requirements & Details
+                  </span>
                   <div className="max-h-48 overflow-y-auto rounded-lg border bg-muted/20 p-3 text-sm whitespace-pre-wrap">
                     {selectedRequest.details}
                   </div>
@@ -797,7 +838,9 @@ function RequestsPage() {
               {/* Admin Note if any */}
               {selectedRequest?.admin_note && (
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-muted-foreground">Administrative Note</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Administrative Note
+                  </span>
                   <div className="rounded-lg border bg-muted/20 p-2.5 text-xs">
                     {selectedRequest.admin_note}
                   </div>
@@ -840,7 +883,10 @@ function RequestsPage() {
         </Dialog>
 
         {/* MODAL 2: APPROVE REQUEST CONFIRMATION DIALOG */}
-        <Dialog open={Boolean(approveDialogRequest)} onOpenChange={(open) => !open && setApproveDialogRequest(null)}>
+        <Dialog
+          open={Boolean(approveDialogRequest)}
+          onOpenChange={(open) => !open && setApproveDialogRequest(null)}
+        >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-emerald-600">
@@ -848,20 +894,34 @@ function RequestsPage() {
                 Approve Service Request
               </DialogTitle>
               <DialogDescription>
-                Confirm approval for &quot;{approveDialogRequest?.title}&quot;. This will generate an active project.
+                Confirm approval for &quot;{approveDialogRequest?.title}&quot;. This will generate
+                an active project.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-2">
               <div className="rounded-lg border bg-muted/30 p-3 text-xs space-y-1">
-                <p><span className="font-semibold">Client:</span> {approveDialogRequest?.clients?.full_name}</p>
-                <p><span className="font-semibold">Service:</span> {approveDialogRequest?.services?.name}</p>
-                <p><span className="font-semibold">Budget:</span> {approveDialogRequest?.budget ? formatCurrency(approveDialogRequest.budget) : "Flexible"}</p>
+                <p>
+                  <span className="font-semibold">Client:</span>{" "}
+                  {approveDialogRequest?.clients?.full_name}
+                </p>
+                <p>
+                  <span className="font-semibold">Service:</span>{" "}
+                  {approveDialogRequest?.services?.name}
+                </p>
+                <p>
+                  <span className="font-semibold">Budget:</span>{" "}
+                  {approveDialogRequest?.budget
+                    ? formatCurrency(approveDialogRequest.budget)
+                    : "Flexible"}
+                </p>
               </div>
 
               {/* Staff Assignment */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Assign Staff Member (Optional)</label>
+                <label className="text-xs font-medium text-foreground">
+                  Assign Staff Member (Optional)
+                </label>
                 <Select value={assignedStaffId} onValueChange={setAssignedStaffId}>
                   <SelectTrigger aria-label="Assign staff">
                     <SelectValue placeholder="Select staff member" />
@@ -879,7 +939,9 @@ function RequestsPage() {
 
               {/* Admin Note */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Admin / Kickoff Note (Optional)</label>
+                <label className="text-xs font-medium text-foreground">
+                  Admin / Kickoff Note (Optional)
+                </label>
                 <Textarea
                   placeholder="Add any internal kickoff instructions or client note..."
                   rows={2}
@@ -909,7 +971,10 @@ function RequestsPage() {
         </Dialog>
 
         {/* MODAL 3: REJECT REQUEST DIALOG WITH MANDATORY REASON */}
-        <Dialog open={Boolean(rejectDialogRequest)} onOpenChange={(open) => !open && setRejectDialogRequest(null)}>
+        <Dialog
+          open={Boolean(rejectDialogRequest)}
+          onOpenChange={(open) => !open && setRejectDialogRequest(null)}
+        >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-destructive">
@@ -917,7 +982,8 @@ function RequestsPage() {
                 Reject Service Request
               </DialogTitle>
               <DialogDescription>
-                Decline &quot;{rejectDialogRequest?.title}&quot;. You must provide a reason so the client understands the decision.
+                Decline &quot;{rejectDialogRequest?.title}&quot;. You must provide a reason so the
+                client understands the decision.
               </DialogDescription>
             </DialogHeader>
 
@@ -934,7 +1000,9 @@ function RequestsPage() {
                     setRejectionReason(e.target.value);
                     if (rejectionError) setRejectionError("");
                   }}
-                  className={rejectionError ? "border-destructive focus-visible:ring-destructive" : ""}
+                  className={
+                    rejectionError ? "border-destructive focus-visible:ring-destructive" : ""
+                  }
                   required
                 />
                 {rejectionError && (
@@ -968,4 +1036,3 @@ function RequestsPage() {
     </ProtectedRoute>
   );
 }
-

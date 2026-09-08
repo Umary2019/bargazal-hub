@@ -118,7 +118,8 @@ export function ClientPortal() {
           <div className="text-sm">
             <p className="font-semibold">Review Update: Request Declined</p>
             <p className="text-red-700 dark:text-red-300">
-              One or more of your submitted requests could not be approved. Click &quot;View details&quot; in My Requests to review the administrator&apos;s feedback.
+              One or more of your submitted requests could not be approved. Click &quot;View
+              details&quot; in My Requests to review the administrator&apos;s feedback.
             </p>
           </div>
         </div>
@@ -141,7 +142,9 @@ export function ClientPortal() {
           <CardContent>
             <form onSubmit={submitRequest} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Select Service *</label>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Select Service *
+                </label>
                 <Select value={serviceId} onValueChange={setServiceId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a service" />
@@ -169,7 +172,9 @@ export function ClientPortal() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Details & Requirements</label>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Details & Requirements
+                </label>
                 <Textarea
                   placeholder="Describe the scope, objectives, requirements, and deliverables..."
                   value={description}
@@ -180,7 +185,9 @@ export function ClientPortal() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Budget (Optional, NGN)</label>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Budget (Optional, NGN)
+                  </label>
                   <Input
                     type="number"
                     min="0"
@@ -190,7 +197,9 @@ export function ClientPortal() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Preferred Deadline</label>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Preferred Deadline
+                  </label>
                   <Input
                     type="date"
                     value={preferredDeadline}
@@ -199,7 +208,11 @@ export function ClientPortal() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full gap-2" disabled={createRequest.isPending || !serviceId}>
+              <Button
+                type="submit"
+                className="w-full gap-2"
+                disabled={createRequest.isPending || !serviceId}
+              >
                 <Send className="h-4 w-4" />
                 {createRequest.isPending ? "Submitting Request..." : "Submit Service Request"}
               </Button>
@@ -243,11 +256,15 @@ export function ClientPortal() {
                     <div className="space-y-1">
                       <p className="font-semibold text-foreground">{request.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {request.services?.name ?? "Custom Service"} · Submitted {formatDate(request.created_at)}
+                        {request.services?.name ?? "Custom Service"} · Submitted{" "}
+                        {formatDate(request.created_at)}
                       </p>
                     </div>
                     {request.status === "Pending" && (
-                      <Badge variant="outline" className="gap-1 border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                      >
                         <Clock className="h-3 w-3" /> Pending
                       </Badge>
                     )}
@@ -267,7 +284,9 @@ export function ClientPortal() {
                   {request.status === "Rejected" && (
                     <div className="rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
                       <span className="font-semibold">Reason: </span>
-                      {request.rejection_reason || request.admin_note || "Requirements could not be accommodated at this time."}
+                      {request.rejection_reason ||
+                        request.admin_note ||
+                        "Requirements could not be accommodated at this time."}
                     </div>
                   )}
 
@@ -280,7 +299,9 @@ export function ClientPortal() {
 
                   <div className="flex items-center justify-between pt-1 text-xs">
                     <span className="text-muted-foreground">
-                      {request.budget ? `Budget: ${formatCurrency(request.budget)}` : "Budget: Flexible"}
+                      {request.budget
+                        ? `Budget: ${formatCurrency(request.budget)}`
+                        : "Budget: Flexible"}
                     </span>
                     <Button
                       variant="ghost"
@@ -300,7 +321,10 @@ export function ClientPortal() {
       </div>
 
       {/* Request Details Dialog */}
-      <Dialog open={Boolean(selectedRequest)} onOpenChange={(open) => !open && setSelectedRequest(null)}>
+      <Dialog
+        open={Boolean(selectedRequest)}
+        onOpenChange={(open) => !open && setSelectedRequest(null)}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <div className="flex items-center justify-between gap-3 pr-6">
@@ -332,7 +356,8 @@ export function ClientPortal() {
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
                 <p className="font-semibold">Under Review</p>
                 <p className="mt-0.5 text-amber-800 dark:text-amber-300">
-                  Your request is awaiting administrative review. Once approved, a project will be scheduled and staff assigned.
+                  Your request is awaiting administrative review. Once approved, a project will be
+                  scheduled and staff assigned.
                 </p>
               </div>
             )}
@@ -341,7 +366,8 @@ export function ClientPortal() {
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
                 <p className="font-semibold">Project Approved</p>
                 <p className="mt-0.5 text-emerald-800 dark:text-emerald-300">
-                  This request has been approved and moved into execution. Track progress in the &quot;Project progress&quot; section below.
+                  This request has been approved and moved into execution. Track progress in the
+                  &quot;Project progress&quot; section below.
                 </p>
                 {selectedRequest?.approved_at && (
                   <p className="mt-1 font-mono text-emerald-700 dark:text-emerald-400">
@@ -361,7 +387,9 @@ export function ClientPortal() {
                   Administrator Feedback / Reason for Rejection:
                 </div>
                 <div className="mt-1.5 rounded-md bg-white/70 p-2 text-sm font-medium text-red-950 dark:bg-black/20 dark:text-red-100">
-                  {selectedRequest?.rejection_reason || selectedRequest?.admin_note || "No specific reason was provided."}
+                  {selectedRequest?.rejection_reason ||
+                    selectedRequest?.admin_note ||
+                    "No specific reason was provided."}
                 </div>
                 {selectedRequest?.rejected_at && (
                   <p className="mt-2 text-xs text-red-700 dark:text-red-400">
@@ -377,11 +405,15 @@ export function ClientPortal() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg border p-3">
                 <span className="text-xs text-muted-foreground">Requested Service</span>
-                <p className="mt-0.5 font-medium">{selectedRequest?.services?.name ?? "General Service"}</p>
+                <p className="mt-0.5 font-medium">
+                  {selectedRequest?.services?.name ?? "General Service"}
+                </p>
               </div>
               <div className="rounded-lg border p-3">
                 <span className="text-xs text-muted-foreground">Submitted Date</span>
-                <p className="mt-0.5 font-medium">{selectedRequest?.created_at ? formatDate(selectedRequest.created_at) : "-"}</p>
+                <p className="mt-0.5 font-medium">
+                  {selectedRequest?.created_at ? formatDate(selectedRequest.created_at) : "-"}
+                </p>
               </div>
               <div className="rounded-lg border p-3">
                 <span className="text-xs text-muted-foreground">Proposed Budget</span>
@@ -392,14 +424,18 @@ export function ClientPortal() {
               <div className="rounded-lg border p-3">
                 <span className="text-xs text-muted-foreground">Preferred Deadline</span>
                 <p className="mt-0.5 font-medium">
-                  {selectedRequest?.preferred_deadline ? formatDate(selectedRequest.preferred_deadline) : "Flexible"}
+                  {selectedRequest?.preferred_deadline
+                    ? formatDate(selectedRequest.preferred_deadline)
+                    : "Flexible"}
                 </p>
               </div>
             </div>
 
             {selectedRequest?.details && (
               <div className="space-y-1">
-                <span className="text-xs font-medium text-muted-foreground">Description & Requirements</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Description & Requirements
+                </span>
                 <div className="rounded-lg border bg-muted/30 p-3 text-sm whitespace-pre-wrap">
                   {selectedRequest.details}
                 </div>
