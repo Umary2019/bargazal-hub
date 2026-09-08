@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ import { formatCurrency } from "@/lib/format";
 import { Link } from "@tanstack/react-router";
 import { InvoiceFormDialog } from "@/components/invoices/invoice-form-dialog";
 import { getInvoicePaymentStatus } from "@/lib/invoice-status";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
+import { useDeleteInvoice } from "@/data/invoices";
 
 export const Route = createFileRoute("/invoices")({
   component: InvoicesPage,
@@ -42,6 +44,7 @@ function InvoicesCollection() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const deleteInvoice = useDeleteInvoice();
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
@@ -172,7 +175,9 @@ function InvoicesCollection() {
                         <TableCell>{formatCurrency(invoice.amount_paid)}</TableCell>
                         <TableCell>{formatCurrency(invoice.balance)}</TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(getInvoicePaymentStatus(invoice))}>{getInvoicePaymentStatus(invoice)}</Badge>
+                          <Badge className={getStatusColor(getInvoicePaymentStatus(invoice))}>
+                            {getInvoicePaymentStatus(invoice)}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <Link to="/invoices/$id" params={{ id: invoice.id }}>
@@ -180,6 +185,21 @@ function InvoicesCollection() {
                               View
                             </Button>
                           </Link>
+                          <ConfirmDialog
+                            trigger={
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-label={`Delete ${invoice.invoice_number}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            }
+                            title="Delete invoice?"
+                            description="This permanently removes the invoice and its line items. Delete its payments first if it has any."
+                            isLoading={deleteInvoice.isPending}
+                            onConfirm={() => deleteInvoice.mutate(invoice.id)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

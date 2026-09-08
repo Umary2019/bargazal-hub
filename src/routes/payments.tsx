@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Pencil, Plus, Search } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
 import { PaymentFormDialog } from "@/components/payments/payment-form-dialog";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
+import { useDeletePayment } from "@/data/payments";
 
 export const Route = createFileRoute("/payments")({
   component: PaymentsPage,
@@ -32,6 +34,7 @@ function PaymentsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | undefined>();
   const navigate = useNavigate();
+  const deletePayment = useDeletePayment();
 
   const filteredPayments = payments.filter(
     (payment) =>
@@ -51,7 +54,13 @@ function PaymentsPage() {
             <p className="text-muted-foreground">Record and track client payments</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button className="gap-2" onClick={() => { setSelectedPayment(undefined); setDialogOpen(true); }}>
+            <Button
+              className="gap-2"
+              onClick={() => {
+                setSelectedPayment(undefined);
+                setDialogOpen(true);
+              }}
+            >
               <Plus className="w-4 h-4" />
               Record Payment
             </Button>
@@ -135,9 +144,32 @@ function PaymentsPage() {
                           {format(new Date(payment.payment_date), "MMM dd, yyyy")}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedPayment(payment); setDialogOpen(true); }} aria-label={`Edit ${payment.payment_number}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPayment(payment);
+                              setDialogOpen(true);
+                            }}
+                            aria-label={`Edit ${payment.payment_number}`}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
+                          <ConfirmDialog
+                            trigger={
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-label={`Delete ${payment.payment_number}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            }
+                            title="Delete payment?"
+                            description="This permanently removes the payment and recalculates the related invoice balance."
+                            isLoading={deletePayment.isPending}
+                            onConfirm={() => deletePayment.mutate(payment.id)}
+                          />
                           {payment.invoice_id ? (
                             <Link to="/invoices/$id" params={{ id: payment.invoice_id }}>
                               <Button variant="ghost" size="sm">
@@ -161,7 +193,10 @@ function PaymentsPage() {
       </div>
       <PaymentFormDialog
         open={dialogOpen}
-        onOpenChange={(open) => { setDialogOpen(open); if (!open) setSelectedPayment(undefined); }}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setSelectedPayment(undefined);
+        }}
         payment={selectedPayment}
         onFullPayment={(invoiceId) => navigate({ to: "/invoices/$id", params: { id: invoiceId } })}
       />
