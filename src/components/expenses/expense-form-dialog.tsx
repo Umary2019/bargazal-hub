@@ -22,13 +22,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSaveExpense } from "@/data/expenses";
 import { EXPENSE_CATEGORIES } from "@/lib/constants";
 import type { Expense } from "@/data/types";
 
 const expenseSchema = z.object({
-  category: z.enum(["Internet", "Hosting", "Domain", "Transportation", "Equipment", "Software", "Marketing", "Office", "Utilities", "Maintenance", "Other"]),
+  category: z.enum([
+    "Internet",
+    "Hosting",
+    "Domain",
+    "Transportation",
+    "Equipment",
+    "Software",
+    "Marketing",
+    "Office",
+    "Utilities",
+    "Maintenance",
+    "Other",
+  ]),
   description: z.string().min(2, "Description is required"),
   amount: z.coerce.number().min(0, "Amount must be positive"),
   expense_date: z.string().min(1, "Date is required"),
@@ -77,22 +95,26 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
   }, [expense, reset]);
 
   async function onSubmit(data: ExpenseFormData) {
-    await saveExpense.mutateAsync(expense ? {
-      id: expense.id,
-      values: {
-        ...data,
-        vendor: data.vendor || null,
-        notes: data.notes || null,
-        expense_number: expense.expense_number,
-      },
-    } : {
-      values: {
-        ...data,
-        vendor: data.vendor || null,
-        notes: data.notes || null,
-        expense_number: "",
-      },
-    });
+    await saveExpense.mutateAsync(
+      expense
+        ? {
+            id: expense.id,
+            values: {
+              ...data,
+              vendor: data.vendor || null,
+              notes: data.notes || null,
+              expense_number: expense.expense_number,
+            },
+          }
+        : {
+            values: {
+              ...data,
+              vendor: data.vendor || null,
+              notes: data.notes || null,
+              expense_number: "",
+            },
+          },
+    );
     reset();
     onOpenChange(false);
   }

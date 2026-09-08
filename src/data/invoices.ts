@@ -38,12 +38,19 @@ export function computeInvoiceTotals(items: InvoiceItemDraft[], discount: number
   return { subtotal, tax, total };
 }
 
-export function useInvoices(options?: { clientId?: string | undefined; projectId?: string | undefined }) {
+export function useInvoices(options?: {
+  clientId?: string | undefined;
+  projectId?: string | undefined;
+}) {
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.projectId ?? "all"],
     queryFn: async (): Promise<InvoiceWithRelations[]> => {
       const rows = await fetchAllPages((from, to) => {
-        let query = supabase.from("invoices").select(SELECT).order("created_at", { ascending: false }).range(from, to);
+        let query = supabase
+          .from("invoices")
+          .select(SELECT)
+          .order("created_at", { ascending: false })
+          .range(from, to);
         if (options?.clientId) query = query.eq("client_id", options.clientId);
         if (options?.projectId) query = query.eq("project_id", options.projectId);
         return query;
@@ -80,18 +87,21 @@ export function useSaveInvoice() {
       values: InvoiceDraft;
     }): Promise<Invoice> => {
       const { items, ...rest } = values;
-      const { data: fresh, error } = await supabase.rpc("save_invoice" as never, {
-        _id: id ?? null,
-        _client_id: rest.client_id,
-        _project_id: rest.project_id ?? null,
-        _issue_date: rest.issue_date,
-        _due_date: rest.due_date ?? null,
-        _status: rest.status,
-        _discount: rest.discount,
-        _tax: rest.tax,
-        _notes: rest.notes ?? null,
-        _items: items,
-      } as never);
+      const { data: fresh, error } = await supabase.rpc(
+        "save_invoice" as never,
+        {
+          _id: id ?? null,
+          _client_id: rest.client_id,
+          _project_id: rest.project_id ?? null,
+          _issue_date: rest.issue_date,
+          _due_date: rest.due_date ?? null,
+          _status: rest.status,
+          _discount: rest.discount,
+          _tax: rest.tax,
+          _notes: rest.notes ?? null,
+          _items: items,
+        } as never,
+      );
       if (error) throw error;
       if (!fresh) throw new Error("Invoice save returned no record");
       await logActivity("invoice", fresh.id, id ? "updated" : "created", fresh.invoice_number);

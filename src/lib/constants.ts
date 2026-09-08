@@ -33,7 +33,12 @@ export const PAYMENT_METHODS: Enums["payment_method"][] = [
   "Other",
 ];
 
-export const PRICING_TYPES: Enums["pricing_type"][] = ["Fixed", "Starting From", "Hourly", "Custom"];
+export const PRICING_TYPES: Enums["pricing_type"][] = [
+  "Fixed",
+  "Starting From",
+  "Hourly",
+  "Custom",
+];
 
 export const SERVICE_STATUSES: Enums["service_status"][] = ["Active", "Inactive"];
 

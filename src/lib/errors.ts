@@ -52,7 +52,8 @@ function extractMessage(error: unknown): string {
   if (!error) return "";
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
-  if (typeof error === "object" && "message" in error) return String((error as { message: unknown }).message);
+  if (typeof error === "object" && "message" in error)
+    return String((error as { message: unknown }).message);
   return "";
 }
 

@@ -6,9 +6,22 @@ import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useExpenses, useDeleteExpense } from "@/data/expenses";
 import { formatCurrency } from "@/lib/format";
 import { format } from "date-fns";
@@ -101,7 +114,10 @@ function ExpensesPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={categoryFilter || "all"} onValueChange={(v) => setCategoryFilter(v === "all" ? null : v)}>
+              <Select
+                value={categoryFilter || "all"}
+                onValueChange={(v) => setCategoryFilter(v === "all" ? null : v)}
+              >
                 <SelectTrigger className="w-full sm:w-40">
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
@@ -155,12 +171,16 @@ function ExpensesPage() {
                   <TableBody>
                     {filteredExpenses.map((expense) => (
                       <TableRow key={expense.id}>
-                        <TableCell className="font-mono text-sm">{expense.expense_number}</TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {expense.expense_number}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline">{expense.category}</Badge>
                         </TableCell>
                         <TableCell>{expense.description}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(expense.amount)}</TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(expense.amount)}
+                        </TableCell>
                         <TableCell className="text-sm">{expense.vendor || "-"}</TableCell>
                         <TableCell className="text-sm">
                           {format(new Date(expense.expense_date), "MMM dd, yyyy")}
@@ -178,7 +198,15 @@ function ExpensesPage() {
                               Edit
                             </Button>
                             <ConfirmDialog
-                              trigger={<Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>}
+                              trigger={
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              }
                               title="Delete expense?"
                               description="This permanently removes the expense record."
                               confirmLabel="Delete"
@@ -195,11 +223,7 @@ function ExpensesPage() {
           </CardContent>
         </Card>
       </div>
-      <ExpenseFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        expense={selectedExpense}
-      />
+      <ExpenseFormDialog open={dialogOpen} onOpenChange={setDialogOpen} expense={selectedExpense} />
     </ProtectedRoute>
   );
 }

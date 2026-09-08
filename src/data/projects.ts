@@ -10,12 +10,19 @@ import { fetchAllPages } from "@/lib/paginate";
 const KEY = ["projects"] as const;
 const SELECT = "*, clients(id, full_name), services(id, name)";
 
-export function useProjects(options?: { clientId?: string | undefined; finalYearOnly?: boolean | undefined }) {
+export function useProjects(options?: {
+  clientId?: string | undefined;
+  finalYearOnly?: boolean | undefined;
+}) {
   return useQuery({
     queryKey: [...KEY, options?.clientId ?? "all", options?.finalYearOnly ?? false],
     queryFn: async (): Promise<ProjectWithRelations[]> => {
       const rows = await fetchAllPages((from, to) => {
-        let query = supabase.from("projects").select(SELECT).order("created_at", { ascending: false }).range(from, to);
+        let query = supabase
+          .from("projects")
+          .select(SELECT)
+          .order("created_at", { ascending: false })
+          .range(from, to);
         if (options?.clientId) query = query.eq("client_id", options.clientId);
         if (options?.finalYearOnly) query = query.eq("is_final_year", true);
         return query;
@@ -40,7 +47,13 @@ export function useProject(id: string | undefined) {
 export function useSaveProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string | undefined; values: ProjectInput }): Promise<Project> => {
+    mutationFn: async ({
+      id,
+      values,
+    }: {
+      id?: string | undefined;
+      values: ProjectInput;
+    }): Promise<Project> => {
       if (id) {
         const { data, error } = await supabase
           .from("projects")

@@ -13,7 +13,13 @@ export function useExpenses() {
   return useQuery({
     queryKey: KEY,
     queryFn: async (): Promise<Expense[]> => {
-      return fetchAllPages((from, to) => supabase.from("expenses").select("*").order("expense_date", { ascending: false }).range(from, to));
+      return fetchAllPages((from, to) =>
+        supabase
+          .from("expenses")
+          .select("*")
+          .order("expense_date", { ascending: false })
+          .range(from, to),
+      );
     },
   });
 }
@@ -46,7 +52,9 @@ export function useSaveExpense() {
       qc.invalidateQueries({ queryKey: KEY });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["activity"] });
-      toast.success(variables.id ? "Expense updated successfully" : "Expense recorded successfully");
+      toast.success(
+        variables.id ? "Expense updated successfully" : "Expense recorded successfully",
+      );
     },
     onError: (error) => notifyError(error, "Could not save expense"),
   });

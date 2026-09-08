@@ -55,11 +55,10 @@ export function PaymentFormDialog({
   const { data: invoices = [] } = useInvoices({ clientId: clientId || undefined });
   const selectedInvoice = invoices.find((invoice) => invoice.id === invoiceId);
   const isEditing = Boolean(payment);
-  const availableBalance = Number(selectedInvoice?.balance ?? 0) + (payment?.invoice_id === invoiceId ? Number(payment.amount) : 0);
-  const remainingAfterPayment = Math.max(
-    availableBalance - (Number(amount) || 0),
-    0,
-  );
+  const availableBalance =
+    Number(selectedInvoice?.balance ?? 0) +
+    (payment?.invoice_id === invoiceId ? Number(payment.amount) : 0);
+  const remainingAfterPayment = Math.max(availableBalance - (Number(amount) || 0), 0);
 
   useEffect(() => {
     if (!open) return;
@@ -111,7 +110,9 @@ export function PaymentFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Payment" : "Record Payment"}</DialogTitle>
-          <DialogDescription>Deposits and final payments are recorded as linked payment records.</DialogDescription>
+          <DialogDescription>
+            Deposits and final payments are recorded as linked payment records.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <Select
@@ -145,8 +146,16 @@ export function PaymentFormDialog({
             </SelectContent>
           </Select>
           <Select value={projectId} onValueChange={setProjectId}>
-            <SelectTrigger aria-label="Project"><SelectValue placeholder="Project is linked from invoice" /></SelectTrigger>
-            <SelectContent>{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.project_number} - {project.title}</SelectItem>)}</SelectContent>
+            <SelectTrigger aria-label="Project">
+              <SelectValue placeholder="Project is linked from invoice" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.project_number} - {project.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Input
             aria-label="Payment amount"
@@ -214,7 +223,11 @@ export function PaymentFormDialog({
                 Boolean(selectedInvoice && Number(amount) > availableBalance)
               }
             >
-              {recordPayment.isPending ? "Saving..." : isEditing ? "Save Payment" : "Record Payment"}
+              {recordPayment.isPending
+                ? "Saving..."
+                : isEditing
+                  ? "Save Payment"
+                  : "Record Payment"}
             </Button>
           </DialogFooter>
         </form>

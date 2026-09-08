@@ -83,7 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Business software for Bargazal and Sons Tech Solution" },
       { name: "author", content: "Bargazal and Sons Tech Solution" },
       { property: "og:title", content: "Bargazal and Sons Tech Solution" },
-      { property: "og:description", content: "Professional business software for daily operations" },
+      {
+        property: "og:description",
+        content: "Professional business software for daily operations",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

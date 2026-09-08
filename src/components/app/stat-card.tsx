@@ -30,7 +30,12 @@ export function StatCard({
           <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
           {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
         </div>
-        <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-md", tones[tone])}>
+        <span
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-md",
+            tones[tone],
+          )}
+        >
           <Icon className="size-5" />
         </span>
       </div>

@@ -1,5 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CreditCard, ExternalLink, Mail, MessageCircle, Pencil, Printer, Share2, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CreditCard,
+  ExternalLink,
+  Mail,
+  MessageCircle,
+  Pencil,
+  Printer,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
@@ -39,13 +49,18 @@ function InvoiceDetailPage() {
   async function sharePublicInvoice() {
     setSharing(true);
     try {
-      const { data, error } = await supabase.rpc("create_invoice_public_token" as never, { _invoice_id: id } as never);
+      const { data, error } = await supabase.rpc(
+        "create_invoice_public_token" as never,
+        { _invoice_id: id } as never,
+      );
       if (error || !data) throw error ?? new Error("Could not create invoice link");
       const link = `${window.location.origin}/public/invoices/${data}`;
       await navigator.clipboard.writeText(link);
       toast.success("Secure invoice link copied");
     } catch (shareError) {
-      toast.error(shareError instanceof Error ? shareError.message : "Could not create invoice link");
+      toast.error(
+        shareError instanceof Error ? shareError.message : "Could not create invoice link",
+      );
     } finally {
       setSharing(false);
     }
@@ -62,7 +77,9 @@ function InvoiceDetailPage() {
       if (result?.status !== "sent") throw new Error(`${channel} delivery was not sent`);
       toast.success(`${channel === "email" ? "Email" : "WhatsApp"} sent successfully`);
     } catch (notificationError) {
-      toast.error(notificationError instanceof Error ? notificationError.message : "Notification failed");
+      toast.error(
+        notificationError instanceof Error ? notificationError.message : "Notification failed",
+      );
     } finally {
       setSending(null);
     }
@@ -116,10 +133,29 @@ function InvoiceDetailPage() {
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer className="mr-1 h-4 w-4" /> Print invoice
             </Button>
-            <Button variant="outline" size="sm" onClick={() => downloadInvoicePdf({ invoice, items: invoice.invoice_items, clientName: client?.full_name ?? invoice.clients?.full_name ?? "Client", businessName: settings?.business_name ?? "Bargazal and Sons Tech Solution", businessEmail: settings?.email, businessPhone: settings?.phone, paymentInstructions: settings?.payment_instructions })}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                downloadInvoicePdf({
+                  invoice,
+                  items: invoice.invoice_items,
+                  clientName: client?.full_name ?? invoice.clients?.full_name ?? "Client",
+                  businessName: settings?.business_name ?? "Bargazal and Sons Tech Solution",
+                  businessEmail: settings?.email,
+                  businessPhone: settings?.phone,
+                  paymentInstructions: settings?.payment_instructions,
+                })
+              }
+            >
               Download PDF
             </Button>
-            <Button variant="outline" size="sm" onClick={() => void sharePublicInvoice()} disabled={sharing}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void sharePublicInvoice()}
+              disabled={sharing}
+            >
               <Share2 className="mr-1 h-4 w-4" /> {sharing ? "Creating..." : "Share link"}
             </Button>
             {Number(invoice.amount_paid) > 0 && (
@@ -129,26 +165,44 @@ function InvoiceDetailPage() {
             )}
             {client?.email && (
               <Button variant="outline" size="sm" asChild>
-                <a href={`mailto:${client.email}?subject=Invoice ${invoice.invoice_number}&body=Your invoice total is ${formatCurrency(invoice.total)}. Balance due: ${formatCurrency(invoice.balance)}.`}>
+                <a
+                  href={`mailto:${client.email}?subject=Invoice ${invoice.invoice_number}&body=Your invoice total is ${formatCurrency(invoice.total)}. Balance due: ${formatCurrency(invoice.balance)}.`}
+                >
                   <Mail className="mr-1 h-4 w-4" /> Email
                 </a>
               </Button>
             )}
             {client?.email && (
-              <Button variant="outline" size="sm" onClick={() => void sendNotification("email")} disabled={sending !== null}>
-                <Mail className="mr-1 h-4 w-4" /> {sending === "email" ? "Sending..." : "Send email"}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void sendNotification("email")}
+                disabled={sending !== null}
+              >
+                <Mail className="mr-1 h-4 w-4" />{" "}
+                {sending === "email" ? "Sending..." : "Send email"}
               </Button>
             )}
             {client?.whatsapp && (
               <Button variant="outline" size="sm" asChild>
-                <a href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Invoice ${invoice.invoice_number}: ${formatCurrency(invoice.total)} total, ${formatCurrency(invoice.balance)} balance due.`)}`} target="_blank" rel="noreferrer">
+                <a
+                  href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Invoice ${invoice.invoice_number}: ${formatCurrency(invoice.total)} total, ${formatCurrency(invoice.balance)} balance due.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
                 </a>
               </Button>
             )}
             {client?.whatsapp && (
-              <Button variant="outline" size="sm" onClick={() => void sendNotification("whatsapp")} disabled={sending !== null}>
-                <MessageCircle className="mr-1 h-4 w-4" /> {sending === "whatsapp" ? "Sending..." : "Send WhatsApp"}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void sendNotification("whatsapp")}
+                disabled={sending !== null}
+              >
+                <MessageCircle className="mr-1 h-4 w-4" />{" "}
+                {sending === "whatsapp" ? "Sending..." : "Send WhatsApp"}
               </Button>
             )}
             <ConfirmDialog

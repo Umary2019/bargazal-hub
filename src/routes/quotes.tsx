@@ -8,14 +8,27 @@ import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useClients } from "@/data/clients";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/quotes")({ component: QuotesPage });
 
-type Quote = { id: string; quote_number: string; client_id: string; total: number; status: string; expiry_date: string | null };
+type Quote = {
+  id: string;
+  quote_number: string;
+  client_id: string;
+  total: number;
+  status: string;
+  expiry_date: string | null;
+};
 
 function QuotesPage() {
   const queryClient = useQueryClient();
@@ -28,33 +41,67 @@ function QuotesPage() {
   const quotesQuery = useQuery({
     queryKey: ["quotes"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("quotes" as never).select("*, clients(id, full_name)").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("quotes" as never)
+        .select("*, clients(id, full_name)")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Quote[];
     },
   });
   const createQuote = useMutation({
     mutationFn: async () => {
-      const quoteResult = await supabase.from("quotes" as never).insert({ client_id: clientId, expiry_date: expiryDate || null, status: "Draft", quote_number: "", subtotal: Number(amount), discount: 0, tax: 0, total: Number(amount) } as never).select().single();
+      const quoteResult = await supabase
+        .from("quotes" as never)
+        .insert({
+          client_id: clientId,
+          expiry_date: expiryDate || null,
+          status: "Draft",
+          quote_number: "",
+          subtotal: Number(amount),
+          discount: 0,
+          tax: 0,
+          total: Number(amount),
+        } as never)
+        .select()
+        .single();
       if (quoteResult.error) throw quoteResult.error;
       const quote = quoteResult.data as unknown as { id: string };
-      const { error } = await supabase.from("quote_items" as never).insert({ quote_id: quote.id, description: description.trim(), quantity: 1, unit_price: Number(amount) } as never);
+      const { error } = await supabase.from("quote_items" as never).insert({
+        quote_id: quote.id,
+        description: description.trim(),
+        quantity: 1,
+        unit_price: Number(amount),
+      } as never);
       if (error) throw error;
     },
-    onSuccess: () => { setClientId(""); setDescription(""); setAmount(""); setExpiryDate(""); void queryClient.invalidateQueries({ queryKey: ["quotes"] }); toast.success("Quote created"); },
+    onSuccess: () => {
+      setClientId("");
+      setDescription("");
+      setAmount("");
+      setExpiryDate("");
+      void queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      toast.success("Quote created");
+    },
     onError: () => toast.error("Could not create quote"),
   });
   const canCreate = Boolean(clientId && description.trim() && Number(amount) > 0);
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("quotes" as never).update({ status } as never).eq("id", id);
+      const { error } = await supabase
+        .from("quotes" as never)
+        .update({ status } as never)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["quotes"] }),
   });
   const convertQuote = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase.rpc("convert_quote_to_invoice" as never, { _quote_id: id } as never);
+      const { data, error } = await supabase.rpc(
+        "convert_quote_to_invoice" as never,
+        { _quote_id: id } as never,
+      );
       if (error) throw error;
       return data as unknown as string;
     },
@@ -63,18 +110,117 @@ function QuotesPage() {
       toast.success("Quote converted to invoice");
       navigate({ to: "/invoices/$id", params: { id: invoiceId } });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not convert quote"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not convert quote"),
   });
 
-  return <ProtectedRoute><div className="space-y-6">
-    <div className="flex items-center justify-between"><div><h1 className="text-3xl font-bold tracking-tight">Quotations</h1><p className="text-muted-foreground">Prepare, track, and convert client quotations.</p></div></div>
-    <Card><CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-4 w-4" />New quotation</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      <Select value={clientId} onValueChange={setClientId}><SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger><SelectContent>{clients.map((client) => <SelectItem key={client.id} value={client.id}>{client.full_name}</SelectItem>)}</SelectContent></Select>
-      <Input placeholder="Description" value={description} onChange={(event) => setDescription(event.target.value)} />
-      <Input type="number" min="0.01" step="0.01" placeholder="Amount" value={amount} onChange={(event) => setAmount(event.target.value)} />
-      <Input type="date" aria-label="Quote expiry date" value={expiryDate} onChange={(event) => setExpiryDate(event.target.value)} />
-      <Button disabled={!canCreate || createQuote.isPending} onClick={() => createQuote.mutate()}>Create quote</Button>
-    </CardContent></Card>
-    <Card><CardHeader><CardTitle>Quote register</CardTitle></CardHeader><CardContent className="space-y-2">{quotesQuery.data?.length ? quotesQuery.data.map((quote) => <div key={quote.id} className="flex flex-wrap items-center gap-3 rounded-md border p-3"><FileText className="h-4 w-4" /><span className="font-medium">{quote.quote_number}</span><span className="flex-1">{formatCurrency(quote.total)}</span><Select value={quote.status} onValueChange={(status) => updateStatus.mutate({ id: quote.id, status })}><SelectTrigger className="w-32"><SelectValue /></SelectTrigger><SelectContent>{["Draft", "Sent", "Accepted", "Rejected", "Expired", "Converted"].map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select><span className="text-sm text-muted-foreground">{quote.expiry_date ? `Expires ${formatDate(quote.expiry_date)}` : "No expiry"}</span>{quote.status === "Accepted" && <Button size="sm" disabled={convertQuote.isPending} onClick={() => convertQuote.mutate(quote.id)}>Convert to invoice</Button>}</div>) : <p className="py-8 text-center text-muted-foreground">No quotations yet.</p>}</CardContent></Card>
-  </div></ProtectedRoute>;
+  return (
+    <ProtectedRoute>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Quotations</h1>
+            <p className="text-muted-foreground">Prepare, track, and convert client quotations.</p>
+          </div>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              New quotation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select client" />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+            />
+            <Input
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="Amount"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+            />
+            <Input
+              type="date"
+              aria-label="Quote expiry date"
+              value={expiryDate}
+              onChange={(event) => setExpiryDate(event.target.value)}
+            />
+            <Button
+              disabled={!canCreate || createQuote.isPending}
+              onClick={() => createQuote.mutate()}
+            >
+              Create quote
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Quote register</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {quotesQuery.data?.length ? (
+              quotesQuery.data.map((quote) => (
+                <div
+                  key={quote.id}
+                  className="flex flex-wrap items-center gap-3 rounded-md border p-3"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="font-medium">{quote.quote_number}</span>
+                  <span className="flex-1">{formatCurrency(quote.total)}</span>
+                  <Select
+                    value={quote.status}
+                    onValueChange={(status) => updateStatus.mutate({ id: quote.id, status })}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Draft", "Sent", "Accepted", "Rejected", "Expired", "Converted"].map(
+                        (status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ),
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">
+                    {quote.expiry_date ? `Expires ${formatDate(quote.expiry_date)}` : "No expiry"}
+                  </span>
+                  {quote.status === "Accepted" && (
+                    <Button
+                      size="sm"
+                      disabled={convertQuote.isPending}
+                      onClick={() => convertQuote.mutate(quote.id)}
+                    >
+                      Convert to invoice
+                    </Button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="py-8 text-center text-muted-foreground">No quotations yet.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute>
+  );
 }

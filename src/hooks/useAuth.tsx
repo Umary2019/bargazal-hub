@@ -154,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [session?.user?.id, session?.user?.email]);
+  }, [session?.user?.id, session?.user?.email, session?.user?.user_metadata]);
 
   const value = useMemo<AuthState>(
     () => ({

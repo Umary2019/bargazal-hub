@@ -13,7 +13,13 @@ export function useClients() {
   return useQuery({
     queryKey: KEY,
     queryFn: async (): Promise<Client[]> => {
-      return fetchAllPages((from, to) => supabase.from("clients").select("*").order("created_at", { ascending: false }).range(from, to));
+      return fetchAllPages((from, to) =>
+        supabase
+          .from("clients")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      );
     },
   });
 }

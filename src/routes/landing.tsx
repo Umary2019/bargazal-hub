@@ -29,7 +29,10 @@ export const Route = createFileRoute("/landing")({
         content:
           "Manage clients, final year projects, invoices, payments, expenses and reports in one Naira-ready business platform built for Bargazal & Sons Tech Solution.",
       },
-      { property: "og:title", content: "Bargazal & Sons Tech Solution — Business Management Software" },
+      {
+        property: "og:title",
+        content: "Bargazal & Sons Tech Solution — Business Management Software",
+      },
       {
         property: "og:description",
         content:
@@ -135,7 +138,9 @@ function Landing() {
               className="h-9 w-9 rounded-lg object-cover ring-1 ring-border"
             />
             <span className="leading-tight">
-              <span className="block text-sm font-semibold tracking-tight">Bargazal &amp; Sons</span>
+              <span className="block text-sm font-semibold tracking-tight">
+                Bargazal &amp; Sons
+              </span>
               <span className="block text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
                 Tech Solution
               </span>
@@ -276,9 +281,7 @@ function Landing() {
                       <div
                         key={label}
                         className={`mb-1 flex items-center gap-2 rounded-md px-2 py-1.5 text-[11px] font-medium ${
-                          active
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground"
+                          active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                         }`}
                       >
                         <Icon className="h-3.5 w-3.5" />
@@ -397,8 +400,8 @@ function Landing() {
               </h2>
               <p className="mt-4 text-base leading-7 text-muted-foreground">
                 Built around how the business actually delivers student work: chapters, software
-                development, documentation and defence support — each with its own price, status
-                and progress.
+                development, documentation and defence support — each with its own price, status and
+                progress.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
@@ -521,7 +524,9 @@ function Landing() {
             />
             <span className="font-medium text-foreground">Bargazal &amp; Sons Tech Solution</span>
           </div>
-          <p>© {new Date().getFullYear()} Bargazal &amp; Sons Tech Solution. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Bargazal &amp; Sons Tech Solution. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

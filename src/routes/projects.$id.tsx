@@ -97,23 +97,49 @@ function ProjectDetailPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader><CardTitle>Linked invoices</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Linked invoices</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
-              {linkedInvoices.filter((invoice) => invoice.project_id === project.id).map((invoice) => (
-                <Link key={invoice.id} to="/invoices/$id" params={{ id: invoice.id }} className="flex justify-between rounded-md border p-3 text-sm hover:bg-muted">
-                  <span>{invoice.invoice_number}</span><span>{formatCurrency(invoice.total)} · {invoice.status}</span>
-                </Link>
-              ))}
-              {linkedInvoices.length === 0 && <p className="text-sm text-muted-foreground">No invoices linked to this project.</p>}
+              {linkedInvoices
+                .filter((invoice) => invoice.project_id === project.id)
+                .map((invoice) => (
+                  <Link
+                    key={invoice.id}
+                    to="/invoices/$id"
+                    params={{ id: invoice.id }}
+                    className="flex justify-between rounded-md border p-3 text-sm hover:bg-muted"
+                  >
+                    <span>{invoice.invoice_number}</span>
+                    <span>
+                      {formatCurrency(invoice.total)} · {invoice.status}
+                    </span>
+                  </Link>
+                ))}
+              {linkedInvoices.length === 0 && (
+                <p className="text-sm text-muted-foreground">No invoices linked to this project.</p>
+              )}
             </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle>Linked payments</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Linked payments</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
               {linkedPayments.map((payment) => (
-                <div key={payment.id} className="flex justify-between rounded-md border p-3 text-sm"><span>{payment.payment_number}</span><span>{formatCurrency(payment.amount)} · {formatDate(payment.payment_date)}</span></div>
+                <div
+                  key={payment.id}
+                  className="flex justify-between rounded-md border p-3 text-sm"
+                >
+                  <span>{payment.payment_number}</span>
+                  <span>
+                    {formatCurrency(payment.amount)} · {formatDate(payment.payment_date)}
+                  </span>
+                </div>
               ))}
-              {linkedPayments.length === 0 && <p className="text-sm text-muted-foreground">No payments linked to this project.</p>}
+              {linkedPayments.length === 0 && (
+                <p className="text-sm text-muted-foreground">No payments linked to this project.</p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -128,7 +154,9 @@ function ProjectDetailPage() {
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Client</span>
-                <span className="min-w-0 break-words text-right">{project.clients?.full_name ?? "—"}</span>
+                <span className="min-w-0 break-words text-right">
+                  {project.clients?.full_name ?? "—"}
+                </span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Institution</span>

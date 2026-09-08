@@ -20,7 +20,9 @@ export function ProjectDetailsCard({ project }: { project: ProjectWithRelations 
           <CardTitle className="text-sm text-muted-foreground">Paid</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-600">{formatCurrency(project.amount_paid)}</div>
+          <div className="text-2xl font-bold text-emerald-600">
+            {formatCurrency(project.amount_paid)}
+          </div>
         </CardContent>
       </Card>
 
@@ -29,7 +31,9 @@ export function ProjectDetailsCard({ project }: { project: ProjectWithRelations 
           <CardTitle className="text-sm text-muted-foreground">Balance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-amber-600">{formatCurrency(project.balance ?? 0)}</div>
+          <div className="text-2xl font-bold text-amber-600">
+            {formatCurrency(project.balance ?? 0)}
+          </div>
         </CardContent>
       </Card>
 
@@ -44,7 +48,10 @@ export function ProjectDetailsCard({ project }: { project: ProjectWithRelations 
               <Badge variant="outline">{project.status}</Badge>
             </div>
             <div className="h-2 w-full rounded-full bg-slate-200">
-              <div className="h-2 rounded-full bg-blue-600" style={{ width: `${project.progress}%` }} />
+              <div
+                className="h-2 rounded-full bg-blue-600"
+                style={{ width: `${project.progress}%` }}
+              />
             </div>
           </div>
         </CardContent>

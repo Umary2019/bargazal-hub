@@ -6,10 +6,30 @@ import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDashboard } from "@/data/dashboard";
 import { formatCurrency } from "@/lib/format";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 export const Route = createFileRoute("/reports")({
   component: ReportsPage,
@@ -50,7 +70,9 @@ function ReportsPage() {
       ["Month", "Revenue", "Expenses", "Profit"],
       ...report.monthly.map((month) => [month.month, month.revenue, month.expenses, month.profit]),
     ];
-    const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+    const csv = rows
+      .map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(","))
+      .join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
@@ -129,7 +151,7 @@ function ReportsPage() {
                 <CardContent>
                   <div className="text-3xl font-bold">{formatCurrency(dashboard.profit)}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {(((dashboard.profit / (dashboard.revenue || 1)) * 100).toFixed(1))}% margin
+                    {((dashboard.profit / (dashboard.revenue || 1)) * 100).toFixed(1)}% margin
                   </p>
                 </CardContent>
               </Card>
@@ -267,12 +289,21 @@ function ReportsPage() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle>Revenue by Client</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Revenue by Client</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-2">
                 {dashboard.revenueByClient.map((client) => (
-                  <div key={client.name} className="flex justify-between gap-4 text-sm"><span>{client.name}</span><strong>{formatCurrency(client.revenue)}</strong></div>
+                  <div key={client.name} className="flex justify-between gap-4 text-sm">
+                    <span>{client.name}</span>
+                    <strong>{formatCurrency(client.revenue)}</strong>
+                  </div>
                 ))}
-                {dashboard.revenueByClient.length === 0 && <p className="text-sm text-muted-foreground">No revenue recorded for this period.</p>}
+                {dashboard.revenueByClient.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No revenue recorded for this period.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -296,13 +327,39 @@ function ReportsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">No service data available</p>
+                  <p className="text-center text-muted-foreground py-8">
+                    No service data available
+                  </p>
                 )}
               </CardContent>
             </Card>
             <div className="grid gap-6 lg:grid-cols-2">
-              <Card><CardHeader><CardTitle>Expenses by Category</CardTitle></CardHeader><CardContent className="space-y-2">{dashboard.expensesByCategory.map((item) => <div key={item.name} className="flex justify-between text-sm"><span>{item.name}</span><strong>{formatCurrency(item.total)}</strong></div>)}</CardContent></Card>
-              <Card><CardHeader><CardTitle>Payments by Method</CardTitle></CardHeader><CardContent className="space-y-2">{dashboard.paymentsByMethod.map((item) => <div key={item.name} className="flex justify-between text-sm"><span>{item.name}</span><strong>{formatCurrency(item.total)}</strong></div>)}</CardContent></Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Expenses by Category</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {dashboard.expensesByCategory.map((item) => (
+                    <div key={item.name} className="flex justify-between text-sm">
+                      <span>{item.name}</span>
+                      <strong>{formatCurrency(item.total)}</strong>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payments by Method</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {dashboard.paymentsByMethod.map((item) => (
+                    <div key={item.name} className="flex justify-between text-sm">
+                      <span>{item.name}</span>
+                      <strong>{formatCurrency(item.total)}</strong>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

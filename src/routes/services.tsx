@@ -6,7 +6,14 @@ import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useServices, useServiceCategories, useDeleteService } from "@/data/services";
@@ -74,7 +81,10 @@ function ServicesPage() {
         </Card>
 
         {/* Tabs by Category */}
-        <Tabs value={selectedCategory || "all"} onValueChange={(v) => setSelectedCategory(v === "all" ? null : v)}>
+        <Tabs
+          value={selectedCategory || "all"}
+          onValueChange={(v) => setSelectedCategory(v === "all" ? null : v)}
+        >
           <TabsList className="w-full justify-start">
             <TabsTrigger value="all">All Services ({services.length})</TabsTrigger>
             {categories.map((cat) => {
@@ -134,7 +144,15 @@ function ServicesPage() {
                                 Edit
                               </Button>
                               <ConfirmDialog
-                                trigger={<Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>}
+                                trigger={
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-600 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                }
                                 title="Delete service?"
                                 description="This permanently removes the service from your catalog."
                                 confirmLabel="Delete"
@@ -152,11 +170,7 @@ function ServicesPage() {
           </TabsContent>
         </Tabs>
       </div>
-      <ServiceFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        service={selectedService}
-      />
+      <ServiceFormDialog open={dialogOpen} onOpenChange={setDialogOpen} service={selectedService} />
     </ProtectedRoute>
   );
 }

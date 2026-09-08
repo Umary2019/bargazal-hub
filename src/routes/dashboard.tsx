@@ -7,7 +7,21 @@ import { useDashboard } from "@/data/dashboard";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
 import { ClientPortal } from "@/components/portals/client-portal";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -16,7 +30,11 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   const { role } = useAuth();
   if (role === "client") {
-    return <ProtectedRoute><ClientPortal /></ProtectedRoute>;
+    return (
+      <ProtectedRoute>
+        <ClientPortal />
+      </ProtectedRoute>
+    );
   }
   return <OperationsDashboard />;
 }
@@ -61,7 +79,9 @@ function OperationsDashboard() {
         {/* Page Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to Bargazal and Sons Tech Solution business software</p>
+          <p className="text-muted-foreground">
+            Welcome to Bargazal and Sons Tech Solution business software
+          </p>
         </div>
 
         {/* Key Metrics */}
@@ -81,7 +101,7 @@ function OperationsDashboard() {
           <MetricCard
             title="Net Profit"
             value={formatCurrency(dashboard.profit)}
-            subtitle={`${(((dashboard.profit / (dashboard.revenue || 1)) * 100).toFixed(1))}% margin`}
+            subtitle={`${((dashboard.profit / (dashboard.revenue || 1)) * 100).toFixed(1)}% margin`}
             icon={<BarChart3 className="w-5 h-5 text-green-600" />}
           />
           <MetricCard
@@ -94,10 +114,26 @@ function OperationsDashboard() {
 
         {/* Business Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Clients" value={dashboard.clientCount} icon={<Users className="w-5 h-5" />} />
-          <StatCard title="Active Projects" value={dashboard.activeProjects} icon={<FolderOpen className="w-5 h-5" />} />
-          <StatCard title="FYP Projects" value={dashboard.finalYearProjects} icon={<FolderOpen className="w-5 h-5" />} />
-          <StatCard title="Overdue Invoices" value={dashboard.overdueInvoices} icon={<AlertCircle className="w-5 h-5 text-red-600" />} />
+          <StatCard
+            title="Total Clients"
+            value={dashboard.clientCount}
+            icon={<Users className="w-5 h-5" />}
+          />
+          <StatCard
+            title="Active Projects"
+            value={dashboard.activeProjects}
+            icon={<FolderOpen className="w-5 h-5" />}
+          />
+          <StatCard
+            title="FYP Projects"
+            value={dashboard.finalYearProjects}
+            icon={<FolderOpen className="w-5 h-5" />}
+          />
+          <StatCard
+            title="Overdue Invoices"
+            value={dashboard.overdueInvoices}
+            icon={<AlertCircle className="w-5 h-5 text-red-600" />}
+          />
         </div>
 
         {/* Charts */}
@@ -150,7 +186,9 @@ function OperationsDashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-80 flex items-center justify-center text-muted-foreground">No projects yet</div>
+                <div className="h-80 flex items-center justify-center text-muted-foreground">
+                  No projects yet
+                </div>
               )}
             </CardContent>
           </Card>
@@ -174,7 +212,9 @@ function OperationsDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-80 flex items-center justify-center text-muted-foreground">No service data available</div>
+              <div className="h-80 flex items-center justify-center text-muted-foreground">
+                No service data available
+              </div>
             )}
           </CardContent>
         </Card>
@@ -210,9 +250,19 @@ interface MetricCardProps {
 }
 
 function MetricCard({ title, value, subtitle, icon }: MetricCardProps) {
-  const destination = title === "Total Revenue" ? "/payments" : title === "Total Expenses" ? "/expenses" : title === "Outstanding" ? "/invoices" : "/reports";
+  const destination =
+    title === "Total Revenue"
+      ? "/payments"
+      : title === "Total Expenses"
+        ? "/expenses"
+        : title === "Outstanding"
+          ? "/invoices"
+          : "/reports";
   return (
-    <Link to={destination} className="block rounded-lg transition hover:-translate-y-0.5 hover:shadow-md">
+    <Link
+      to={destination}
+      className="block rounded-lg transition hover:-translate-y-0.5 hover:shadow-md"
+    >
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -234,17 +284,21 @@ interface StatCardProps {
 }
 
 function StatCard({ title, value, icon }: StatCardProps) {
-  const destination = title === "Total Clients" ? "/clients" : title.includes("Project") ? "/projects" : "/invoices";
+  const destination =
+    title === "Total Clients" ? "/clients" : title.includes("Project") ? "/projects" : "/invoices";
   return (
-    <Link to={destination} className="block rounded-lg transition hover:-translate-y-0.5 hover:shadow-md">
+    <Link
+      to={destination}
+      className="block rounded-lg transition hover:-translate-y-0.5 hover:shadow-md"
+    >
       <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className="text-slate-600">{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-      </CardContent>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <div className="text-slate-600">{icon}</div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{value}</div>
+        </CardContent>
       </Card>
     </Link>
   );

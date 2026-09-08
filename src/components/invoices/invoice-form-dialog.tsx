@@ -77,7 +77,6 @@ export function InvoiceFormDialog({
     onOpenChange(false);
   }
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -103,10 +102,23 @@ export function InvoiceFormDialog({
             </SelectContent>
           </Select>
           <Select value={projectId} onValueChange={setProjectId}>
-            <SelectTrigger aria-label="Project"><SelectValue placeholder="Link to project (optional)" /></SelectTrigger>
-            <SelectContent>{projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.project_number} - {project.title}</SelectItem>)}</SelectContent>
+            <SelectTrigger aria-label="Project">
+              <SelectValue placeholder="Link to project (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.project_number} - {project.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-          <Input aria-label="Due date" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+          <Input
+            aria-label="Due date"
+            type="date"
+            value={dueDate}
+            onChange={(event) => setDueDate(event.target.value)}
+          />
           <Input
             aria-label="Item description"
             placeholder="Item description"
@@ -131,9 +143,7 @@ export function InvoiceFormDialog({
             </div>
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="text-xs text-muted-foreground">Remaining balance</div>
-              <div className="mt-1 font-semibold">
-                ₦{Number(amount || 0).toLocaleString()}
-              </div>
+              <div className="mt-1 font-semibold">₦{Number(amount || 0).toLocaleString()}</div>
             </div>
           </div>
 

@@ -22,7 +22,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSaveService, useServiceCategories } from "@/data/services";
 import { PRICING_TYPES, SERVICE_STATUSES } from "@/lib/constants";
 import type { Service, ServiceCategory } from "@/data/types";
@@ -78,22 +84,26 @@ export function ServiceFormDialog({ open, onOpenChange, service }: ServiceFormDi
   }, [service, categories, reset]);
 
   async function onSubmit(data: ServiceFormData) {
-    await saveService.mutateAsync(service ? {
-      id: service.id,
-      values: {
-        ...data,
-        category_id: data.category_id,
-        description: data.description || null,
-        duration: data.duration || null,
-      },
-    } : {
-      values: {
-        ...data,
-        category_id: data.category_id,
-        description: data.description || null,
-        duration: data.duration || null,
-      },
-    });
+    await saveService.mutateAsync(
+      service
+        ? {
+            id: service.id,
+            values: {
+              ...data,
+              category_id: data.category_id,
+              description: data.description || null,
+              duration: data.duration || null,
+            },
+          }
+        : {
+            values: {
+              ...data,
+              category_id: data.category_id,
+              description: data.description || null,
+              duration: data.duration || null,
+            },
+          },
+    );
     reset();
     onOpenChange(false);
   }
@@ -250,7 +260,11 @@ export function ServiceFormDialog({ open, onOpenChange, service }: ServiceFormDi
                 Cancel
               </Button>
               <Button type="submit" disabled={saveService.isPending}>
-                {saveService.isPending ? "Saving..." : service ? "Update Service" : "Create Service"}
+                {saveService.isPending
+                  ? "Saving..."
+                  : service
+                    ? "Update Service"
+                    : "Create Service"}
               </Button>
             </DialogFooter>
           </form>

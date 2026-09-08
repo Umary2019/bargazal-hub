@@ -91,7 +91,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
     })
       .then(setQrCode)
       .catch(() => setQrCode(""));
-  }, [businessName, client, invoice, payment, payments, settings]);
+  }, [businessName, client, invoice, payment, payments, receiptStatus]);
 
   async function printReceipt() {
     if (!receiptRef.current) return;

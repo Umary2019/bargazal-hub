@@ -36,10 +36,7 @@ export function ConfirmDialog({
   const controlled = open !== undefined;
 
   return (
-    <AlertDialog
-      {...(controlled ? { open } : {})}
-      {...(onOpenChange ? { onOpenChange } : {})}
-    >
+    <AlertDialog {...(controlled ? { open } : {})} {...(onOpenChange ? { onOpenChange } : {})}>
       {trigger ? <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger> : null}
       <AlertDialogContent>
         <AlertDialogHeader>
