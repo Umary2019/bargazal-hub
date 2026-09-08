@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { FileText, Printer } from "lucide-react";
+import { Download, FileText, Printer } from "lucide-react";
 import QRCode from "qrcode";
 
 import { useBusinessSettings } from "@/data/settings";
 import { useClient } from "@/data/clients";
 import type { InvoiceItem, InvoiceWithRelations, PaymentWithRelations } from "@/data/types";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { downloadReceiptPdf } from "@/lib/pdf";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -298,6 +299,21 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
         <DialogFooter data-print-hide>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadReceiptPdf({
+                invoice,
+                items: invoice.invoice_items,
+                payments,
+                clientName: client?.full_name || invoice.clients?.full_name || "Client",
+                businessName,
+              })
+            }
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
           </Button>
           <Button onClick={printReceipt}>
             <Printer className="mr-2 h-4 w-4" />
