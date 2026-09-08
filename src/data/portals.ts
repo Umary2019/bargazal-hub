@@ -60,7 +60,12 @@ export function useCreateServiceRequest() {
       description: string;
       budget: number;
     }) => {
-      const { data, error } = await db.from("service_requests").insert(values).select().single();
+      const { description, ...requestValues } = values;
+      const { data, error } = await db
+        .from("service_requests")
+        .insert({ ...requestValues, details: description })
+        .select()
+        .single();
       if (error) throw error;
       return data;
     },
