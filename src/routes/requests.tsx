@@ -1,26 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  useApproveServiceRequest,
+  useRejectServiceRequest,
+  useServiceRequests,
+} from "@/data/service-requests";
+import { useStaff } from "@/data/staff";
 
 export const Route = createFileRoute("/requests")({ component: RequestsPage });
 function RequestsPage() {
   const queryClient = useQueryClient();
-  const { data: requests = [], isLoading } = useQuery({
-    queryKey: ["service-requests"],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("service_requests")
-        .select("*, clients(full_name, email), services(name)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  const { data: requests = [], isLoading } = useServiceRequests();
+  const { data: staff = [] } = useStaff();
+  const approveRequest = useApproveServiceRequest();
+  const rejectRequest = useRejectServiceRequest();
+  const [assignments, setAssignments] = useState<Record<string, string>>({});
   const { data: pendingClients = [] } = useQuery({
     queryKey: ["pending-client-registrations"],
     queryFn: async () => {
@@ -169,7 +177,7 @@ function RequestsPage() {
             {requests.length === 0 ? (
               <p className="text-sm text-muted-foreground">No service requests yet.</p>
             ) : (
-              requests.map((request: any) => (
+              requests.map((request) => (
                 <div
                   key={request.id}
                   className="flex flex-col gap-3 rounded-md border p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -183,6 +191,51 @@ function RequestsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{request.status}</Badge>
+                    {request.status === "Pending" ? (
+                      <>
+                        <Select
+                          value={assignments[request.id] || "unassigned"}
+                          onValueChange={(value) =>
+                            setAssignments((current) => ({
+                              ...current,
+                              [request.id]: value === "unassigned" ? "" : value,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="w-44" aria-label="Assign staff member">
+                            <SelectValue placeholder="Assign staff" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Leave unassigned</SelectItem>
+                            {staff.map((member) => (
+                              <SelectItem key={member.user_id} value={member.user_id}>
+                                {member.full_name || member.email}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          disabled={approveRequest.isPending}
+                          onClick={() =>
+                            approveRequest.mutate({
+                              request,
+                              assignedStaffId: assignments[request.id] || null,
+                            })
+                          }
+                        >
+                          Approve & create job
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={rejectRequest.isPending}
+                          onClick={() => rejectRequest.mutate({ id: request.id })}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    ) : null}
                   </div>
                 </div>
               ))

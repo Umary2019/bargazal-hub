@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -276,7 +276,11 @@ function ProjectRow({ project, today }: { project: AssignedProject; today: strin
     project.deadline && project.deadline <= today && project.status !== "Completed",
   );
   return (
-    <div className="rounded-lg border p-4">
+    <Link
+      to="/projects/$id"
+      params={{ id: project.id }}
+      className="block rounded-lg border p-4 transition-colors hover:bg-muted/50"
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -318,7 +322,7 @@ function ProjectRow({ project, today }: { project: AssignedProject; today: strin
         <span className="text-border">•</span>
         <span>{project.priority} priority</span>
       </div>
-    </div>
+    </Link>
   );
 }
 

@@ -17,6 +17,7 @@ import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
 import { ProjectDeliveryBoard } from "@/components/projects/project-delivery-board";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/projects/$id")({
   component: ProjectDetailPage,
@@ -28,6 +29,7 @@ function ProjectDetailPage() {
   const { data: project, isLoading, error } = useProject(id);
   const { data: linkedInvoices = [] } = useInvoices({ projectId: id });
   const { data: linkedPayments = [] } = usePayments({ projectId: id });
+  const { isAdmin, isStaff, user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const deleteProject = useDeleteProject();
 
@@ -46,6 +48,22 @@ function ProjectDetailPage() {
           <p className="text-muted-foreground">This project could not be loaded.</p>
           <Button variant="outline" onClick={() => navigate({ to: "/projects" })}>
             Back to projects
+          </Button>
+        </div>
+      </ProtectedRoute>
+    );
+
+  const canAccessProject = isAdmin || (isStaff && project.assigned_staff_id === user?.id);
+  if (!canAccessProject)
+    return (
+      <ProtectedRoute roles={["admin", "staff"]}>
+        <div className="space-y-3 p-4">
+          <h1 className="text-xl font-semibold">Project unavailable</h1>
+          <p className="text-muted-foreground">
+            This project is not assigned to your staff account.
+          </p>
+          <Button variant="outline" onClick={() => navigate({ to: "/work" })}>
+            Back to work
           </Button>
         </div>
       </ProtectedRoute>
@@ -73,21 +91,25 @@ function ProjectDetailPage() {
             <Badge variant="outline" className="text-base px-3 py-1.5">
               {project.status}
             </Badge>
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <Pencil className="mr-1 h-4 w-4" /> Edit
-            </Button>
-            <ConfirmDialog
-              trigger={
-                <Button variant="destructive" size="sm">
-                  <Trash2 className="mr-1 h-4 w-4" /> Delete
+            {isAdmin ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                  <Pencil className="mr-1 h-4 w-4" /> Edit
                 </Button>
-              }
-              title="Delete project?"
-              description="This will permanently remove the project."
-              onConfirm={() =>
-                deleteProject.mutate(id, { onSuccess: () => navigate({ to: "/projects" }) })
-              }
-            />
+                <ConfirmDialog
+                  trigger={
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="mr-1 h-4 w-4" /> Delete
+                    </Button>
+                  }
+                  title="Delete project?"
+                  description="This will permanently remove the project."
+                  onConfirm={() =>
+                    deleteProject.mutate(id, { onSuccess: () => navigate({ to: "/projects" }) })
+                  }
+                />
+              </>
+            ) : null}
           </div>
         </div>
 
@@ -241,7 +263,9 @@ function ProjectDetailPage() {
           </Card>
         )}
       </div>
-      <ProjectFormDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
+      {isAdmin ? (
+        <ProjectFormDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
+      ) : null}
     </ProtectedRoute>
   );
 }

@@ -36,10 +36,11 @@
    - Click **SQL Editor** in the left sidebar
    - Click **New Query**
 
-2. **Run migrations:**
-   - Copy entire content from `drizzle/migrations/0000_bargazal_bms_core.sql`
-   - Paste it in the SQL Editor
-   - Click **Run** (wait for completion)
+2. **Run migrations in order:**
+   - Run every SQL file in `drizzle/migrations/` in filename order, from `0000_bargazal_bms_core.sql` through the latest migration.
+   - Do not run only `0000`; later migrations add portals, approvals, quotes, delivery workflows, public invoice links, and security hardening.
+   - Paste each file into the SQL Editor and click **Run**, waiting for completion before continuing.
+   - For an existing installation, run only migrations that have not already been applied.
 
 3. **Verify tables created:**
    - Go to **Table Editor** in left sidebar
