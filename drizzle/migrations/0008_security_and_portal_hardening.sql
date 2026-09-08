@@ -162,6 +162,7 @@ GRANT EXECUTE ON FUNCTION public.convert_quote_to_invoice(UUID) TO authenticated
 -- Staff should only see and update projects explicitly assigned to them.
 DROP POLICY IF EXISTS projects_read_staff ON public.projects;
 DROP POLICY IF EXISTS projects_insert_staff ON public.projects;
+DROP POLICY IF EXISTS projects_insert_admin ON public.projects;
 DROP POLICY IF EXISTS projects_update_staff ON public.projects;
 DROP POLICY IF EXISTS projects_delete_admin ON public.projects;
 CREATE POLICY projects_read_staff ON public.projects
