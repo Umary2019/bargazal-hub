@@ -1,7 +1,14 @@
 import { jsPDF } from "jspdf";
 
 export type InvoicePdfInput = {
-  invoice: { invoice_number: string; issue_date: string; due_date: string | null; total: number; amount_paid: number; balance: number | null };
+  invoice: {
+    invoice_number: string;
+    issue_date: string;
+    due_date: string | null;
+    total: number;
+    amount_paid: number;
+    balance: number | null;
+  };
   items: Array<{ description: string; quantity: number; unit_price: number }>;
   clientName: string;
   businessName: string;
@@ -52,7 +59,10 @@ export function downloadInvoicePdf(input: InvoicePdfInput) {
     pdf.text(String(item.quantity), 130, y);
     pdf.text(money(Number(item.quantity) * Number(item.unit_price)), 160, y);
     y += 8;
-    if (y > 265) { pdf.addPage(); y = 20; }
+    if (y > 265) {
+      pdf.addPage();
+      y = 20;
+    }
   }
   y += 4;
   pdf.line(120, y, 190, y);

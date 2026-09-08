@@ -152,7 +152,6 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
     }, 3000);
   }
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto print-receipt-dialog">
