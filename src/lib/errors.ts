@@ -17,8 +17,14 @@ export function friendlyError(error: unknown): string {
       return "You do not have permission to perform this action. Please sign in again.";
     case "PGRST116":
       return "That record could not be found. It may have been removed.";
+    case "PGRST202":
+      return "Unable to complete this request. Please try again or contact the system administrator.";
     default:
       break;
+  }
+
+  if (/schema cache|could not find the function/i.test(raw)) {
+    return "Unable to complete this request. Please try again or contact the system administrator.";
   }
 
   if (/failed to fetch|networkerror|load failed/i.test(raw)) {

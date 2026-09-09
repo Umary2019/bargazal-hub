@@ -1221,6 +1221,14 @@ export type Database = {
         Args: { _approved: boolean; _client_id: string };
         Returns: undefined;
       };
+      approve_service_request: {
+        Args: {
+          _admin_note?: string | null;
+          _assigned_staff_id?: string | null;
+          _request_id: string;
+        };
+        Returns: Json;
+      };
       approve_staff: {
         Args: { _approved: boolean; _user_id: string };
         Returns: undefined;
@@ -1297,6 +1305,14 @@ export type Database = {
           _paid_at: string;
           _raw: Json;
           _reference: string;
+        };
+        Returns: Json;
+      };
+      reject_service_request: {
+        Args: {
+          _admin_note?: string | null;
+          _rejection_reason: string;
+          _request_id: string;
         };
         Returns: Json;
       };

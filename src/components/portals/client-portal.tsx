@@ -292,8 +292,18 @@ export function ClientPortal() {
 
                   {/* Approved project note */}
                   {request.status === "Approved" && (
-                    <div className="text-xs text-emerald-800 dark:text-emerald-300">
-                      ✓ Approved and linked to active project delivery queue.
+                    <div className="space-y-1">
+                      <div className="text-xs text-emerald-800 dark:text-emerald-300">
+                        ✓ Approved and linked to active project delivery queue.
+                      </div>
+                      {request.assigned_staff && (
+                        <div className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                          Assigned Staff: {request.assigned_staff.full_name}
+                          {request.assigned_staff.job_title
+                            ? ` — ${request.assigned_staff.job_title}`
+                            : ""}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -369,6 +379,15 @@ export function ClientPortal() {
                   This request has been approved and moved into execution. Track progress in the
                   &quot;Project progress&quot; section below.
                 </p>
+                {selectedRequest?.assigned_staff && (
+                  <p className="mt-1 font-medium text-emerald-800 dark:text-emerald-200">
+                    <span className="font-semibold">Assigned Staff:</span>{" "}
+                    {selectedRequest.assigned_staff.full_name}
+                    {selectedRequest.assigned_staff.job_title
+                      ? ` — ${selectedRequest.assigned_staff.job_title}`
+                      : ""}
+                  </p>
+                )}
                 {selectedRequest?.approved_at && (
                   <p className="mt-1 font-mono text-emerald-700 dark:text-emerald-400">
                     Approved date: {formatDate(selectedRequest.approved_at)}
@@ -461,7 +480,17 @@ export function ClientPortal() {
             projects.map((project: any) => (
               <div key={project.id} className="space-y-2">
                 <div className="flex justify-between gap-3">
-                  <span className="font-medium">{project.title}</span>
+                  <div>
+                    <span className="font-medium">{project.title}</span>
+                    {project.assigned_staff && (
+                      <p className="text-xs text-muted-foreground">
+                        Assigned: {project.assigned_staff.full_name}
+                        {project.assigned_staff.job_title
+                          ? ` — ${project.assigned_staff.job_title}`
+                          : ""}
+                      </p>
+                    )}
+                  </div>
                   <Badge variant="outline">{project.status}</Badge>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">

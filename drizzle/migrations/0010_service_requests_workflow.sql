@@ -44,6 +44,21 @@ BEGIN
     RAISE EXCEPTION 'This request has already been processed (current status: %)', v_request.status;
   END IF;
 
+  -- Validate assigned staff member if provided
+  IF _assigned_staff_id IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM public.user_roles ur
+      JOIN public.profiles p ON p.id = ur.user_id
+      WHERE ur.user_id = _assigned_staff_id
+        AND ur.role = 'staff'
+        AND (p.approval_status IS NULL OR p.approval_status = 'Approved')
+        AND (p.is_active IS NULL OR p.is_active = true)
+    ) THEN
+      RAISE EXCEPTION 'Selected staff member is not valid or eligible for assignment';
+    END IF;
+  END IF;
+
   -- Create corresponding project
   INSERT INTO public.projects (
     project_number,
@@ -172,3 +187,21 @@ DROP POLICY IF EXISTS service_requests_update_approved ON public.service_request
 CREATE POLICY service_requests_update_approved ON public.service_requests FOR UPDATE TO authenticated
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
+
+-- Allow authenticated users to view active staff profiles (for project and assignment visibility)
+DROP POLICY IF EXISTS profiles_select_staff_directory ON public.profiles;
+CREATE POLICY profiles_select_staff_directory ON public.profiles FOR SELECT TO authenticated
+  USING (
+    auth.uid() = id
+    OR public.is_admin()
+    OR (
+      EXISTS (
+        SELECT 1 FROM public.user_roles ur
+        WHERE ur.user_id = public.profiles.id
+          AND ur.role = 'staff'
+      )
+      AND (approval_status = 'Approved' OR approval_status IS NULL)
+      AND is_active = true
+    )
+  );
+

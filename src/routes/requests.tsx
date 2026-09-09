@@ -71,7 +71,7 @@ function RequestsPage() {
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   const { data: requests = [], isLoading, error: requestsError, refetch } = useServiceRequests();
-  const { data: staff = [] } = useStaff(isAdmin);
+  const { data: staff = [], isLoading: isStaffLoading, isError: isStaffError } = useStaff(isAdmin);
   const { data: services = [] } = useServices();
   const approveRequest = useApproveServiceRequest();
   const rejectRequest = useRejectServiceRequest();
@@ -776,6 +776,22 @@ function RequestsPage() {
                       Approved at: {formatDate(selectedRequest.approved_at)}
                     </p>
                   )}
+                  {selectedRequest?.projects?.assigned_staff_id &&
+                    (() => {
+                      const assigned = staff.find(
+                        (s) =>
+                          s.id === selectedRequest.projects?.assigned_staff_id ||
+                          s.user_id === selectedRequest.projects?.assigned_staff_id,
+                      );
+                      return (
+                        <p className="mt-1 font-medium text-emerald-800 dark:text-emerald-200">
+                          <span className="font-semibold">Assigned Staff:</span>{" "}
+                          {assigned
+                            ? `${assigned.full_name}${assigned.job_title ? ` — ${assigned.job_title}` : ""}`
+                            : "Staff Member Assigned"}
+                        </p>
+                      );
+                    })()}
                   {selectedRequest?.project_id && (
                     <div className="mt-2">
                       <Link
@@ -919,18 +935,54 @@ function RequestsPage() {
 
               {/* Staff Assignment */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">
-                  Assign Staff Member (Optional)
-                </label>
-                <Select value={assignedStaffId} onValueChange={setAssignedStaffId}>
-                  <SelectTrigger aria-label="Assign staff">
-                    <SelectValue placeholder="Select staff member" />
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-foreground">
+                    Assign Staff Member (Optional)
+                  </label>
+                  {isStaffLoading && (
+                    <span className="text-[10px] text-muted-foreground animate-pulse">
+                      Loading staff...
+                    </span>
+                  )}
+                </div>
+                <Select
+                  value={assignedStaffId}
+                  onValueChange={setAssignedStaffId}
+                  disabled={isStaffLoading}
+                >
+                  <SelectTrigger aria-label="Assign staff member">
+                    <SelectValue
+                      placeholder={
+                        isStaffLoading
+                          ? "Loading eligible staff..."
+                          : "Select staff member (Optional)"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="unassigned">Leave unassigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {isStaffLoading && (
+                      <SelectItem value="__loading" disabled>
+                        Loading eligible staff...
+                      </SelectItem>
+                    )}
+                    {isStaffError && (
+                      <SelectItem value="__error" disabled>
+                        Failed to load staff members
+                      </SelectItem>
+                    )}
+                    {!isStaffLoading && !isStaffError && staff.length === 0 && (
+                      <SelectItem value="__empty" disabled>
+                        No eligible staff members found
+                      </SelectItem>
+                    )}
                     {staff.map((member) => (
-                      <SelectItem key={member.user_id} value={member.user_id}>
+                      <SelectItem
+                        key={member.id || member.user_id}
+                        value={member.id || member.user_id}
+                      >
                         {member.full_name || member.email}
+                        {member.job_title ? ` — ${member.job_title}` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
