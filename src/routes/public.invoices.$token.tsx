@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadInvoicePdf } from "@/lib/pdf";
+import { initiatePaystackPayment, verifyPaystackPayment } from "@/data/paystack";
 
 export const Route = createFileRoute("/public/invoices/$token")({ component: PublicInvoicePage });
 
@@ -59,12 +60,14 @@ function PublicInvoicePage() {
     const reference = new URLSearchParams(window.location.search).get("reference");
     if (!reference || isVerifying) return;
     setIsVerifying(true);
-    void supabase.functions
-      .invoke("paystack-payment", { body: { action: "verify", token, reference } })
-      .then(({ error }) => {
-        if (error) throw error;
-        void query.refetch();
-        window.history.replaceState({}, "", window.location.pathname);
+    verifyPaystackPayment(reference)
+      .then((res) => {
+        if (res.status === "success") {
+          void query.refetch();
+          window.history.replaceState({}, "", window.location.pathname);
+        } else {
+          setPaymentError("Payment verification failed. Status: " + res.status);
+        }
       })
       .catch((error: unknown) => {
         setPaymentError(error instanceof Error ? error.message : "Could not verify payment");
@@ -100,20 +103,21 @@ function PublicInvoicePage() {
       return;
     }
     setIsPaying(true);
-    const { data, error } = await supabase.functions.invoke("paystack-payment", {
-      body: {
-        action: "initialize",
+    try {
+      const data = await initiatePaystackPayment({
         token,
-        amount,
+        email: client.email || undefined,
         callbackUrl: window.location.href.split("?")[0],
-      },
-    });
-    if (error || !data?.authorizationUrl) {
-      setPaymentError(error?.message ?? "Could not start payment");
+      });
+      if (data.authorizationUrl) {
+        window.location.assign(data.authorizationUrl);
+      } else {
+        throw new Error("Could not start payment");
+      }
+    } catch (err: any) {
+      setPaymentError(err?.message ?? "Could not start payment");
       setIsPaying(false);
-      return;
     }
-    window.location.assign(data.authorizationUrl);
   }
 
   return (
