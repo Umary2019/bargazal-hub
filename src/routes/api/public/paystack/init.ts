@@ -140,7 +140,7 @@ export const Route = createFileRoute("/api/public/paystack/init")({
 
         const defaultCallback = target.token
           ? `${appUrl}/public/invoices/${target.token}?reference=${encodeURIComponent(reference)}`
-          : `${appUrl}/dashboard?payment=complete&reference=${encodeURIComponent(reference)}`;
+          : `${appUrl}/client-portal?payment=complete&reference=${encodeURIComponent(reference)}`;
 
         const callbackUrl = parsed.data.callbackUrl || defaultCallback;
 
