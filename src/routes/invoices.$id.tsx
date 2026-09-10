@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { useInvoice } from "@/data/invoices";
 import { useDeleteInvoice } from "@/data/invoices";
 import { usePayments } from "@/data/payments";
 import { useServiceRequest } from "@/data/service-requests";
-import { initiatePaystackPayment } from "@/data/paystack";
+import { initiatePaystackPayment, verifyPaystackPayment } from "@/data/paystack";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { InvoiceFormDialog } from "@/components/invoices/invoice-form-dialog";
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/invoices/$id")({ component: InvoiceDetail
 function InvoiceDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { role, clientId } = useAuth();
   const isClient = role === "client" || Boolean(clientId);
   const { data: invoice, isLoading, error } = useInvoice(id);
@@ -55,12 +57,40 @@ function InvoiceDetailPage() {
   const [isPaying, setIsPaying] = useState(false);
   const deleteInvoice = useDeleteInvoice();
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("reference");
+    if (!ref) return;
+
+    verifyPaystackPayment(ref)
+      .then((res) => {
+        if (res.status === "success") {
+          toast.success("Payment verified successfully!");
+          queryClient.invalidateQueries({ queryKey: ["invoice", id] });
+          queryClient.invalidateQueries({ queryKey: ["invoices"] });
+          queryClient.invalidateQueries({ queryKey: ["payments", { invoiceId: id }] });
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.delete("reference");
+        url.searchParams.delete("payment");
+        window.history.replaceState(
+          {},
+          "",
+          url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""),
+        );
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Could not verify payment");
+      });
+  }, [id, queryClient]);
+
   const handlePayNow = async () => {
     if (!invoice) return;
     setIsPaying(true);
     try {
       const { authorizationUrl } = await initiatePaystackPayment({
         invoiceId: invoice.id,
+        callbackUrl: `${window.location.origin}/invoices/${invoice.id}?payment=complete`,
       });
       if (authorizationUrl) {
         window.location.href = authorizationUrl;

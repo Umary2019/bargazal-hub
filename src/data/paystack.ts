@@ -64,11 +64,19 @@ export async function initiatePaystackPayment({
  * Automatically updates invoice and payment records upon verification.
  */
 export async function verifyPaystackPayment(reference: string): Promise<PaystackVerifyResponse> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+
   const response = await fetch("/api/public/paystack/verify", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({ reference }),
   });
 

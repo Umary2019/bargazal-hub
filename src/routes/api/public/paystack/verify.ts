@@ -36,16 +36,54 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
           return json({ status: "unknown" }, 502);
         }
 
+        const authHeader =
+          request.headers.get("authorization") || request.headers.get("Authorization");
+        const jwt = authHeader ? authHeader.replace(/^Bearer\s+/i, "") : null;
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { createClient } = await import("@supabase/supabase-js");
+
+        const supabaseUrl = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"]!;
+        const supabaseKey =
+          process.env["SUPABASE_SERVICE_ROLE_KEY"] ||
+          process.env["SUPABASE_PUBLISHABLE_KEY"] ||
+          process.env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
+
+        const dbClient = process.env["SUPABASE_SERVICE_ROLE_KEY"]
+          ? supabaseAdmin
+          : jwt
+            ? (createClient(supabaseUrl, supabaseKey, {
+                auth: { persistSession: false },
+                global: { headers: { Authorization: `Bearer ${jwt}` } },
+              }) as any)
+            : supabaseAdmin;
 
         if (result.data.status === "success") {
           const paidAmount = (result.data.amount ?? 0) / 100;
           const paidAt = result.data.paid_at ?? new Date().toISOString();
           const channel = result.data.channel ?? "online";
 
+          // 1. Check if payment already exists for this reference (Idempotency)
+          const { data: existingPayment } = await dbClient
+            .from("payments")
+            .select("id")
+            .eq("provider_reference", reference)
+            .maybeSingle();
+
+          if (existingPayment?.id) {
+            return json({
+              status: "success",
+              reference,
+              amount: paidAmount,
+              channel,
+              paidAt,
+              alreadyRecorded: true,
+            });
+          }
+
           let successRecorded = false;
           try {
-            const { data: rpcData, error } = await supabaseAdmin.rpc(
+            const { data: rpcData, error } = await dbClient.rpc(
               "record_paystack_success" as never,
               {
                 _reference: reference,
@@ -55,7 +93,7 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
                 _raw: result as unknown as Record<string, unknown>,
               } as never,
             );
-            if (!error && rpcData) {
+            if (!error && (rpcData as any)?.ok) {
               successRecorded = true;
             } else if (error) {
               console.warn("record_paystack_success RPC returned error, executing fallback:", error);
@@ -66,105 +104,110 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
 
           if (!successRecorded) {
             // Direct database transaction fallback
-            const { data: tx } = await supabaseAdmin
+            const { data: tx } = await dbClient
               .from("paystack_transactions")
               .select("*")
               .eq("reference", reference)
               .maybeSingle();
 
-            if (tx) {
-              if (tx.status !== "success") {
-                // Check if payment already exists with this provider_reference
-                const { data: existingPayment } = await supabaseAdmin
-                  .from("payments")
-                  .select("id")
-                  .eq("provider_reference", reference)
-                  .maybeSingle();
+            const invoiceId = tx?.invoice_id || (result.data as any).metadata?.invoice_id;
+            if (!invoiceId) {
+              console.error("Could not resolve invoice_id for verified reference", reference);
+              return json({ error: "Could not associate payment with an invoice" }, 400);
+            }
 
-                let paymentId = existingPayment?.id;
+            // Fetch linked invoice to get client_id and project_id
+            const { data: inv } = await dbClient
+              .from("invoices")
+              .select("id, client_id, project_id, total, amount_paid")
+              .eq("id", invoiceId)
+              .single();
 
-                if (!paymentId) {
-                  // Fetch linked invoice to get client_id and project_id
-                  const { data: inv } = await supabaseAdmin
-                    .from("invoices")
-                    .select("id, client_id, project_id, total, amount_paid")
-                    .eq("id", tx.invoice_id)
-                    .single();
+            const clientId =
+              tx?.client_id || (result.data as any).metadata?.client_id || inv?.client_id;
+            if (!clientId) {
+              throw new Error("Missing client_id for payment");
+            }
+            const projectId = inv?.project_id || null;
 
-                  const clientId = tx.client_id || inv?.client_id;
-                  if (!clientId) {
-                    throw new Error("Missing client_id for payment");
-                  }
-                  const projectId = inv?.project_id || null;
+            const { data: newPayment, error: payError } = await dbClient
+              .from("payments")
+              .insert({
+                client_id: clientId,
+                invoice_id: invoiceId,
+                project_id: projectId,
+                amount: paidAmount,
+                payment_method: "Online Payment",
+                payment_date: paidAt.slice(0, 10),
+                reference,
+                provider_reference: reference,
+                channel,
+                currency: "NGN",
+                notes: `Paystack ${channel}`,
+                payment_number: "",
+              })
+              .select("id")
+              .single();
 
-                  const { data: newPayment, error: payError } = await supabaseAdmin
-                    .from("payments")
-                    .insert({
-                      client_id: clientId,
-                      invoice_id: tx.invoice_id,
-                      project_id: projectId,
-                      amount: paidAmount,
-                      payment_method: "Online Payment",
-                      payment_date: paidAt.slice(0, 10),
-                      reference,
-                      provider_reference: reference,
-                      channel,
-                      currency: "NGN",
-                      notes: `Paystack ${channel}`,
-                      payment_number: "",
-                    })
-                    .select("id")
-                    .single();
+            let paymentId = newPayment?.id;
 
-                  if (payError) {
-                    console.error("Direct payment insert error:", payError);
-                  } else if (newPayment) {
-                    paymentId = newPayment.id;
-                  }
-
-                  // Update invoice balance and status
-                  if (inv) {
-                    const newAmountPaid = Number(inv.amount_paid || 0) + paidAmount;
-                    const newStatus =
-                      newAmountPaid >= Number(inv.total) && Number(inv.total) > 0
-                        ? "Paid"
-                        : "Partially Paid";
-                    await supabaseAdmin
-                      .from("invoices")
-                      .update({ amount_paid: newAmountPaid, status: newStatus })
-                      .eq("id", tx.invoice_id);
-                  }
-
-                  // Update project balance
-                  if (projectId) {
-                    const { data: projPayments } = await supabaseAdmin
-                      .from("payments")
-                      .select("amount")
-                      .eq("project_id", projectId);
-
-                    const projPaid = (projPayments || []).reduce(
-                      (acc, p) => acc + Number(p.amount),
-                      0,
-                    );
-                    await supabaseAdmin
-                      .from("projects")
-                      .update({ amount_paid: projPaid })
-                      .eq("id", projectId);
-                  }
-                }
-
-                // Update transaction status
-                await supabaseAdmin
-                  .from("paystack_transactions")
-                  .update({
-                    status: "success",
-                    paid_at: paidAt,
-                    channel,
-                    raw: result as any,
-                    payment_id: paymentId || null,
-                  })
-                  .eq("id", tx.id);
+            if (payError) {
+              if (payError.code === "23505") {
+                // Duplicate reference constraint - already recorded
+                return json({
+                  status: "success",
+                  reference,
+                  amount: paidAmount,
+                  channel,
+                  paidAt,
+                  alreadyRecorded: true,
+                });
               }
+              console.error("Direct payment insert error:", payError);
+            }
+
+            // Update invoice balance and status
+            if (inv) {
+              const newAmountPaid = Number(inv.amount_paid || 0) + paidAmount;
+              const newStatus =
+                newAmountPaid >= Number(inv.total) && Number(inv.total) > 0
+                  ? "Paid"
+                  : "Partially Paid";
+              await dbClient
+                .from("invoices")
+                .update({ amount_paid: newAmountPaid, status: newStatus })
+                .eq("id", invoiceId);
+            }
+
+            // Update project balance
+            if (projectId) {
+              const { data: projPayments } = await dbClient
+                .from("payments")
+                .select("amount")
+                .eq("project_id", projectId);
+
+              const projPaid = (projPayments || []).reduce(
+                (acc, p) => acc + Number(p.amount),
+                0,
+              );
+              await dbClient
+                .from("projects")
+                .update({ amount_paid: projPaid })
+                .eq("id", projectId);
+            }
+
+            // Update transaction status if tx row exists
+            if (tx?.id) {
+              await dbClient
+                .from("paystack_transactions")
+                .update({
+                  status: "success",
+                  paid_at: paidAt,
+                  channel,
+                  raw: result as any,
+                  payment_id: paymentId || null,
+                })
+                .eq("id", tx.id);
             }
           }
 
@@ -177,11 +220,15 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
           });
         }
 
-        await supabaseAdmin.rpc("mark_paystack_failed" as never, {
-          _reference: reference,
-          _status: result.data.status === "abandoned" ? "abandoned" : "failed",
-          _raw: result as unknown as Record<string, unknown>,
-        } as never);
+        try {
+          await dbClient.rpc("mark_paystack_failed" as never, {
+            _reference: reference,
+            _status: result.data.status === "abandoned" ? "abandoned" : "failed",
+            _raw: result as unknown as Record<string, unknown>,
+          } as never);
+        } catch {
+          // ignore error if RPC fails
+        }
         return json({ status: result.data.status ?? "failed" });
       },
     },

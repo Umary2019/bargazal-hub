@@ -40,8 +40,16 @@ export const Route = createFileRoute("/api/public/paystack/init")({
         if (!parsed.success) return json({ error: "Invalid request" }, 400);
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { createClient } = await import("@supabase/supabase-js");
+
+        const supabaseUrl = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"]!;
+        const supabaseKey =
+          process.env["SUPABASE_SERVICE_ROLE_KEY"] ||
+          process.env["SUPABASE_PUBLISHABLE_KEY"] ||
+          process.env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
 
         let target: InvoiceTarget | null = null;
+        let dbClient = supabaseAdmin;
 
         // Path A: Authenticated Client paying by invoiceId
         if (parsed.data.invoiceId) {
@@ -59,8 +67,16 @@ export const Route = createFileRoute("/api/public/paystack/init")({
 
           const authUserId = authData.user.id;
 
+          // If service role key is not configured, create a client with user JWT so RLS allows reading their invoice
+          if (!process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
+            dbClient = createClient(supabaseUrl, supabaseKey, {
+              auth: { persistSession: false },
+              global: { headers: { Authorization: `Bearer ${jwt}` } },
+            }) as any;
+          }
+
           // Check if admin
-          const { data: isAdminRole } = await supabaseAdmin
+          const { data: isAdminRole } = await dbClient
             .from("user_roles")
             .select("role")
             .eq("user_id", authUserId)
@@ -68,13 +84,14 @@ export const Route = createFileRoute("/api/public/paystack/init")({
             .maybeSingle();
 
           // Fetch invoice with client details from database
-          const { data: inv, error: invError } = await supabaseAdmin
+          const { data: inv, error: invError } = await dbClient
             .from("invoices")
             .select("id, invoice_number, total, amount_paid, balance, status, client_id, clients(id, full_name, email, auth_user_id)")
             .eq("id", parsed.data.invoiceId)
             .maybeSingle();
 
           if (invError || !inv) {
+            console.error("Invoice fetch failed:", invError);
             return json({ error: "Invoice not found" }, 404);
           }
 
@@ -140,7 +157,7 @@ export const Route = createFileRoute("/api/public/paystack/init")({
 
         const defaultCallback = target.token
           ? `${appUrl}/public/invoices/${target.token}?reference=${encodeURIComponent(reference)}`
-          : `${appUrl}/client-portal?payment=complete&reference=${encodeURIComponent(reference)}`;
+          : `${appUrl}/dashboard?payment=complete&reference=${encodeURIComponent(reference)}`;
 
         const callbackUrl = parsed.data.callbackUrl || defaultCallback;
 
@@ -160,6 +177,8 @@ export const Route = createFileRoute("/api/public/paystack/init")({
               invoice_id: target.id,
               invoice_number: target.invoice_number,
               client_name: target.client_name,
+              client_id: target.client_id,
+              balance: target.balance,
             },
           }),
         });
@@ -174,7 +193,7 @@ export const Route = createFileRoute("/api/public/paystack/init")({
           return json({ error: "Could not start the payment. Please try again." }, 502);
         }
 
-        const insert = await supabaseAdmin.from("paystack_transactions").insert({
+        const insert = await dbClient.from("paystack_transactions").insert({
           reference,
           invoice_id: target.id,
           client_id: target.client_id,
@@ -184,8 +203,7 @@ export const Route = createFileRoute("/api/public/paystack/init")({
         });
 
         if (insert.error) {
-          console.error("Paystack transaction insert failed", insert.error);
-          return json({ error: "Could not start the payment. Please try again." }, 500);
+          console.warn("Paystack transaction insert warning:", insert.error.message);
         }
 
         return json({ authorizationUrl: result.data.authorization_url, reference });
