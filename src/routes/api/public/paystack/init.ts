@@ -1,14 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-const bodySchema = z.object({
-  token: z.string().min(10),
-  email: z.string().email().optional(),
-});
+const bodySchema = z
+  .object({
+    token: z.string().min(6).optional(),
+    invoiceId: z.string().uuid().optional(),
+    email: z.string().email().optional(),
+    callbackUrl: z.string().url().optional(),
+  })
+  .refine((data) => Boolean(data.token || data.invoiceId), {
+    message: "Either token or invoiceId must be provided",
+  });
 
-type PublicInvoice = {
-  invoice: { id: string; invoice_number: string; balance: number; client_id: string };
-  client: { id: string; full_name: string; email: string | null };
+type InvoiceTarget = {
+  id: string;
+  invoice_number: string;
+  balance: number;
+  client_id: string;
+  client_name: string;
+  client_email: string;
+  token?: string | null;
 };
 
 function json(body: unknown, status = 200) {
@@ -30,25 +41,108 @@ export const Route = createFileRoute("/api/public/paystack/init")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // The public invoice token is the only credential here; it authorises this invoice only.
-        const { data, error } = await supabaseAdmin.rpc("get_public_invoice" as never, {
-          _token: parsed.data.token,
-        } as never);
-        if (error || !data) return json({ error: "Invoice link is invalid or expired" }, 404);
+        let target: InvoiceTarget | null = null;
 
-        const payload = data as unknown as PublicInvoice;
-        const balance = Number(payload.invoice.balance ?? 0);
-        if (!(balance > 0)) return json({ error: "This invoice is already settled" }, 400);
+        // Path A: Authenticated Client paying by invoiceId
+        if (parsed.data.invoiceId) {
+          const authHeader =
+            request.headers.get("authorization") || request.headers.get("Authorization");
+          if (!authHeader) {
+            return json({ error: "Authentication required to pay invoice directly" }, 401);
+          }
 
-        const email = parsed.data.email ?? payload.client.email;
-        if (!email) return json({ error: "An email address is required to pay online" }, 400);
+          const jwt = authHeader.replace(/^Bearer\s+/i, "");
+          const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(jwt);
+          if (authError || !authData?.user) {
+            return json({ error: "Invalid or expired session" }, 401);
+          }
 
-        const reference = `BTS-${payload.invoice.invoice_number}-${Date.now()}`;
+          const authUserId = authData.user.id;
+
+          // Check if admin
+          const { data: isAdminRole } = await supabaseAdmin
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", authUserId)
+            .eq("role", "admin")
+            .maybeSingle();
+
+          // Fetch invoice with client details from database
+          const { data: inv, error: invError } = await supabaseAdmin
+            .from("invoices")
+            .select("id, invoice_number, total, amount_paid, balance, status, client_id, clients(id, full_name, email, auth_user_id)")
+            .eq("id", parsed.data.invoiceId)
+            .maybeSingle();
+
+          if (invError || !inv) {
+            return json({ error: "Invoice not found" }, 404);
+          }
+
+          // Verify ownership: must be admin OR the client who owns this invoice
+          const isOwner = (inv.clients as any)?.auth_user_id === authUserId;
+          if (!isAdminRole && !isOwner) {
+            return json({ error: "Access denied. You can only pay your own invoices." }, 403);
+          }
+
+          const balance = Number(inv.balance ?? (Number(inv.total) - Number(inv.amount_paid)));
+          if (!(balance > 0) || inv.status === "Paid") {
+            return json({ error: "This invoice is already settled" }, 400);
+          }
+
+          const clientEmail = (inv.clients as any)?.email || parsed.data.email || authData.user.email;
+          if (!clientEmail) {
+            return json({ error: "An email address is required to pay online" }, 400);
+          }
+
+          target = {
+            id: inv.id,
+            invoice_number: inv.invoice_number,
+            balance,
+            client_id: inv.client_id,
+            client_name: (inv.clients as any)?.full_name || "Client",
+            client_email: clientEmail,
+          };
+        }
+        // Path B: Public token payment
+        else if (parsed.data.token) {
+          const { data, error } = await supabaseAdmin.rpc("get_public_invoice" as never, {
+            _token: parsed.data.token,
+          } as never);
+          if (error || !data) return json({ error: "Invoice link is invalid or expired" }, 404);
+
+          const payload = data as any;
+          const balance = Number(payload.invoice.balance ?? 0);
+          if (!(balance > 0)) return json({ error: "This invoice is already settled" }, 400);
+
+          const email = parsed.data.email ?? payload.client.email;
+          if (!email) return json({ error: "An email address is required to pay online" }, 400);
+
+          target = {
+            id: payload.invoice.id,
+            invoice_number: payload.invoice.invoice_number,
+            balance,
+            client_id: payload.client.id,
+            client_name: payload.client.full_name,
+            client_email: email,
+            token: parsed.data.token,
+          };
+        }
+
+        if (!target) {
+          return json({ error: "Could not resolve invoice target" }, 400);
+        }
+
+        const reference = `BTS-${target.invoice_number}-${Date.now()}`;
         const appUrl = (process.env["PUBLIC_APP_URL"] ?? new URL(request.url).origin).replace(
           /\/$/,
           "",
         );
-        const callbackUrl = `${appUrl}/public/invoices/${parsed.data.token}?reference=${encodeURIComponent(reference)}`;
+
+        const defaultCallback = target.token
+          ? `${appUrl}/public/invoices/${target.token}?reference=${encodeURIComponent(reference)}`
+          : `${appUrl}/dashboard?payment=complete&reference=${encodeURIComponent(reference)}`;
+
+        const callbackUrl = parsed.data.callbackUrl || defaultCallback;
 
         const response = await fetch("https://api.paystack.co/transaction/initialize", {
           method: "POST",
@@ -57,18 +151,19 @@ export const Route = createFileRoute("/api/public/paystack/init")({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email,
-            amount: Math.round(balance * 100),
+            email: target.client_email,
+            amount: Math.round(target.balance * 100),
             currency: "NGN",
             reference,
             callback_url: callbackUrl,
             metadata: {
-              invoice_id: payload.invoice.id,
-              invoice_number: payload.invoice.invoice_number,
-              client_name: payload.client.full_name,
+              invoice_id: target.id,
+              invoice_number: target.invoice_number,
+              client_name: target.client_name,
             },
           }),
         });
+
         const result = (await response.json().catch(() => null)) as {
           status?: boolean;
           data?: { authorization_url?: string };
@@ -81,12 +176,13 @@ export const Route = createFileRoute("/api/public/paystack/init")({
 
         const insert = await supabaseAdmin.from("paystack_transactions").insert({
           reference,
-          invoice_id: payload.invoice.id,
-          client_id: payload.client.id,
-          email,
-          amount: balance,
+          invoice_id: target.id,
+          client_id: target.client_id,
+          email: target.client_email,
+          amount: target.balance,
           authorization_url: result.data.authorization_url,
         });
+
         if (insert.error) {
           console.error("Paystack transaction insert failed", insert.error);
           return json({ error: "Could not start the payment. Please try again." }, 500);

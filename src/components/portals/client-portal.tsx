@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
   FolderKanban,
@@ -12,13 +13,19 @@ import {
   Eye,
   Calendar,
   DollarSign,
+  CreditCard,
+  Receipt,
+  Search,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -38,8 +45,13 @@ import { useServices } from "@/data/services";
 import { useClientPortalData, useMyClient } from "@/data/portals";
 import { useCreateServiceRequest } from "@/data/service-requests";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { initiatePaystackPayment, verifyPaystackPayment } from "@/data/paystack";
+import { ClientInvoiceDialog } from "@/components/invoices/client-invoice-dialog";
+import { PaymentReceipt } from "@/components/payments/payment-receipt";
+import { getInvoicePaymentStatus } from "@/lib/invoice-status";
 
 export function ClientPortal() {
+  const queryClient = useQueryClient();
   const { data: client, isLoading: clientLoading } = useMyClient();
   const { data, isLoading } = useClientPortalData(client?.id);
   const { data: services = [] } = useServices();
@@ -50,6 +62,72 @@ export function ClientPortal() {
   const [budget, setBudget] = useState("");
   const [preferredDeadline, setPreferredDeadline] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+
+  // Invoices & Payment States
+  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+  const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [verifiedPaymentRef, setVerifiedPaymentRef] = useState<string | null>(null);
+  const [invoiceFilter, setInvoiceFilter] = useState<"all" | "unpaid" | "paid">("all");
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [receiptInvoice, setReceiptInvoice] = useState<any | null>(null);
+
+  // Handle Paystack callback verification on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("reference");
+    if (!ref || isVerifyingPayment) return;
+
+    setIsVerifyingPayment(true);
+    verifyPaystackPayment(ref)
+      .then((res) => {
+        if (res.status === "success") {
+          toast.success("Payment verified successfully! Your project is funded.");
+          setVerifiedPaymentRef(ref);
+        } else if (res.status === "abandoned") {
+          toast.info("Payment session was cancelled. You can try again whenever ready.");
+        } else {
+          toast.error("Payment was not completed. Please try again.");
+        }
+        queryClient.invalidateQueries({ queryKey: ["client-portal"] });
+        queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+
+        // Clean query params
+        const url = new URL(window.location.href);
+        url.searchParams.delete("reference");
+        url.searchParams.delete("payment");
+        window.history.replaceState(
+          {},
+          "",
+          url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""),
+        );
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Could not verify payment");
+      })
+      .finally(() => {
+        setIsVerifyingPayment(false);
+      });
+  }, [isVerifyingPayment, queryClient]);
+
+  async function handlePayInvoice(invoiceToPay: any) {
+    if (!invoiceToPay?.id) return;
+    try {
+      setPayingInvoiceId(invoiceToPay.id);
+      const res = await initiatePaystackPayment({
+        invoiceId: invoiceToPay.id,
+        email: client?.email || undefined,
+        callbackUrl: `${window.location.origin}/dashboard?payment=complete`,
+      });
+      if (res.authorizationUrl) {
+        window.location.assign(res.authorizationUrl);
+      }
+    } catch (payErr) {
+      toast.error(payErr instanceof Error ? payErr.message : "Failed to start Paystack checkout");
+      setPayingInvoiceId(null);
+    }
+  }
 
   async function submitRequest(event: React.FormEvent) {
     event.preventDefault();
@@ -93,6 +171,11 @@ export function ClientPortal() {
   const approvedRequests = requests.filter((r: any) => r.status === "Approved");
   const rejectedRequests = requests.filter((r: any) => r.status === "Rejected");
 
+  const unpaidInvoices = invoices.filter(
+    (i: any) => getInvoicePaymentStatus(i) !== "Paid" && Number(i.balance ?? i.total) > 0,
+  );
+  const paidInvoices = invoices.filter((i: any) => getInvoicePaymentStatus(i) === "Paid");
+
   return (
     <div className="space-y-6">
       <div>
@@ -109,6 +192,81 @@ export function ClientPortal() {
             reviewed by the team.
           </CardContent>
         </Card>
+      )}
+
+      {/* Payment Success Confirmation Banner (Requirement 14 & 20) */}
+      {verifiedPaymentRef && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-300 bg-emerald-50/90 p-4 text-emerald-950 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold">Your payment has been successfully received.</p>
+              <p className="text-sm text-emerald-800/90 dark:text-emerald-300/90">
+                Transaction confirmed with Paystack (Ref: <span className="font-mono font-medium">{verifiedPaymentRef}</span>). Your project is now funded and in development.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 shrink-0"
+            onClick={() => setVerifiedPaymentRef(null)}
+          >
+            Dismiss
+          </Button>
+        </div>
+      )}
+
+      {/* Invoice Ready For Payment Banner (Requirement 14) */}
+      {unpaidInvoices.length > 0 && !verifiedPaymentRef && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50/90 p-4 text-amber-950 shadow-xs dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-100">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-xs">
+              <CreditCard className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-semibold">
+                Your invoice is ready for payment ({unpaidInvoices[0].invoice_number})
+              </p>
+              <p className="text-sm text-amber-800/90 dark:text-amber-300/90">
+                Amount due:{" "}
+                <span className="font-bold">
+                  {formatCurrency(Number(unpaidInvoices[0].balance || unpaidInvoices[0].total))}
+                </span>{" "}
+                for {unpaidInvoices[0].projects?.services?.name || unpaidInvoices[0].projects?.title || "approved project"}.
+                {unpaidInvoices.length > 1 && ` (${unpaidInvoices.length} total unpaid)`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-amber-300 hover:bg-amber-100"
+              onClick={() => setSelectedInvoice(unpaidInvoices[0])}
+            >
+              View Invoice
+            </Button>
+            <Button
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5 shadow-xs"
+              onClick={() => void handlePayInvoice(unpaidInvoices[0])}
+              disabled={payingInvoiceId === unpaidInvoices[0].id}
+            >
+              {payingInvoiceId === unpaidInvoices[0].id ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Preparing...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4" /> Pay Now
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Rejection Notification Banner */}
@@ -507,27 +665,234 @@ export function ClientPortal() {
           )}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Invoices
-          </CardTitle>
+      {/* INVOICES SECTION (Requirement 4 & 5) */}
+      <Card className="shadow-xs border">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl font-bold">
+              <FileText className="h-5 w-5 text-primary" /> Invoices & Billing
+            </CardTitle>
+            <CardDescription>
+              Review your project invoices, payment history, and pay online with Paystack
+            </CardDescription>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative w-full sm:w-56">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search invoice or service..."
+                className="pl-8 text-xs h-9"
+                value={invoiceSearch}
+                onChange={(e) => setInvoiceSearch(e.target.value)}
+              />
+            </div>
+            <Tabs
+              value={invoiceFilter}
+              onValueChange={(v) => setInvoiceFilter(v as any)}
+              className="w-full sm:w-auto"
+            >
+              <TabsList className="grid grid-cols-3 h-9">
+                <TabsTrigger value="all" className="text-xs">
+                  All ({invoices.length})
+                </TabsTrigger>
+                <TabsTrigger value="unpaid" className="text-xs">
+                  Unpaid ({unpaidInvoices.length})
+                </TabsTrigger>
+                <TabsTrigger value="paid" className="text-xs">
+                  Paid ({paidInvoices.length})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {invoices.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No invoices yet.</p>
-          ) : (
-            invoices.map((invoice: any) => (
-              <div key={invoice.id} className="flex justify-between rounded-md border p-3">
-                <span>{invoice.invoice_number}</span>
-                <span>
-                  {formatCurrency(invoice.total)} · {invoice.status}
-                </span>
+
+        <CardContent>
+          {(() => {
+            const filtered = invoices.filter((inv: any) => {
+              const status = getInvoicePaymentStatus(inv);
+              if (invoiceFilter === "unpaid" && status === "Paid") return false;
+              if (invoiceFilter === "paid" && status !== "Paid") return false;
+
+              if (invoiceSearch.trim()) {
+                const q = invoiceSearch.toLowerCase();
+                const num = (inv.invoice_number || "").toLowerCase();
+                const sName = (inv.projects?.services?.name || "").toLowerCase();
+                const pTitle = (inv.projects?.title || "").toLowerCase();
+                if (!num.includes(q) && !sName.includes(q) && !pTitle.includes(q)) return false;
+              }
+              return true;
+            });
+
+            if (invoices.length === 0) {
+              return (
+                <div className="text-center py-12 border rounded-lg bg-muted/20">
+                  <FileText className="h-10 w-10 mx-auto text-muted-foreground/60 mb-2" />
+                  <p className="font-semibold text-foreground">No invoices generated yet</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                    When the administrator approves your service request, an invoice will be automatically generated here for instant payment.
+                  </p>
+                </div>
+              );
+            }
+
+            if (filtered.length === 0) {
+              return (
+                <div className="text-center py-8 border rounded-lg bg-muted/10">
+                  <p className="text-sm text-muted-foreground">
+                    No invoices matching the selected filter or search term.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-xs font-semibold text-muted-foreground border-b">
+                    <tr>
+                      <th className="py-3 px-4 text-left">Invoice</th>
+                      <th className="py-3 px-4 text-left">Service / Project</th>
+                      <th className="py-3 px-4 text-left">Amount</th>
+                      <th className="py-3 px-4 text-left hidden md:table-cell">Issue Date</th>
+                      <th className="py-3 px-4 text-left hidden md:table-cell">Due Date</th>
+                      <th className="py-3 px-4 text-center">Status</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filtered.map((inv: any) => {
+                      const status = getInvoicePaymentStatus(inv);
+                      const isPaid = status === "Paid";
+                      const sName =
+                        inv.projects?.services?.name ||
+                        inv.projects?.title ||
+                        inv.invoice_items?.[0]?.description ||
+                        "Service Request";
+
+                      return (
+                        <tr
+                          key={inv.id}
+                          className="hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => setSelectedInvoice(inv)}
+                        >
+                          <td className="py-3 px-4 font-mono font-bold text-foreground">
+                            {inv.invoice_number}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-medium text-foreground block max-w-[200px] truncate">
+                              {sName}
+                            </span>
+                            {inv.projects?.project_number && (
+                              <span className="text-[11px] text-muted-foreground block font-mono">
+                                #{inv.projects.project_number}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-foreground">
+                            {formatCurrency(Number(inv.total))}
+                            {status === "Partially Paid" && (
+                              <span className="text-xs text-amber-600 block">
+                                Bal: {formatCurrency(Number(inv.balance))}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground hidden md:table-cell">
+                            {formatDate(inv.issue_date)}
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground hidden md:table-cell">
+                            {inv.due_date ? formatDate(inv.due_date) : "Upon receipt"}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge
+                              className={
+                                isPaid
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-200"
+                                  : status === "Overdue"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 hover:bg-red-200"
+                                    : status === "Partially Paid"
+                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 hover:bg-blue-200"
+                                      : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 hover:bg-amber-200"
+                              }
+                            >
+                              {status}
+                            </Badge>
+                          </td>
+                          <td
+                            className="py-3 px-4 text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-xs font-medium"
+                                onClick={() => setSelectedInvoice(inv)}
+                              >
+                                <Eye className="h-3.5 w-3.5 mr-1" /> View
+                              </Button>
+
+                              {!isPaid ? (
+                                <Button
+                                  size="sm"
+                                  className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs gap-1.5 shadow-xs"
+                                  onClick={() => void handlePayInvoice(inv)}
+                                  disabled={payingInvoiceId === inv.id}
+                                >
+                                  {payingInvoiceId === inv.id ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Starting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CreditCard className="h-3.5 w-3.5" /> Pay Now
+                                    </>
+                                  )}
+                                </Button>
+                              ) : (
+                                Number(inv.amount_paid) > 0 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs gap-1 font-medium"
+                                    onClick={() => setReceiptInvoice(inv)}
+                                  >
+                                    <Receipt className="h-3.5 w-3.5" /> Receipt
+                                  </Button>
+                                )
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ))
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
+
+      {/* Invoice Details Modal (Requirement 5) */}
+      <ClientInvoiceDialog
+        open={Boolean(selectedInvoice)}
+        onOpenChange={(open) => !open && setSelectedInvoice(null)}
+        invoice={selectedInvoice}
+        client={client}
+        onPayNow={handlePayInvoice}
+        isPaying={payingInvoiceId === selectedInvoice?.id}
+      />
+
+      {/* Payment Receipt Dialog */}
+      {receiptInvoice && (
+        <PaymentReceipt
+          invoice={receiptInvoice}
+          payments={receiptInvoice.payments ?? []}
+          open={Boolean(receiptInvoice)}
+          onOpenChange={(open) => !open && setReceiptInvoice(null)}
+        />
+      )}
     </div>
   );
 }

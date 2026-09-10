@@ -3,11 +3,13 @@ import {
   ArrowLeft,
   CreditCard,
   ExternalLink,
+  Loader2,
   Mail,
   MessageCircle,
   Pencil,
   Printer,
   Share2,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +21,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useInvoice } from "@/data/invoices";
 import { useDeleteInvoice } from "@/data/invoices";
 import { usePayments } from "@/data/payments";
+import { useServiceRequest } from "@/data/service-requests";
+import { initiatePaystackPayment } from "@/data/paystack";
+import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { InvoiceFormDialog } from "@/components/invoices/invoice-form-dialog";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
@@ -36,15 +41,37 @@ export const Route = createFileRoute("/invoices/$id")({ component: InvoiceDetail
 function InvoiceDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const { role, clientId } = useAuth();
+  const isClient = role === "client" || Boolean(clientId);
   const { data: invoice, isLoading, error } = useInvoice(id);
   const { data: payments = [] } = usePayments({ invoiceId: id });
   const { data: client } = useClient(invoice?.client_id);
+  const { data: serviceRequest } = useServiceRequest(invoice?.service_request_id);
   const { data: settings } = useBusinessSettings();
   const [editOpen, setEditOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [sending, setSending] = useState<"email" | "whatsapp" | null>(null);
+  const [isPaying, setIsPaying] = useState(false);
   const deleteInvoice = useDeleteInvoice();
+
+  const handlePayNow = async () => {
+    if (!invoice) return;
+    setIsPaying(true);
+    try {
+      const { authorizationUrl } = await initiatePaystackPayment({
+        invoiceId: invoice.id,
+      });
+      if (authorizationUrl) {
+        window.location.href = authorizationUrl;
+      } else {
+        throw new Error("Unable to obtain Paystack checkout URL");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to connect to Paystack");
+      setIsPaying(false);
+    }
+  };
 
   async function sharePublicInvoice() {
     setSharing(true);
@@ -127,6 +154,25 @@ function InvoiceDetailPage() {
             <Badge variant="outline" className="px-3 py-1.5 text-base">
               {getInvoicePaymentStatus(invoice)}
             </Badge>
+            {Number(invoice.balance) > 0 && (
+              <Button
+                size="sm"
+                className="bg-emerald-600 font-semibold text-white hover:bg-emerald-700"
+                onClick={handlePayNow}
+                disabled={isPaying}
+              >
+                {isPaying ? (
+                  <>
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="mr-1 h-4 w-4" /> Pay with Paystack (
+                    {formatCurrency(invoice.balance)})
+                  </>
+                )}
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1 h-4 w-4" /> Edit
             </Button>
@@ -290,7 +336,7 @@ function InvoiceDetailPage() {
             <CardHeader>
               <CardTitle>Invoice Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+            <CardContent className="space-y-3.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Issue date</span>
                 <span>{formatDate(invoice.issue_date)}</span>
@@ -299,14 +345,39 @@ function InvoiceDetailPage() {
                 <span className="text-muted-foreground">Due date</span>
                 <span>{invoice.due_date ? formatDate(invoice.due_date) : "—"}</span>
               </div>
+              {invoice.service_request_id && (
+                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 dark:border-indigo-900/50 dark:bg-indigo-950/20">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-indigo-900 dark:text-indigo-300">
+                      Originating Service Request
+                    </span>
+                    <Badge variant="outline" className="border-indigo-300 text-[11px]">
+                      {serviceRequest?.status ?? "Linked"}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-foreground">
+                    {serviceRequest?.title ?? `Request #${invoice.service_request_id.slice(0, 8)}`}
+                  </p>
+                  <Link
+                    to="/requests"
+                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 hover:underline dark:text-indigo-300"
+                  >
+                    View in Requests Manager <ExternalLink className="h-3 w-3" />
+                  </Link>
+                </div>
+              )}
               {invoice.project_id && (
-                <Link
-                  to="/projects/$id"
-                  params={{ id: invoice.project_id }}
-                  className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                >
-                  Open linked project <ExternalLink className="h-3.5 w-3.5" />
-                </Link>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-muted-foreground">Linked Project</span>
+                  <Link
+                    to="/projects/$id"
+                    params={{ id: invoice.project_id }}
+                    className="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {invoice.projects?.project_number ? `${invoice.projects.project_number} — ` : ""}
+                    {invoice.projects?.title ?? "View Project"} <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               )}
               {invoice.notes && (
                 <p className="whitespace-pre-wrap text-muted-foreground">{invoice.notes}</p>
@@ -316,21 +387,78 @@ function InvoiceDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" /> Payments
+                <CreditCard className="h-4 w-4" /> Payments & Audit Trail
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {payments.length === 0 && (
                 <p className="text-sm text-muted-foreground">No payments recorded.</p>
               )}
-              {payments.map((payment) => (
-                <div key={payment.id} className="flex justify-between text-sm">
-                  <span>
-                    {formatDate(payment.payment_date)} · {payment.payment_method}
-                  </span>
-                  <span className="font-medium">{formatCurrency(payment.amount)}</span>
-                </div>
-              ))}
+              {payments.map((payment) => {
+                const payRecord = payment as unknown as {
+                  id: string;
+                  amount: number;
+                  payment_date: string;
+                  payment_method: string;
+                  channel?: string | null;
+                  provider_reference?: string | null;
+                  created_at?: string;
+                  notes?: string | null;
+                };
+                return (
+                  <div
+                    key={payment.id}
+                    className="rounded-lg border bg-card p-3 shadow-xs space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-semibold"
+                        >
+                          <ShieldCheck className="mr-1 h-3 w-3 inline" /> Verified
+                        </Badge>
+                        <span className="font-semibold text-sm">
+                          {payment.payment_method || "Paystack"}
+                        </span>
+                        {payRecord.channel && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] uppercase font-mono tracking-wider"
+                          >
+                            {payRecord.channel}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(payment.amount)}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1">
+                      <div>
+                        <span className="text-muted-foreground/70">Payment Date:</span>{" "}
+                        <span className="font-medium text-foreground">
+                          {formatDate(payment.payment_date)}
+                        </span>
+                      </div>
+                      {payRecord.provider_reference && (
+                        <div className="text-right">
+                          <span className="text-muted-foreground/70">Paystack Ref:</span>{" "}
+                          <span className="font-mono text-foreground select-all font-semibold">
+                            {payRecord.provider_reference}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {payment.notes && (
+                      <p className="text-xs text-muted-foreground border-t pt-1.5 mt-1 italic">
+                        {payment.notes}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </div>

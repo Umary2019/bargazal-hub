@@ -8,5 +8,5 @@ export function getInvoicePaymentStatus(
   if (Number(invoice.amount_paid) > 0) return "Partially Paid";
   if (invoice.due_date && invoice.due_date < new Date().toISOString().slice(0, 10))
     return "Overdue";
-  return "Not Paid";
+  return "Unpaid";
 }

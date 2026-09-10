@@ -9,7 +9,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { fetchAllPages } from "@/lib/paginate";
 
 const KEY = ["invoices"] as const;
-const SELECT = "*, clients(id, full_name), projects(id, title, project_number)";
+const SELECT =
+  "*, clients(id, full_name, email, phone, whatsapp), projects(id, title, project_number, service_id, services(id, name)), payments(*)";
 
 export type InvoiceItemDraft = {
   description: string;

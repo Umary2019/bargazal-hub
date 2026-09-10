@@ -296,6 +296,7 @@ export type Database = {
           issue_date: string;
           notes: string | null;
           project_id: string | null;
+          service_request_id: string | null;
           status: Database["public"]["Enums"]["invoice_status"];
           subtotal: number;
           tax: number;
@@ -314,6 +315,7 @@ export type Database = {
           issue_date?: string;
           notes?: string | null;
           project_id?: string | null;
+          service_request_id?: string | null;
           status?: Database["public"]["Enums"]["invoice_status"];
           subtotal?: number;
           tax?: number;
@@ -332,6 +334,7 @@ export type Database = {
           issue_date?: string;
           notes?: string | null;
           project_id?: string | null;
+          service_request_id?: string | null;
           status?: Database["public"]["Enums"]["invoice_status"];
           subtotal?: number;
           tax?: number;
@@ -351,6 +354,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_service_request_id_fkey";
+            columns: ["service_request_id"];
+            isOneToOne: false;
+            referencedRelation: "service_requests";
             referencedColumns: ["id"];
           },
         ];
@@ -402,8 +412,10 @@ export type Database = {
       payments: {
         Row: {
           amount: number;
+          channel: string | null;
           client_id: string;
           created_at: string;
+          currency: string;
           id: string;
           invoice_id: string | null;
           notes: string | null;
@@ -411,14 +423,17 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_method"];
           payment_number: string;
           project_id: string | null;
+          provider_reference: string | null;
           reference: string | null;
           void_reason: string | null;
           voided_at: string | null;
         };
         Insert: {
           amount: number;
+          channel?: string | null;
           client_id: string;
           created_at?: string;
+          currency?: string;
           id?: string;
           invoice_id?: string | null;
           notes?: string | null;
@@ -426,14 +441,17 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"];
           payment_number: string;
           project_id?: string | null;
+          provider_reference?: string | null;
           reference?: string | null;
           void_reason?: string | null;
           voided_at?: string | null;
         };
         Update: {
           amount?: number;
+          channel?: string | null;
           client_id?: string;
           created_at?: string;
+          currency?: string;
           id?: string;
           invoice_id?: string | null;
           notes?: string | null;
@@ -441,6 +459,7 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"];
           payment_number?: string;
           project_id?: string | null;
+          provider_reference?: string | null;
           reference?: string | null;
           void_reason?: string | null;
           voided_at?: string | null;
@@ -1225,6 +1244,8 @@ export type Database = {
         Args: {
           _admin_note?: string | null;
           _assigned_staff_id?: string | null;
+          _invoice_amount?: number | null;
+          _invoice_due_date?: string | null;
           _request_id: string;
         };
         Returns: Json;
@@ -1239,6 +1260,10 @@ export type Database = {
         Returns: string;
       };
       current_client_id: { Args: never; Returns: string };
+      get_or_create_invoice_token: {
+        Args: { _invoice_id: string };
+        Returns: string;
+      };
       finalize_client_registration: {
         Args: {
           _address: string;

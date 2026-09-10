@@ -37,6 +37,51 @@ export function useServiceRequests(options?: { clientId?: string | undefined }) 
   });
 }
 
+export function useServiceRequest(id: string | undefined | null) {
+  return useQuery({
+    queryKey: ["service_request", id],
+    enabled: Boolean(id),
+    queryFn: async (): Promise<ServiceRequest | null> => {
+      const { data, error } = await supabase
+        .from("service_requests")
+        .select(SELECT)
+        .eq("id", id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as ServiceRequest | null;
+    },
+  });
+}
+
+export function useServiceRequestInvoice(
+  serviceRequestId?: string | null,
+  projectId?: string | null,
+) {
+  return useQuery({
+    queryKey: ["service_request_invoice", serviceRequestId, projectId],
+    enabled: Boolean(serviceRequestId || projectId),
+    queryFn: async () => {
+      if (serviceRequestId) {
+        const { data } = await supabase
+          .from("invoices")
+          .select("id, invoice_number, total, amount_paid, balance, status, issue_date")
+          .eq("service_request_id", serviceRequestId)
+          .maybeSingle();
+        if (data) return data;
+      }
+      if (projectId) {
+        const { data } = await supabase
+          .from("invoices")
+          .select("id, invoice_number, total, amount_paid, balance, status, issue_date")
+          .eq("project_id", projectId)
+          .maybeSingle();
+        if (data) return data;
+      }
+      return null;
+    },
+  });
+}
+
 export function usePendingServiceRequestsCount() {
   return useQuery({
     queryKey: ["service_requests", "pending_count"],
@@ -117,10 +162,14 @@ export function useApproveServiceRequest() {
       request,
       assignedStaffId,
       note,
+      invoiceAmount,
+      dueDate,
     }: {
       request: ServiceRequest;
       assignedStaffId?: string | null | undefined;
       note?: string | null | undefined;
+      invoiceAmount?: number | null | undefined;
+      dueDate?: string | null | undefined;
     }) => {
       if (request.status !== "Pending") {
         throw new Error(`Cannot approve request. It is already ${request.status}.`);
@@ -147,7 +196,17 @@ export function useApproveServiceRequest() {
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData.user?.id ?? null;
 
-      // 1. Try RPC first
+      const finalAmount = Number(
+        invoiceAmount !== undefined && invoiceAmount !== null
+          ? invoiceAmount
+          : (request.budget ?? 0),
+      );
+      const finalDueDate =
+        dueDate ||
+        request.preferred_deadline ||
+        new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+
+      // 1. Try RPC first (with migration 0011 args)
       try {
         const { data: rpcData, error: rpcError } = await (supabase as any).rpc(
           "approve_service_request",
@@ -155,6 +214,8 @@ export function useApproveServiceRequest() {
             _request_id: request.id,
             _assigned_staff_id: targetStaffId,
             _admin_note: note || null,
+            _invoice_amount: finalAmount,
+            _invoice_due_date: finalDueDate,
           },
         );
         if (!rpcError && rpcData) {
@@ -202,7 +263,7 @@ export function useApproveServiceRequest() {
           service_id: request.service_id,
           description: request.details,
           institution: request.institution,
-          budget: Number(request.budget ?? 0),
+          budget: finalAmount,
           deadline: request.preferred_deadline,
           assigned_staff_id: targetStaffId,
           status: "Pending",
@@ -210,6 +271,83 @@ export function useApproveServiceRequest() {
         .select()
         .single();
       if (projectError) throw projectError;
+
+      // Duplicate invoice protection (Requirement 16)
+      let invoiceId: string | null = null;
+      try {
+        const { data: existingInv } = await (supabase as any)
+          .from("invoices")
+          .select("id")
+          .eq("service_request_id", request.id)
+          .maybeSingle();
+
+        if (existingInv?.id) {
+          invoiceId = existingInv.id;
+        } else {
+          // Automatic invoice creation
+          const invoicePayload = {
+            invoice_number: "",
+            client_id: request.client_id,
+            project_id: project.id,
+            service_request_id: request.id,
+            issue_date: new Date().toISOString().slice(0, 10),
+            due_date: finalDueDate,
+            subtotal: finalAmount,
+            discount: 0,
+            tax: 0,
+            total: finalAmount,
+            amount_paid: 0,
+            status: "Sent" as const,
+            notes: request.details || null,
+          };
+
+          let { data: newInv, error: invError } = await (supabase as any)
+            .from("invoices")
+            .insert(invoicePayload)
+            .select("id, invoice_number")
+            .single();
+
+          if (
+            invError &&
+            (invError.code === "PGRST204" ||
+              (invError.message || "").toLowerCase().includes("column"))
+          ) {
+            // Fallback if migration 0011 column is not in DB schema cache yet
+            const { service_request_id: _srid, ...basePayload } = invoicePayload;
+            const retryInv = await (supabase as any)
+              .from("invoices")
+              .insert(basePayload)
+              .select("id, invoice_number")
+              .single();
+            newInv = retryInv.data;
+            invError = retryInv.error;
+          }
+
+          if (!invError && newInv) {
+            invoiceId = newInv.id;
+            // Create line item
+            await (supabase as any).from("invoice_items").insert({
+              invoice_id: newInv.id,
+              service_id: request.service_id,
+              description: request.title || "Service Request",
+              quantity: 1,
+              unit_price: finalAmount,
+            });
+
+            // Create public token
+            try {
+              await (supabase as any).from("invoice_public_tokens").insert({
+                invoice_id: newInv.id,
+                created_by: currentUserId,
+              });
+            } catch (tokenErr) {
+              console.warn("Could not create invoice token:", tokenErr);
+            }
+          }
+        }
+      } catch (invCreateErr) {
+        console.warn("Automatic invoice generation error in fallback:", invCreateErr);
+      }
 
       // Update service request status
       const fullUpdatePayload = {
@@ -254,18 +392,20 @@ export function useApproveServiceRequest() {
         "service_request",
         request.id,
         "approved",
-        `Approved service request: ${request.title}${targetStaffId ? " with staff assigned" : ""}`,
+        `Approved service request: ${request.title}${targetStaffId ? " with staff assigned" : ""} and generated invoice`,
       );
-      return project;
+      return { project, invoiceId };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEY });
       qc.invalidateQueries({ queryKey: ["client-portal"] });
       qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["invoice"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["activity"] });
       qc.invalidateQueries({ queryKey: ["service_requests", "pending_count"] });
-      toast.success("Request approved and project created successfully");
+      toast.success("Request approved, project created, and invoice generated");
     },
     onError: (error) => notifyError(error, "Could not approve request"),
   });

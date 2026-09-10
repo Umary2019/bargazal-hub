@@ -36,7 +36,9 @@ export function useClientPortalData(clientId: string | undefined) {
           .order("created_at", { ascending: false }),
         db
           .from("invoices")
-          .select("*")
+          .select(
+            "*, projects(id, title, project_number, service_id, services(id, name)), invoice_items(*), payments(*), paystack_transactions(*)",
+          )
           .eq("client_id", clientId)
           .order("created_at", { ascending: false }),
       ]);

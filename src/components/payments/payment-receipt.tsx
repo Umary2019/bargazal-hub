@@ -76,6 +76,10 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
       `Invoice total: ${formatCurrency(invoice.total)}`,
       `Amount paid: ${formatCurrency(invoice.amount_paid)}`,
       `Payment method: ${payment?.payment_method || "Payment received"}`,
+      (payment as any)?.provider_reference
+        ? `Paystack Ref: ${(payment as any).provider_reference}`
+        : "",
+      (payment as any)?.channel ? `Channel: ${(payment as any).channel}` : "",
       ...payments.map(
         (item) =>
           `Payment: ${item.payment_number}, ${formatCurrency(item.amount)}, ${item.payment_method}, ${formatDate(item.payment_date)}`,
@@ -188,6 +192,16 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
               <p className="text-sm">
                 <strong>Date:</strong> {formatDate(payment?.payment_date)}
               </p>
+              {(payment as any)?.provider_reference && (
+                <p className="text-xs font-mono text-slate-600">
+                  <strong>Paystack Ref:</strong> {(payment as any).provider_reference}
+                </p>
+              )}
+              {(payment as any)?.channel && (
+                <p className="text-xs text-slate-600 uppercase">
+                  <strong>Channel:</strong> {(payment as any).channel}
+                </p>
+              )}
             </div>
           </div>
 
@@ -257,6 +271,7 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
           <div className="mt-6 bg-emerald-50 p-3 text-center font-bold text-emerald-700">
             {receiptStatus} · Invoice {invoice.invoice_number} ·{" "}
             {payment?.payment_method || "Payment received"}
+            {(payment as any)?.channel ? ` (${String((payment as any).channel).toUpperCase()})` : ""}
           </div>
           <div className="mt-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
             <div className="w-56 text-sm">

@@ -24,8 +24,17 @@ export type ProjectWithRelations = Project & {
   services: Pick<Service, "id" | "name"> | null;
 };
 export type InvoiceWithRelations = Invoice & {
-  clients: Pick<Client, "id" | "full_name"> | null;
-  projects: Pick<Project, "id" | "title" | "project_number"> | null;
+  clients: (Pick<Client, "id" | "full_name"> & {
+    email?: string | null;
+    phone?: string | null;
+    whatsapp?: string | null;
+  }) | null;
+  projects: (Pick<Project, "id" | "title" | "project_number"> & {
+    service_id?: string | null;
+    services?: Pick<Service, "id" | "name"> | null;
+  }) | null;
+  payments?: Payment[] | null;
+  service_requests?: { id: string; title: string; status: string } | null;
 };
 export type PaymentWithRelations = Payment & {
   clients: Pick<Client, "id" | "full_name"> | null;
