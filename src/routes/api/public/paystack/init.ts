@@ -193,17 +193,24 @@ export const Route = createFileRoute("/api/public/paystack/init")({
           return json({ error: "Could not start the payment. Please try again." }, 502);
         }
 
-        const insert = await dbClient.from("paystack_transactions").insert({
-          reference,
-          invoice_id: target.id,
-          client_id: target.client_id,
-          email: target.client_email,
-          amount: target.balance,
-          authorization_url: result.data.authorization_url,
-        });
+        // Securely record pending transaction in paystack_transactions using SECURITY DEFINER RPC
+        const { data: initData, error: initError } = await dbClient.rpc(
+          "init_paystack_transaction" as never,
+          {
+            _reference: reference,
+            _invoice_id: target.id,
+            _amount: target.balance,
+            _email: target.client_email,
+            _authorization_url: result.data.authorization_url,
+          } as never,
+        );
 
-        if (insert.error) {
-          console.warn("Paystack transaction insert warning:", insert.error.message);
+        if (initError || !(initData as any)?.ok) {
+          console.error("Paystack transaction initialization failed:", initError || initData);
+          return json(
+            { error: (initData as any)?.error || "Could not record payment initialization in database" },
+            500,
+          );
         }
 
         return json({ authorizationUrl: result.data.authorization_url, reference });

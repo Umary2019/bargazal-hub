@@ -1312,6 +1312,16 @@ export type Database = {
         };
         Returns: boolean;
       };
+      init_paystack_transaction: {
+        Args: {
+          _amount: number;
+          _authorization_url?: string | null;
+          _email: string;
+          _invoice_id: string;
+          _reference: string;
+        };
+        Returns: Json;
+      };
       is_admin: { Args: { _user_id?: string }; Returns: boolean };
       is_approved_client: { Args: never; Returns: boolean };
       is_staff_or_admin: { Args: { _user_id?: string }; Returns: boolean };
@@ -1324,6 +1334,16 @@ export type Database = {
         Returns: string;
       };
       record_paystack_success: {
+        Args: {
+          _amount: number;
+          _channel: string;
+          _paid_at: string;
+          _raw: Json;
+          _reference: string;
+        };
+        Returns: Json;
+      };
+      settle_paystack_payment: {
         Args: {
           _amount: number;
           _channel: string;

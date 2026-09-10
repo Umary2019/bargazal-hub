@@ -72,160 +72,42 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
             : supabaseAdmin;
 
         if (result.data.status === "success") {
+          const currency = (result.data.currency || "").toUpperCase();
+          if (currency && currency !== "NGN") {
+            console.error("Paystack verified currency mismatch:", currency);
+            return json({ error: "Invalid payment currency" }, 400);
+          }
+
           const paidAmount = (result.data.amount ?? 0) / 100;
+          if (paidAmount <= 0) {
+            console.error("Paystack verified amount invalid:", result.data.amount);
+            return json({ error: "Invalid payment amount" }, 400);
+          }
+
           const paidAt = result.data.paid_at ?? new Date().toISOString();
           const channel = result.data.channel ?? "online";
 
-          // 1. Check if payment already exists for this reference (Idempotency)
-          const { data: existingPayment } = await dbClient
-            .from("payments")
-            .select("id, payment_number, amount, reference")
-            .eq("reference", reference)
-            .maybeSingle();
+          // Settle verified payment via secure database-side SECURITY DEFINER RPC
+          const { data: rpcData, error: rpcError } = await dbClient.rpc(
+            "record_paystack_success" as never,
+            {
+              _reference: reference,
+              _amount: paidAmount,
+              _paid_at: paidAt,
+              _channel: channel,
+              _raw: result as unknown as Record<string, unknown>,
+            } as never,
+          );
 
-          if (existingPayment?.id) {
-            return json({
-              status: "success",
-              reference,
-              amount: paidAmount,
-              channel,
-              paidAt,
-              alreadyRecorded: true,
-            });
-          }
-
-          let successRecorded = false;
-          try {
-            const { data: rpcData, error } = await dbClient.rpc(
-              "record_paystack_success" as never,
+          if (rpcError || !(rpcData as any)?.ok) {
+            console.error("record_paystack_success settlement failed:", rpcError || rpcData);
+            return json(
               {
-                _reference: reference,
-                _amount: paidAmount,
-                _paid_at: paidAt,
-                _channel: channel,
-                _raw: result as unknown as Record<string, unknown>,
-              } as never,
+                error: (rpcData as any)?.error || rpcError?.message || "Payment settlement failed",
+                code: (rpcData as any)?.error || rpcError?.code || "SETTLEMENT_FAILED",
+              },
+              500,
             );
-            if (!error && (rpcData as any)?.ok) {
-              successRecorded = true;
-            } else if (error) {
-              console.warn("record_paystack_success RPC returned error, executing fallback:", error);
-            }
-          } catch (rpcErr) {
-            console.warn("record_paystack_success RPC threw exception, executing fallback:", rpcErr);
-          }
-
-          if (!successRecorded) {
-            // Direct database transaction fallback
-            const { data: tx } = await dbClient
-              .from("paystack_transactions")
-              .select("*")
-              .eq("reference", reference)
-              .maybeSingle();
-
-            const invoiceId = tx?.invoice_id || result.data.metadata?.invoice_id;
-            if (!invoiceId) {
-              console.error("Could not resolve invoice_id for verified reference", reference);
-              return json({ error: "Could not associate payment with an invoice" }, 400);
-            }
-
-            // Fetch linked invoice to get client_id, project_id, and amounts
-            const { data: inv } = await dbClient
-              .from("invoices")
-              .select("id, client_id, project_id, total, amount_paid, status, subtotal")
-              .eq("id", invoiceId)
-              .maybeSingle();
-
-            const clientId =
-              tx?.client_id || result.data.metadata?.client_id || inv?.client_id;
-            if (!clientId) {
-              return json({ error: "Missing client_id for payment" }, 400);
-            }
-            const projectId = inv?.project_id || null;
-
-            // Ensure invoice total matches at least paidAmount so validate_payment_amount trigger does not throw
-            if (inv && Number(inv.total ?? 0) < paidAmount) {
-              try {
-                await dbClient
-                  .from("invoices")
-                  .update({
-                    subtotal: paidAmount,
-                    total: paidAmount,
-                  })
-                  .eq("id", invoiceId);
-              } catch (updateErr) {
-                console.warn("Could not adjust invoice total before payment insert:", updateErr);
-              }
-            }
-
-            // Direct payment insert matching exact columns on public.payments:
-            // id, payment_number (auto), client_id, invoice_id, project_id, amount, payment_method, payment_date, reference, notes
-            const { data: newPayment, error: payError } = await dbClient
-              .from("payments")
-              .insert({
-                client_id: clientId,
-                invoice_id: invoiceId,
-                project_id: projectId,
-                amount: paidAmount,
-                payment_method: "Online Payment",
-                payment_date: paidAt.slice(0, 10),
-                reference,
-                notes: `Paystack ${channel}`,
-              })
-              .select("id, payment_number, amount")
-              .maybeSingle();
-
-            let paymentId = newPayment?.id;
-
-            if (payError) {
-              if (payError.code === "23505" || payError.message?.includes("unique")) {
-                // Duplicate reference constraint - already recorded
-                return json({
-                  status: "success",
-                  reference,
-                  amount: paidAmount,
-                  channel,
-                  paidAt,
-                  alreadyRecorded: true,
-                });
-              }
-              console.error("Direct payment insert error:", payError);
-              return json(
-                {
-                  error: payError.message || "Could not record payment in database",
-                  code: payError.code,
-                },
-                500,
-              );
-            }
-
-            // Explicitly ensure invoice status is updated to Paid
-            try {
-              await dbClient
-                .from("invoices")
-                .update({ status: "Paid" })
-                .eq("id", invoiceId);
-            } catch (invErr) {
-              console.warn("Direct invoice status touch warning:", invErr);
-            }
-
-            // Update transaction status if tx row exists
-            if (tx?.id) {
-              try {
-                await dbClient
-                  .from("paystack_transactions")
-                  .update({
-                    status: "success",
-                    paid_at: paidAt,
-                    channel,
-                    raw: result as any,
-                    payment_id: paymentId || null,
-                  })
-                  .eq("id", tx.id);
-              } catch (txErr) {
-                console.warn("paystack_transactions update warning:", txErr);
-              }
-            }
           }
 
           return json({
@@ -234,6 +116,9 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
             amount: paidAmount,
             channel,
             paidAt,
+            invoiceId: (rpcData as any)?.invoice_id,
+            paymentId: (rpcData as any)?.payment_id,
+            alreadyRecorded: Boolean((rpcData as any)?.already_recorded),
           });
         }
 
