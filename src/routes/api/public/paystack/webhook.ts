@@ -6,9 +6,16 @@ type PaystackEvent = {
   data?: {
     reference?: string;
     amount?: number;
+    currency?: string;
     paid_at?: string;
     channel?: string;
     status?: string;
+    customer?: { email?: string };
+    metadata?: {
+      invoice_id?: string;
+      invoice_number?: string;
+      client_id?: string;
+    };
   };
 };
 
@@ -35,7 +42,18 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         if (payload.event === "charge.success" && payload.data?.status === "success") {
+          const currency = (payload.data.currency || "").toUpperCase();
+          if (currency && currency !== "NGN") {
+            console.warn("Paystack webhook ignored: currency mismatch:", currency);
+            return new Response("Invalid currency", { status: 400 });
+          }
+
           const paidAmount = (payload.data.amount ?? 0) / 100;
+          if (paidAmount <= 0) {
+            console.warn("Paystack webhook ignored: non-positive amount:", payload.data.amount);
+            return new Response("Invalid amount", { status: 400 });
+          }
+
           const paidAt = payload.data.paid_at ?? new Date().toISOString();
           const channel = payload.data.channel ?? "online";
 
@@ -51,10 +69,10 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
                 _raw: payload as unknown as Record<string, unknown>,
               } as never,
             );
-            if (!error && rpcData) {
+            if (!error && (rpcData as any)?.ok) {
               successRecorded = true;
-            } else if (error) {
-              console.warn("record_paystack_success RPC returned error in webhook:", error);
+            } else if (error || (rpcData as any)?.ok === false) {
+              console.warn("record_paystack_success RPC returned error in webhook:", error || rpcData);
             }
           } catch (rpcErr) {
             console.warn("record_paystack_success RPC exception in webhook:", rpcErr);
@@ -72,7 +90,7 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
               const { data: existingPayment } = await supabaseAdmin
                 .from("payments")
                 .select("id")
-                .eq("provider_reference", reference)
+                .eq("reference", reference)
                 .maybeSingle();
 
               let paymentId = existingPayment?.id;
@@ -100,9 +118,6 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
                     payment_method: "Online Payment",
                     payment_date: paidAt.slice(0, 10),
                     reference,
-                    provider_reference: reference,
-                    channel,
-                    currency: "NGN",
                     notes: `Paystack ${channel}`,
                     payment_number: "",
                   })

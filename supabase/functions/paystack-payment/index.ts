@@ -102,7 +102,7 @@ Deno.serve(async (request) => {
     const existing = await supabase
       .from("payments")
       .select("id, amount, payment_number")
-      .eq("provider_reference", body.reference)
+      .eq("reference", body.reference)
       .maybeSingle();
     if (existing.error) throw existing.error;
     if (existing.data) return json({ paid: true, payment: existing.data });
@@ -130,14 +130,14 @@ Deno.serve(async (request) => {
         payment_method: "Online Payment",
         payment_date: new Date().toISOString().slice(0, 10),
         reference: body.reference,
-        provider_reference: body.reference,
+        notes: "Paystack online",
         payment_number: "",
       })
       .select("id, amount, payment_number")
       .single();
     if (inserted.error) {
       if (inserted.error.code === "23505") {
-        const retry = await supabase.from("payments").select("id, amount, payment_number").eq("provider_reference", body.reference).single();
+        const retry = await supabase.from("payments").select("id, amount, payment_number").eq("reference", body.reference).single();
         if (!retry.error) return json({ paid: true, payment: retry.data });
       }
       throw inserted.error;

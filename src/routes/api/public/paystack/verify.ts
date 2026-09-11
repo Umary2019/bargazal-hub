@@ -32,6 +32,7 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
           data?: {
             status?: string;
             amount?: number;
+            currency?: string;
             paid_at?: string;
             channel?: string;
             metadata?: {
