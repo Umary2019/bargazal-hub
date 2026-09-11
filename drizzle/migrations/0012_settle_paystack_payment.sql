@@ -28,7 +28,7 @@ BEGIN
   END IF;
 
   -- Validate invoice is not already settled
-  IF v_invoice.status = 'Paid' OR (v_invoice.total > 0 AND v_invoice.amount_paid >= v_invoice.total) THEN
+  IF v_invoice.status = 'Paid'::public.invoice_status OR (v_invoice.total > 0 AND v_invoice.amount_paid >= v_invoice.total) THEN
     RETURN jsonb_build_object('ok', false, 'error', 'invoice_already_settled');
   END IF;
 
@@ -113,9 +113,9 @@ BEGIN
 
     -- Ensure invoice status is Paid
     UPDATE public.invoices
-       SET status = 'Paid'
+       SET status = 'Paid'::public.invoice_status
      WHERE id = v_existing_payment.invoice_id
-       AND (status <> 'Paid' OR balance = 0);
+       AND (status <> 'Paid'::public.invoice_status OR balance = 0);
 
     RETURN jsonb_build_object(
       'ok', true,
@@ -221,7 +221,6 @@ BEGIN
   END IF;
 
   -- Step F: Insert into public.payments using the EXACT existing table schema
-  -- Existing schema: client_id, invoice_id, project_id, amount, payment_method, payment_date, reference, notes, payment_number
   INSERT INTO public.payments (
     client_id,
     invoice_id,
@@ -238,7 +237,7 @@ BEGIN
     inv.id,
     inv.project_id,
     COALESCE(_amount, tx.amount),
-    'Online Payment',
+    'Online Payment'::public.payment_method,
     COALESCE(_paid_at, now())::DATE,
     _reference,
     'Paystack ' || COALESCE(_channel, 'online'),
@@ -258,7 +257,7 @@ BEGIN
 
   -- Step H: Explicitly guarantee invoice status becomes 'Paid'
   UPDATE public.invoices
-     SET status = 'Paid'
+     SET status = 'Paid'::public.invoice_status
    WHERE id = inv.id;
 
   RETURN jsonb_build_object(
@@ -295,33 +294,62 @@ $$;
 REVOKE ALL ON FUNCTION public.settle_paystack_payment(TEXT, NUMERIC, TIMESTAMPTZ, TEXT, JSONB) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.settle_paystack_payment(TEXT, NUMERIC, TIMESTAMPTZ, TEXT, JSONB) TO anon, authenticated, service_role;
 
--- 4. Immediate reconciliation of the existing real successful payment
-DO $$
-DECLARE
-  v_res JSONB;
-BEGIN
-  v_res := public.record_paystack_success(
-    'BTS-BTS-INV-2026-0014-1789039657184',
-    100,
-    '2026-09-10 11:28:31.000Z'::TIMESTAMPTZ,
-    'bank_transfer',
-    jsonb_build_object(
-      'data', jsonb_build_object(
-        'status', 'success',
-        'currency', 'NGN',
-        'amount', 10000,
-        'reference', 'BTS-BTS-INV-2026-0014-1789039657184',
-        'metadata', jsonb_build_object(
-          'invoice_id', '310c5653-a344-4ca0-97f0-b977df419c51',
-          'invoice_number', 'BTS-INV-2026-0014',
-          'client_id', '708ef3e6-bae9-4ab4-bb32-0a09a6521fc4'
-        ),
-        'customer', jsonb_build_object(
-          'email', 'bargazal002@gmail.com'
-        )
-      )
-    )
-  );
-  RAISE NOTICE 'Payment BTS-BTS-INV-2026-0014-1789039657184 reconciled successfully: %', v_res;
-END;
-$$;
+-- 4. Direct Reconciliation of BTS-BTS-INV-2026-0014-1789039657184 (100 NGN)
+INSERT INTO public.paystack_transactions (
+  reference,
+  invoice_id,
+  client_id,
+  email,
+  amount,
+  status,
+  channel,
+  paid_at,
+  created_at,
+  updated_at
+) VALUES (
+  'BTS-BTS-INV-2026-0014-1789039657184',
+  '310c5653-a344-4ca0-97f0-b977df419c51',
+  '708ef3e6-bae9-4ab4-bb32-0a09a6521fc4',
+  'bargazal002@gmail.com',
+  100,
+  'success',
+  'bank_transfer',
+  '2026-09-10 11:28:31.000Z'::timestamptz,
+  now(),
+  now()
+) ON CONFLICT (reference) DO UPDATE
+SET status = 'success',
+    paid_at = EXCLUDED.paid_at,
+    updated_at = now();
+
+INSERT INTO public.payments (
+  client_id,
+  invoice_id,
+  project_id,
+  amount,
+  payment_method,
+  payment_date,
+  reference,
+  notes,
+  payment_number
+) VALUES (
+  '708ef3e6-bae9-4ab4-bb32-0a09a6521fc4',
+  '310c5653-a344-4ca0-97f0-b977df419c51',
+  NULL,
+  100,
+  'Online Payment'::public.payment_method,
+  '2026-09-10'::date,
+  'BTS-BTS-INV-2026-0014-1789039657184',
+  'Paystack bank_transfer',
+  ''
+) ON CONFLICT DO NOTHING;
+
+UPDATE public.paystack_transactions pt
+SET payment_id = p.id
+FROM public.payments p
+WHERE pt.reference = 'BTS-BTS-INV-2026-0014-1789039657184'
+  AND p.reference = 'BTS-BTS-INV-2026-0014-1789039657184';
+
+UPDATE public.invoices
+SET status = 'Paid'::public.invoice_status
+WHERE id = '310c5653-a344-4ca0-97f0-b977df419c51';
