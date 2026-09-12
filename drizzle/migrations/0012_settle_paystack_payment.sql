@@ -1,7 +1,73 @@
 -- Migration 0012: Paystack Payment Reconciliation & Secure Settlement
 -- Verified 100% compatible with production schema (paystack_transactions, payments, invoices)
 
--- 1. Helper function to securely initialize a pending paystack transaction BEFORE checkout
+-- 1. Ensure sequences have usage granted
+GRANT USAGE, SELECT ON SEQUENCE public.payment_number_seq TO anon, authenticated, service_role;
+
+-- 2. Make set_payment_number trigger function SECURITY DEFINER
+CREATE OR REPLACE FUNCTION public.set_payment_number()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.payment_number IS NULL OR NEW.payment_number = '' THEN
+    NEW.payment_number := 'BTS-PAY-' || lpad(nextval('public.payment_number_seq')::TEXT, 4, '0');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- 3. Make validate_payment_amount trigger function SECURITY DEFINER
+-- This fixes the root cause where unauthenticated or anon invocations could not read
+-- invoices under RLS, throwing "Payment exceeds the invoice balance".
+CREATE OR REPLACE FUNCTION public.validate_payment_amount()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  already_paid NUMERIC(14,2);
+  invoice_total NUMERIC(14,2);
+  invoice_client UUID;
+  invoice_project UUID;
+BEGIN
+  IF NEW.invoice_id IS NULL THEN
+    RAISE EXCEPTION 'An invoice is required before recording a payment';
+  END IF;
+  IF NEW.voided_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT total, client_id, project_id
+  INTO invoice_total, invoice_client, invoice_project
+  FROM public.invoices
+  WHERE id = NEW.invoice_id
+  FOR UPDATE;
+
+  IF invoice_total IS NULL THEN
+    RAISE EXCEPTION 'The selected invoice does not exist';
+  END IF;
+
+  NEW.client_id := COALESCE(NEW.client_id, invoice_client);
+  NEW.project_id := COALESCE(NEW.project_id, invoice_project);
+
+  SELECT COALESCE(SUM(amount), 0) INTO already_paid
+  FROM public.payments
+  WHERE invoice_id = NEW.invoice_id
+    AND voided_at IS NULL
+    AND (TG_OP <> 'UPDATE' OR id <> OLD.id);
+
+  IF invoice_total IS NULL OR (already_paid + NEW.amount) > invoice_total THEN
+    RAISE EXCEPTION 'Payment exceeds the invoice balance';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- 4. Helper function to securely initialize a pending paystack transaction BEFORE checkout
 CREATE OR REPLACE FUNCTION public.init_paystack_transaction(
   _reference TEXT,
   _invoice_id UUID,
@@ -28,12 +94,12 @@ BEGIN
   END IF;
 
   -- Validate invoice is not already settled
-  IF v_invoice.status = 'Paid'::public.invoice_status OR (v_invoice.total > 0 AND v_invoice.amount_paid >= v_invoice.total) THEN
+  IF v_invoice.status = 'Paid'::public.invoice_status OR (COALESCE(v_invoice.total, 0) > 0 AND COALESCE(v_invoice.amount_paid, 0) >= v_invoice.total) THEN
     RETURN jsonb_build_object('ok', false, 'error', 'invoice_already_settled');
   END IF;
 
   -- Validate positive amount not exceeding balance
-  IF _amount <= 0 OR _amount > (v_invoice.total - v_invoice.amount_paid) THEN
+  IF _amount <= 0 OR _amount > (COALESCE(v_invoice.total, 0) - COALESCE(v_invoice.amount_paid, 0)) THEN
     RETURN jsonb_build_object('ok', false, 'error', 'invalid_amount');
   END IF;
 
@@ -72,7 +138,7 @@ $$;
 REVOKE ALL ON FUNCTION public.init_paystack_transaction(TEXT, UUID, NUMERIC, TEXT, TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.init_paystack_transaction(TEXT, UUID, NUMERIC, TEXT, TEXT) TO anon, authenticated, service_role;
 
--- 2. Enhanced record_paystack_success function with automatic reconciliation of missing transaction rows
+-- 5. Enhanced record_paystack_success function with automatic reconciliation of missing transaction rows
 CREATE OR REPLACE FUNCTION public.record_paystack_success(
   _reference TEXT,
   _amount NUMERIC,
@@ -114,8 +180,7 @@ BEGIN
     -- Ensure invoice status is Paid
     UPDATE public.invoices
        SET status = 'Paid'::public.invoice_status
-     WHERE id = v_existing_payment.invoice_id
-       AND (status <> 'Paid'::public.invoice_status OR balance = 0);
+     WHERE id = v_existing_payment.invoice_id;
 
     RETURN jsonb_build_object(
       'ok', true,
@@ -185,7 +250,7 @@ BEGIN
       v_invoice_id,
       inv.client_id,
       COALESCE(_raw->'data'->'customer'->>'email', _raw->'customer'->>'email', 'billing@bargazal.com'),
-      COALESCE(_amount, GREATEST(inv.total - inv.amount_paid, 0)),
+      COALESCE(_amount, GREATEST(COALESCE(inv.total, 0) - COALESCE(inv.amount_paid, 0), 0)),
       'pending',
       _channel,
       COALESCE(_paid_at, now()),
@@ -273,7 +338,7 @@ $$;
 REVOKE ALL ON FUNCTION public.record_paystack_success(TEXT, NUMERIC, TIMESTAMPTZ, TEXT, JSONB) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.record_paystack_success(TEXT, NUMERIC, TIMESTAMPTZ, TEXT, JSONB) TO anon, authenticated, service_role;
 
--- 3. Dedicated settle_paystack_payment alias
+-- 6. Dedicated settle_paystack_payment alias
 CREATE OR REPLACE FUNCTION public.settle_paystack_payment(
   _reference TEXT,
   _amount NUMERIC,
@@ -294,7 +359,7 @@ $$;
 REVOKE ALL ON FUNCTION public.settle_paystack_payment(TEXT, NUMERIC, TIMESTAMPTZ, TEXT, JSONB) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.settle_paystack_payment(TEXT, NUMERIC, TIMESTAMPTZ, TEXT, JSONB) TO anon, authenticated, service_role;
 
--- 4. Direct Reconciliation of BTS-BTS-INV-2026-0014-1789039657184 (100 NGN)
+-- 7. Direct Reconciliation of BTS-BTS-INV-2026-0014-1789039657184 (100 NGN)
 INSERT INTO public.paystack_transactions (
   reference,
   invoice_id,
@@ -332,7 +397,8 @@ INSERT INTO public.payments (
   reference,
   notes,
   payment_number
-) VALUES (
+)
+SELECT
   '708ef3e6-bae9-4ab4-bb32-0a09a6521fc4',
   '310c5653-a344-4ca0-97f0-b977df419c51',
   NULL,
@@ -342,7 +408,9 @@ INSERT INTO public.payments (
   'BTS-BTS-INV-2026-0014-1789039657184',
   'Paystack bank_transfer',
   ''
-) ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.payments WHERE reference = 'BTS-BTS-INV-2026-0014-1789039657184' AND voided_at IS NULL
+);
 
 UPDATE public.paystack_transactions pt
 SET payment_id = p.id
@@ -353,3 +421,67 @@ WHERE pt.reference = 'BTS-BTS-INV-2026-0014-1789039657184'
 UPDATE public.invoices
 SET status = 'Paid'::public.invoice_status
 WHERE id = '310c5653-a344-4ca0-97f0-b977df419c51';
+
+-- 8. Direct Reconciliation of Current Transaction BTS-BTS-INV-2026-0015-1789245650486 (100 NGN)
+INSERT INTO public.paystack_transactions (
+  reference,
+  invoice_id,
+  client_id,
+  email,
+  amount,
+  status,
+  channel,
+  paid_at,
+  created_at,
+  updated_at
+) VALUES (
+  'BTS-BTS-INV-2026-0015-1789245650486',
+  'd7cfb241-9c30-40a7-bc59-23f1e4cbf323',
+  '708ef3e6-bae9-4ab4-bb32-0a09a6521fc4',
+  'bargazal002@gmail.com',
+  100,
+  'success',
+  'bank_transfer',
+  '2026-09-12 20:42:13.000Z'::timestamptz,
+  now(),
+  now()
+) ON CONFLICT (reference) DO UPDATE
+SET status = 'success',
+    paid_at = EXCLUDED.paid_at,
+    channel = EXCLUDED.channel,
+    updated_at = now();
+
+INSERT INTO public.payments (
+  client_id,
+  invoice_id,
+  project_id,
+  amount,
+  payment_method,
+  payment_date,
+  reference,
+  notes,
+  payment_number
+)
+SELECT
+  '708ef3e6-bae9-4ab4-bb32-0a09a6521fc4',
+  'd7cfb241-9c30-40a7-bc59-23f1e4cbf323',
+  NULL,
+  100,
+  'Online Payment'::public.payment_method,
+  '2026-09-12'::date,
+  'BTS-BTS-INV-2026-0015-1789245650486',
+  'Paystack bank_transfer',
+  ''
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.payments WHERE reference = 'BTS-BTS-INV-2026-0015-1789245650486' AND voided_at IS NULL
+);
+
+UPDATE public.paystack_transactions pt
+SET payment_id = p.id
+FROM public.payments p
+WHERE pt.reference = 'BTS-BTS-INV-2026-0015-1789245650486'
+  AND p.reference = 'BTS-BTS-INV-2026-0015-1789245650486';
+
+UPDATE public.invoices
+SET status = 'Paid'::public.invoice_status
+WHERE id = 'd7cfb241-9c30-40a7-bc59-23f1e4cbf323';

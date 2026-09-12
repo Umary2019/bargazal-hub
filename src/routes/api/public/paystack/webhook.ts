@@ -73,9 +73,27 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
               successRecorded = true;
             } else if (error || (rpcData as any)?.ok === false) {
               console.warn(
-                "record_paystack_success RPC returned error in webhook:",
+                "record_paystack_success RPC returned error in webhook, trying settle_paystack_payment:",
                 error || rpcData,
               );
+              const { data: settleData, error: settleError } = await supabaseAdmin.rpc(
+                "settle_paystack_payment" as never,
+                {
+                  _reference: reference,
+                  _amount: paidAmount,
+                  _paid_at: paidAt,
+                  _channel: channel,
+                  _raw: payload as unknown as Record<string, unknown>,
+                } as never,
+              );
+              if (!settleError && (settleData as any)?.ok) {
+                successRecorded = true;
+              } else {
+                console.warn(
+                  "settle_paystack_payment RPC error in webhook:",
+                  settleError || settleData,
+                );
+              }
             }
           } catch (rpcErr) {
             console.warn("record_paystack_success RPC exception in webhook:", rpcErr);

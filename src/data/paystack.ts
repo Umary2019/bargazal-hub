@@ -3,16 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 export interface PaystackInitResponse {
   authorizationUrl: string;
   reference: string;
-  error?: string;
+  error?: string | undefined;
 }
 
 export interface PaystackVerifyResponse {
   status: "success" | "failed" | "abandoned" | "error" | "unknown";
-  reference?: string;
-  amount?: number;
-  channel?: string;
-  paidAt?: string;
-  error?: string;
+  reference?: string | undefined;
+  amount?: number | undefined;
+  channel?: string | undefined;
+  paidAt?: string | undefined;
+  error?: string | undefined;
+  alreadyRecorded?: boolean | undefined;
 }
 
 /**
@@ -25,10 +26,10 @@ export async function initiatePaystackPayment({
   email,
   callbackUrl,
 }: {
-  invoiceId?: string;
-  token?: string;
-  email?: string;
-  callbackUrl?: string;
+  invoiceId?: string | undefined;
+  token?: string | undefined;
+  email?: string | undefined;
+  callbackUrl?: string | undefined;
 }): Promise<PaystackInitResponse> {
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;

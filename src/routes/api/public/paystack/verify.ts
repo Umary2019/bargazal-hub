@@ -133,9 +133,30 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
               alreadyRecorded = Boolean((rpcData as any)?.already_recorded);
             } else {
               console.warn(
-                "record_paystack_success RPC returned error, attempting metadata fallback:",
+                "record_paystack_success RPC returned error, trying settle_paystack_payment:",
                 rpcError || rpcData,
               );
+              const { data: settleData, error: settleError } = await dbClient.rpc(
+                "settle_paystack_payment" as never,
+                {
+                  _reference: reference,
+                  _amount: paidAmount,
+                  _paid_at: paidAt,
+                  _channel: channel,
+                  _raw: result as unknown as Record<string, unknown>,
+                } as never,
+              );
+              if (!settleError && (settleData as any)?.ok) {
+                rpcSuccess = true;
+                rpcInvoiceId = (settleData as any)?.invoice_id;
+                rpcPaymentId = (settleData as any)?.payment_id;
+                alreadyRecorded = Boolean((settleData as any)?.already_recorded);
+              } else {
+                console.warn(
+                  "settle_paystack_payment RPC error, attempting metadata fallback:",
+                  settleError || settleData,
+                );
+              }
             }
           } catch (rpcErr) {
             console.warn(
