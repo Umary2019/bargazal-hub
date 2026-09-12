@@ -88,47 +88,176 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
           const paidAt = result.data.paid_at ?? new Date().toISOString();
           const channel = result.data.channel ?? "online";
 
-          // Settle verified payment via secure database-side SECURITY DEFINER RPC
-          const { data: rpcData, error: rpcError } = await dbClient.rpc(
-            "record_paystack_success" as never,
-            {
-              _reference: reference,
-              _amount: paidAmount,
-              _paid_at: paidAt,
-              _channel: channel,
-              _raw: result as unknown as Record<string, unknown>,
-            } as never,
-          );
+          // 1. Idempotency Check: check if payment is already recorded in public.payments
+          const { data: existingPayment } = await dbClient
+            .from("payments")
+            .select("id, invoice_id, amount")
+            .eq("reference", reference)
+            .maybeSingle();
 
-          if (rpcError || !(rpcData as any)?.ok) {
-            console.error("record_paystack_success settlement failed:", rpcError || rpcData);
-            return json(
+          if (existingPayment) {
+            return json({
+              status: "success",
+              reference,
+              amount: Number(existingPayment.amount) || paidAmount,
+              channel,
+              paidAt,
+              invoiceId: existingPayment.invoice_id,
+              paymentId: existingPayment.id,
+              alreadyRecorded: true,
+            });
+          }
+
+          // 2. Primary Settlement: Settle verified payment via secure database-side SECURITY DEFINER RPC
+          let rpcSuccess = false;
+          let rpcInvoiceId: string | undefined;
+          let rpcPaymentId: string | undefined;
+          let alreadyRecorded = false;
+
+          try {
+            const { data: rpcData, error: rpcError } = await dbClient.rpc(
+              "record_paystack_success" as never,
               {
-                error: (rpcData as any)?.error || rpcError?.message || "Payment settlement failed",
-                code: (rpcData as any)?.error || rpcError?.code || "SETTLEMENT_FAILED",
-              },
-              500,
+                _reference: reference,
+                _amount: paidAmount,
+                _paid_at: paidAt,
+                _channel: channel,
+                _raw: result as unknown as Record<string, unknown>,
+              } as never,
+            );
+
+            if (!rpcError && (rpcData as any)?.ok) {
+              rpcSuccess = true;
+              rpcInvoiceId = (rpcData as any)?.invoice_id;
+              rpcPaymentId = (rpcData as any)?.payment_id;
+              alreadyRecorded = Boolean((rpcData as any)?.already_recorded);
+            } else {
+              console.warn(
+                "record_paystack_success RPC returned error, attempting metadata fallback:",
+                rpcError || rpcData,
+              );
+            }
+          } catch (rpcErr) {
+            console.warn(
+              "record_paystack_success exception, attempting metadata fallback:",
+              rpcErr,
             );
           }
 
-          return json({
-            status: "success",
+          if (rpcSuccess) {
+            return json({
+              status: "success",
+              reference,
+              amount: paidAmount,
+              channel,
+              paidAt,
+              invoiceId: rpcInvoiceId,
+              paymentId: rpcPaymentId,
+              alreadyRecorded,
+            });
+          }
+
+          // 3. Resilient Metadata Fallback: When transaction row was not initialized beforehand
+          const metadata = result.data.metadata || {};
+          const invoiceId = metadata.invoice_id;
+          const clientId = metadata.client_id;
+
+          if (invoiceId) {
+            // Check if payment was recorded concurrently
+            const { data: payRow } = await dbClient
+              .from("payments")
+              .select("id, invoice_id, amount")
+              .eq("reference", reference)
+              .maybeSingle();
+
+            if (payRow) {
+              return json({
+                status: "success",
+                reference,
+                amount: Number(payRow.amount) || paidAmount,
+                channel,
+                paidAt,
+                invoiceId: payRow.invoice_id,
+                paymentId: payRow.id,
+                alreadyRecorded: true,
+              });
+            }
+
+            // Insert into payments
+            const { data: newPayment, error: payError } = await dbClient
+              .from("payments")
+              .insert({
+                invoice_id: invoiceId,
+                client_id: clientId || null,
+                amount: paidAmount,
+                payment_method: "Online Payment",
+                payment_date: paidAt.slice(0, 10),
+                reference,
+                notes: `Paystack ${channel}`,
+                payment_number: "",
+              })
+              .select("id")
+              .maybeSingle();
+
+            if (!payError && newPayment) {
+              // Ensure invoice status is Paid
+              await dbClient.from("invoices").update({ status: "Paid" }).eq("id", invoiceId);
+
+              // Update paystack_transactions record if accessible
+              await dbClient.from("paystack_transactions").upsert(
+                {
+                  reference,
+                  invoice_id: invoiceId,
+                  client_id: clientId || null,
+                  email: result.data.customer?.email || "billing@bargazal.com",
+                  amount: paidAmount,
+                  status: "success",
+                  channel,
+                  paid_at: paidAt,
+                  payment_id: newPayment.id,
+                  raw: result,
+                },
+                { onConflict: "reference" },
+              );
+
+              return json({
+                status: "success",
+                reference,
+                amount: paidAmount,
+                channel,
+                paidAt,
+                invoiceId,
+                paymentId: newPayment.id,
+                alreadyRecorded: false,
+              });
+            } else if (payError) {
+              console.warn("Direct payment insert fallback warning:", payError.message);
+            }
+          }
+
+          console.error(
+            "record_paystack_success settlement and fallback both failed for reference:",
             reference,
-            amount: paidAmount,
-            channel,
-            paidAt,
-            invoiceId: (rpcData as any)?.invoice_id,
-            paymentId: (rpcData as any)?.payment_id,
-            alreadyRecorded: Boolean((rpcData as any)?.already_recorded),
-          });
+          );
+          return json(
+            {
+              error: "Payment settlement failed in database. Reference: " + reference,
+              code: "SETTLEMENT_FAILED",
+              reference,
+            },
+            500,
+          );
         }
 
         try {
-          await dbClient.rpc("mark_paystack_failed" as never, {
-            _reference: reference,
-            _status: result.data.status === "abandoned" ? "abandoned" : "failed",
-            _raw: result as unknown as Record<string, unknown>,
-          } as never);
+          await dbClient.rpc(
+            "mark_paystack_failed" as never,
+            {
+              _reference: reference,
+              _status: result.data.status === "abandoned" ? "abandoned" : "failed",
+              _raw: result as unknown as Record<string, unknown>,
+            } as never,
+          );
         } catch {
           // ignore error if RPC fails
         }

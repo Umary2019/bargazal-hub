@@ -72,21 +72,27 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
             if (!error && (rpcData as any)?.ok) {
               successRecorded = true;
             } else if (error || (rpcData as any)?.ok === false) {
-              console.warn("record_paystack_success RPC returned error in webhook:", error || rpcData);
+              console.warn(
+                "record_paystack_success RPC returned error in webhook:",
+                error || rpcData,
+              );
             }
           } catch (rpcErr) {
             console.warn("record_paystack_success RPC exception in webhook:", rpcErr);
           }
 
           if (!successRecorded) {
-            // Direct fallback
+            // Direct fallback: check if transaction row exists or fallback to event metadata
             const { data: tx } = await supabaseAdmin
               .from("paystack_transactions")
               .select("*")
               .eq("reference", reference)
               .maybeSingle();
 
-            if (tx && tx.status !== "success") {
+            const invoiceId = tx?.invoice_id || payload.data?.metadata?.invoice_id;
+            const metaClientId = tx?.client_id || payload.data?.metadata?.client_id;
+
+            if (invoiceId && (!tx || tx.status !== "success")) {
               const { data: existingPayment } = await supabaseAdmin
                 .from("payments")
                 .select("id")
@@ -99,20 +105,21 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
                 const { data: inv } = await supabaseAdmin
                   .from("invoices")
                   .select("id, client_id, project_id, total, amount_paid")
-                  .eq("id", tx.invoice_id)
-                  .single();
+                  .eq("id", invoiceId)
+                  .maybeSingle();
 
-                const clientId = tx.client_id || inv?.client_id;
+                const clientId = metaClientId || inv?.client_id;
                 if (!clientId) {
-                  return Response.json({ error: "Missing client_id for payment" }, { status: 400 });
+                  console.warn("Paystack webhook: missing client_id for payment settlement");
+                  return new Response("Missing client_id", { status: 400 });
                 }
                 const projectId = inv?.project_id || null;
 
-                const { data: newPayment } = await supabaseAdmin
+                const { data: newPayment, error: insertPayError } = await supabaseAdmin
                   .from("payments")
                   .insert({
                     client_id: clientId,
-                    invoice_id: tx.invoice_id,
+                    invoice_id: invoiceId,
                     project_id: projectId,
                     amount: paidAmount,
                     payment_method: "Online Payment",
@@ -122,9 +129,12 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
                     payment_number: "",
                   })
                   .select("id")
-                  .single();
+                  .maybeSingle();
 
                 if (newPayment) paymentId = newPayment.id;
+                if (insertPayError) {
+                  console.warn("Webhook direct payment insert warning:", insertPayError.message);
+                }
 
                 if (inv) {
                   const newAmountPaid = Number(inv.amount_paid || 0) + paidAmount;
@@ -135,7 +145,7 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
                   await supabaseAdmin
                     .from("invoices")
                     .update({ amount_paid: newAmountPaid, status: newStatus })
-                    .eq("id", tx.invoice_id);
+                    .eq("id", invoiceId);
                 }
 
                 if (projectId) {
@@ -155,24 +165,45 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
                 }
               }
 
-              await supabaseAdmin
-                .from("paystack_transactions")
-                .update({
-                  status: "success",
-                  paid_at: paidAt,
-                  channel,
-                  raw: payload as any,
-                  payment_id: paymentId || null,
-                })
-                .eq("id", tx.id);
+              if (tx) {
+                await supabaseAdmin
+                  .from("paystack_transactions")
+                  .update({
+                    status: "success",
+                    paid_at: paidAt,
+                    channel,
+                    raw: payload as any,
+                    payment_id: paymentId || null,
+                  })
+                  .eq("id", tx.id);
+              } else {
+                await supabaseAdmin.from("paystack_transactions").upsert(
+                  {
+                    reference,
+                    invoice_id: invoiceId,
+                    client_id: metaClientId || null,
+                    email: payload.data?.customer?.email || "billing@bargazal.com",
+                    amount: paidAmount,
+                    status: "success",
+                    channel,
+                    paid_at: paidAt,
+                    payment_id: paymentId || null,
+                    raw: payload as any,
+                  },
+                  { onConflict: "reference" },
+                );
+              }
             }
           }
         } else if (payload.event === "charge.failed") {
-          await supabaseAdmin.rpc("mark_paystack_failed" as never, {
-            _reference: reference,
-            _status: "failed",
-            _raw: payload as unknown as Record<string, unknown>,
-          } as never);
+          await supabaseAdmin.rpc(
+            "mark_paystack_failed" as never,
+            {
+              _reference: reference,
+              _status: "failed",
+              _raw: payload as unknown as Record<string, unknown>,
+            } as never,
+          );
         }
 
         return new Response("ok");

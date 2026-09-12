@@ -66,9 +66,10 @@ function InvoiceDetailPage() {
       .then((res) => {
         if (res.status === "success") {
           toast.success("Payment verified successfully!");
+          queryClient.invalidateQueries({ queryKey: ["payments"] });
           queryClient.invalidateQueries({ queryKey: ["invoice", id] });
           queryClient.invalidateQueries({ queryKey: ["invoices"] });
-          queryClient.invalidateQueries({ queryKey: ["payments", { invoiceId: id }] });
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         }
         const url = new URL(window.location.href);
         url.searchParams.delete("reference");
@@ -404,8 +405,11 @@ function InvoiceDetailPage() {
                     params={{ id: invoice.project_id }}
                     className="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
-                    {invoice.projects?.project_number ? `${invoice.projects.project_number} — ` : ""}
-                    {invoice.projects?.title ?? "View Project"} <ExternalLink className="h-3.5 w-3.5" />
+                    {invoice.projects?.project_number
+                      ? `${invoice.projects.project_number} — `
+                      : ""}
+                    {invoice.projects?.title ?? "View Project"}{" "}
+                    <ExternalLink className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               )}

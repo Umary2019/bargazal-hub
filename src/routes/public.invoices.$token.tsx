@@ -61,9 +61,9 @@ function PublicInvoicePage() {
     if (!reference || isVerifying) return;
     setIsVerifying(true);
     verifyPaystackPayment(reference)
-      .then((res) => {
+      .then(async (res) => {
         if (res.status === "success") {
-          void query.refetch();
+          await query.refetch();
           window.history.replaceState({}, "", window.location.pathname);
         } else {
           setPaymentError("Payment verification failed. Status: " + res.status);

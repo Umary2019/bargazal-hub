@@ -86,7 +86,9 @@ export const Route = createFileRoute("/api/public/paystack/init")({
           // Fetch invoice with client details from database
           const { data: inv, error: invError } = await dbClient
             .from("invoices")
-            .select("id, invoice_number, total, amount_paid, balance, status, client_id, clients(id, full_name, email, auth_user_id)")
+            .select(
+              "id, invoice_number, total, amount_paid, balance, status, client_id, clients(id, full_name, email, auth_user_id)",
+            )
             .eq("id", parsed.data.invoiceId)
             .maybeSingle();
 
@@ -101,12 +103,13 @@ export const Route = createFileRoute("/api/public/paystack/init")({
             return json({ error: "Access denied. You can only pay your own invoices." }, 403);
           }
 
-          const balance = Number(inv.balance ?? (Number(inv.total) - Number(inv.amount_paid)));
+          const balance = Number(inv.balance ?? Number(inv.total) - Number(inv.amount_paid));
           if (!(balance > 0) || inv.status === "Paid") {
             return json({ error: "This invoice is already settled" }, 400);
           }
 
-          const clientEmail = (inv.clients as any)?.email || parsed.data.email || authData.user.email;
+          const clientEmail =
+            (inv.clients as any)?.email || parsed.data.email || authData.user.email;
           if (!clientEmail) {
             return json({ error: "An email address is required to pay online" }, 400);
           }
@@ -122,9 +125,12 @@ export const Route = createFileRoute("/api/public/paystack/init")({
         }
         // Path B: Public token payment
         else if (parsed.data.token) {
-          const { data, error } = await supabaseAdmin.rpc("get_public_invoice" as never, {
-            _token: parsed.data.token,
-          } as never);
+          const { data, error } = await supabaseAdmin.rpc(
+            "get_public_invoice" as never,
+            {
+              _token: parsed.data.token,
+            } as never,
+          );
           if (error || !data) return json({ error: "Invoice link is invalid or expired" }, 404);
 
           const payload = data as any;
@@ -194,23 +200,41 @@ export const Route = createFileRoute("/api/public/paystack/init")({
         }
 
         // Securely record pending transaction in paystack_transactions using SECURITY DEFINER RPC
-        const { data: initData, error: initError } = await dbClient.rpc(
-          "init_paystack_transaction" as never,
-          {
-            _reference: reference,
-            _invoice_id: target.id,
-            _amount: target.balance,
-            _email: target.client_email,
-            _authorization_url: result.data.authorization_url,
-          } as never,
-        );
-
-        if (initError || !(initData as any)?.ok) {
-          console.error("Paystack transaction initialization failed:", initError || initData);
-          return json(
-            { error: (initData as any)?.error || "Could not record payment initialization in database" },
-            500,
+        try {
+          const { data: initData, error: initError } = await dbClient.rpc(
+            "init_paystack_transaction" as never,
+            {
+              _reference: reference,
+              _invoice_id: target.id,
+              _amount: target.balance,
+              _email: target.client_email,
+              _authorization_url: result.data.authorization_url,
+            } as never,
           );
+
+          if (initError || !(initData as any)?.ok) {
+            console.warn(
+              "init_paystack_transaction RPC unavailable or failed, falling back to direct upsert:",
+              initError?.message || (initData as any)?.error,
+            );
+            const { error: upsertError } = await dbClient.from("paystack_transactions").upsert(
+              {
+                reference,
+                invoice_id: target.id,
+                client_id: target.client_id,
+                email: target.client_email,
+                amount: target.balance,
+                status: "pending",
+                authorization_url: result.data.authorization_url,
+              },
+              { onConflict: "reference" },
+            );
+            if (upsertError) {
+              console.warn("Paystack transaction upsert warning:", upsertError.message);
+            }
+          }
+        } catch (dbErr) {
+          console.warn("Database initialization warning (checkout still allowed):", dbErr);
         }
 
         return json({ authorizationUrl: result.data.authorization_url, reference });
