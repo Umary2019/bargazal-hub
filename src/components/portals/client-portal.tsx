@@ -112,9 +112,27 @@ export function ClientPortal() {
   }, [isVerifyingPayment, queryClient]);
 
   async function handlePayInvoice(invoiceToPay: any) {
-    if (!invoiceToPay?.id) return;
+    if (!invoiceToPay?.id || payingInvoiceId) return;
+    const balance = Number(
+      invoiceToPay.balance ?? Number(invoiceToPay.total) - Number(invoiceToPay.amount_paid ?? 0),
+    );
+    if (balance <= 0 || getInvoicePaymentStatus(invoiceToPay) === "Paid") {
+      toast.info("This invoice is already settled.");
+      return;
+    }
+    if (invoiceToPay.status === "Cancelled") {
+      toast.error("This invoice has been cancelled and cannot be paid.");
+      return;
+    }
+
     try {
       setPayingInvoiceId(invoiceToPay.id);
+      console.info("[Client Portal] Initializing Paystack checkout for invoice:", {
+        invoiceId: invoiceToPay.id,
+        invoiceNumber: invoiceToPay.invoice_number,
+        projectId: invoiceToPay.project_id || invoiceToPay.projects?.id,
+        balance,
+      });
       const res = await initiatePaystackPayment({
         invoiceId: invoiceToPay.id,
         email: client?.email || undefined,
@@ -172,9 +190,14 @@ export function ClientPortal() {
   const rejectedRequests = requests.filter((r: any) => r.status === "Rejected");
 
   const unpaidInvoices = invoices.filter(
-    (i: any) => getInvoicePaymentStatus(i) !== "Paid" && Number(i.balance ?? i.total) > 0,
+    (i: any) =>
+      i.status !== "Cancelled" &&
+      getInvoicePaymentStatus(i) !== "Paid" &&
+      Number(i.balance ?? i.total) > 0,
   );
-  const paidInvoices = invoices.filter((i: any) => getInvoicePaymentStatus(i) === "Paid");
+  const paidInvoices = invoices.filter(
+    (i: any) => i.status !== "Cancelled" && getInvoicePaymentStatus(i) === "Paid",
+  );
 
   return (
     <div className="space-y-6">
@@ -710,6 +733,7 @@ export function ClientPortal() {
         <CardContent>
           {(() => {
             const filtered = invoices.filter((inv: any) => {
+              if (inv.status === "Cancelled") return false;
               const status = getInvoicePaymentStatus(inv);
               if (invoiceFilter === "unpaid" && status === "Paid") return false;
               if (invoiceFilter === "paid" && status !== "Paid") return false;

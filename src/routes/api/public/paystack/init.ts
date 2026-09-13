@@ -103,6 +103,10 @@ export const Route = createFileRoute("/api/public/paystack/init")({
             return json({ error: "Access denied. You can only pay your own invoices." }, 403);
           }
 
+          if (inv.status === "Cancelled") {
+            return json({ error: "This invoice has been cancelled" }, 400);
+          }
+
           const balance = Number(inv.balance ?? Number(inv.total) - Number(inv.amount_paid));
           if (!(balance > 0) || inv.status === "Paid") {
             return json({ error: "This invoice is already settled" }, 400);
@@ -156,6 +160,9 @@ export const Route = createFileRoute("/api/public/paystack/init")({
         }
 
         const reference = `BTS-${target.invoice_number}-${Date.now()}`;
+        console.info(
+          `[Paystack Init] Starting payment initialization for invoice: ${target.id} (${target.invoice_number}), client: ${target.client_id}, balance: ${target.balance}, reference: ${reference}`,
+        );
         const appUrl = (process.env["PUBLIC_APP_URL"] ?? new URL(request.url).origin).replace(
           /\/$/,
           "",

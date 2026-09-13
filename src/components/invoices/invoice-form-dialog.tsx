@@ -19,6 +19,8 @@ import {
 import { useClients } from "@/data/clients";
 import { useProjects } from "@/data/projects";
 import { useSaveInvoice } from "@/data/invoices";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import type { InvoiceItem, InvoiceWithRelations } from "@/data/types";
 
@@ -55,8 +57,28 @@ export function InvoiceFormDialog({
     const total = Number(amount);
     if (!clientId || !description.trim() || total <= 0) return;
     const status: Database["public"]["Enums"]["invoice_status"] = invoice?.status ?? "Draft";
+
+    let targetInvoiceId = invoice?.id;
+    if (!targetInvoiceId && projectId) {
+      const { data: existingProjectInv } = await supabase
+        .from("invoices")
+        .select("id, invoice_number")
+        .eq("project_id", projectId)
+        .neq("status", "Cancelled")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingProjectInv) {
+        targetInvoiceId = existingProjectInv.id;
+        toast.info(
+          `Updating existing active invoice (${existingProjectInv.invoice_number}) for this project.`,
+        );
+      }
+    }
+
     await saveInvoice.mutateAsync({
-      id: invoice?.id,
+      id: targetInvoiceId,
       values: {
         client_id: clientId,
         project_id: projectId || null,

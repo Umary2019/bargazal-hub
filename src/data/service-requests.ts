@@ -275,14 +275,25 @@ export function useApproveServiceRequest() {
       // Duplicate invoice protection (Requirement 16)
       let invoiceId: string | null = null;
       try {
-        const { data: existingInv } = await (supabase as any)
+        let { data: existingInv } = await (supabase as any)
           .from("invoices")
           .select("id")
           .eq("service_request_id", request.id)
           .maybeSingle();
 
+        if (!existingInv?.id && project?.id) {
+          const { data: projInv } = await (supabase as any)
+            .from("invoices")
+            .select("id")
+            .eq("project_id", project.id)
+            .neq("status", "Cancelled")
+            .maybeSingle();
+          existingInv = projInv;
+        }
+
         if (existingInv?.id) {
           invoiceId = existingInv.id;
+          console.info("[service-requests] Existing invoice reused:", invoiceId);
         } else {
           // Automatic invoice creation
           const invoicePayload = {

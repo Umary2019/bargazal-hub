@@ -88,6 +88,15 @@ export const Route = createFileRoute("/api/public/paystack/verify")({
           const paidAt = result.data.paid_at ?? new Date().toISOString();
           const channel = result.data.channel ?? "online";
 
+          console.info("[Paystack Verify] Verified transaction with Paystack:", {
+            reference,
+            status: result.data.status,
+            amount: paidAmount,
+            currency,
+            invoiceId: result.data.metadata?.invoice_id,
+            clientId: result.data.metadata?.client_id,
+          });
+
           // 1. Idempotency Check: check if payment is already recorded in public.payments
           const { data: existingPayment } = await dbClient
             .from("payments")
