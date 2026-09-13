@@ -42,12 +42,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useServices } from "@/data/services";
-import { useClientPortalData, useMyClient } from "@/data/portals";
-import { useCreateServiceRequest } from "@/data/service-requests";
+import { useClientPortalData, useMyClient, useRespondToQuote } from "@/data/portals";
+import { useCreateServiceRequest, useCancelServiceRequest } from "@/data/service-requests";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { initiatePaystackPayment, verifyPaystackPayment } from "@/data/paystack";
 import { ClientInvoiceDialog } from "@/components/invoices/client-invoice-dialog";
 import { PaymentReceipt } from "@/components/payments/payment-receipt";
+import { ClientProjectModal } from "@/components/projects/client-project-modal";
 import { getInvoicePaymentStatus } from "@/lib/invoice-status";
 
 export function ClientPortal() {
@@ -56,12 +57,15 @@ export function ClientPortal() {
   const { data, isLoading } = useClientPortalData(client?.id);
   const { data: services = [] } = useServices();
   const createRequest = useCreateServiceRequest();
+  const cancelRequest = useCancelServiceRequest();
+  const respondToQuote = useRespondToQuote();
   const [serviceId, setServiceId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [budget, setBudget] = useState("");
   const [preferredDeadline, setPreferredDeadline] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
   // Invoices & Payment States
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
@@ -184,6 +188,7 @@ export function ClientPortal() {
   const requests = data?.requests ?? [];
   const projects = data?.projects ?? [];
   const invoices = data?.invoices ?? [];
+  const quotes = (data as any)?.quotes ?? [];
 
   const pendingRequests = requests.filter((r: any) => r.status === "Pending");
   const approvedRequests = requests.filter((r: any) => r.status === "Approved");
@@ -198,6 +203,37 @@ export function ClientPortal() {
   const paidInvoices = invoices.filter(
     (i: any) => i.status !== "Cancelled" && getInvoicePaymentStatus(i) === "Paid",
   );
+
+  async function handleCancelRequest(requestId: string) {
+    if (!client?.id) return;
+    try {
+      await cancelRequest.mutateAsync(requestId);
+      toast.success("Service request cancelled");
+      if (selectedRequest?.id === requestId) {
+        setSelectedRequest(null);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to cancel request");
+    }
+  }
+
+  async function handleQuoteResponse(quoteId: string, action: "accept" | "reject") {
+    if (!client?.id) return;
+    try {
+      await respondToQuote.mutateAsync({
+        quoteId,
+        clientId: client.id,
+        action,
+      });
+      toast.success(
+        action === "accept"
+          ? "Quote accepted! An invoice will be generated shortly."
+          : "Quote declined.",
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to respond to quote");
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -494,15 +530,28 @@ export function ClientPortal() {
                         ? `Budget: ${formatCurrency(request.budget)}`
                         : "Budget: Flexible"}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs font-medium text-primary hover:text-primary"
-                      onClick={() => setSelectedRequest(request)}
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      View Details
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {request.status === "Pending" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          onClick={() => handleCancelRequest(request.id)}
+                          disabled={cancelRequest.isPending}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs font-medium text-primary hover:text-primary"
+                        onClick={() => setSelectedRequest(request)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        View Details
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -643,7 +692,17 @@ export function ClientPortal() {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
+            {selectedRequest?.status === "Pending" ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleCancelRequest(selectedRequest.id)}
+                disabled={cancelRequest.isPending}
+              >
+                Cancel Request
+              </Button>
+            ) : <div />}
             <Button variant="outline" onClick={() => setSelectedRequest(null)}>
               Close
             </Button>
@@ -653,16 +712,27 @@ export function ClientPortal() {
       <Card>
         <CardHeader>
           <CardTitle>Project progress</CardTitle>
+          <CardDescription>
+            Track your ongoing projects, download deliverables, request revisions, and message your project team.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {projects.length === 0 ? (
             <p className="text-sm text-muted-foreground">Approved work will appear here.</p>
           ) : (
             projects.map((project: any) => (
-              <div key={project.id} className="space-y-2">
-                <div className="flex justify-between gap-3">
-                  <div>
-                    <span className="font-medium">{project.title}</span>
+              <div
+                key={project.id}
+                className="space-y-3 rounded-lg border p-4 transition hover:border-primary/50 hover:shadow-xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <span className="font-semibold text-foreground text-base block">{project.title}</span>
+                    {project.project_number && (
+                      <span className="text-xs font-mono text-muted-foreground block">
+                        #{project.project_number}
+                      </span>
+                    )}
                     {project.assigned_staff && (
                       <p className="text-xs text-muted-foreground">
                         Assigned: {project.assigned_staff.full_name}
@@ -672,22 +742,104 @@ export function ClientPortal() {
                       </p>
                     )}
                   </div>
-                  <Badge variant="outline">{project.status}</Badge>
+                  <Badge variant="outline" className="shrink-0">{project.status}</Badge>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div className="h-full bg-primary" style={{ width: `${project.progress}%` }} />
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted-foreground pt-1">
                   <span>{project.progress}% complete</span>
                   <span>
                     {project.deadline ? `Due ${formatDate(project.deadline)}` : "No deadline"}
                   </span>
+                </div>
+                <div className="pt-2 border-t flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 border-primary/40 text-primary hover:bg-primary/5"
+                    onClick={() => setSelectedProject(project)}
+                  >
+                    <FolderKanban className="h-4 w-4" />
+                    Inspect Deliverables & Collaboration
+                  </Button>
                 </div>
               </div>
             ))
           )}
         </CardContent>
       </Card>
+
+      {/* QUOTATIONS SECTION */}
+      {quotes.length > 0 && (
+        <Card className="shadow-xs border">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-xl font-bold">
+              <FileText className="h-5 w-5 text-primary" /> Quotations & Estimates
+            </CardTitle>
+            <CardDescription>
+              Review proposals and estimates submitted for your project requests.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {quotes.map((quote: any) => (
+              <div
+                key={quote.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border p-4 hover:bg-muted/20 transition-colors"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-foreground">{quote.quote_number}</span>
+                    <Badge
+                      className={
+                        quote.status === "Accepted"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                          : quote.status === "Rejected"
+                            ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                            : quote.status === "Sent"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                              : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {quote.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {quote.quote_items?.[0]?.description || "Service Quotation"} ·{" "}
+                    {quote.expiry_date ? `Valid until ${formatDate(quote.expiry_date)}` : "No expiration"}
+                  </p>
+                  <p className="text-base font-bold text-foreground mt-1">
+                    {formatCurrency(Number(quote.total))}
+                  </p>
+                </div>
+
+                {quote.status === "Sent" && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => handleQuoteResponse(quote.id, "reject")}
+                      disabled={respondToQuote.isPending}
+                    >
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
+                      onClick={() => handleQuoteResponse(quote.id, "accept")}
+                      disabled={respondToQuote.isPending}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Accept Quote
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
       {/* INVOICES SECTION (Requirement 4 & 5) */}
       <Card className="shadow-xs border">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
@@ -897,6 +1049,15 @@ export function ClientPortal() {
           })()}
         </CardContent>
       </Card>
+
+      {/* Client Project Collaboration & Deliverables Modal */}
+      {selectedProject && (
+        <ClientProjectModal
+          project={selectedProject}
+          open={Boolean(selectedProject)}
+          onOpenChange={(open) => !open && setSelectedProject(null)}
+        />
+      )}
 
       {/* Invoice Details Modal (Requirement 5) */}
       <ClientInvoiceDialog

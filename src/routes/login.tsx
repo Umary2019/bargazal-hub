@@ -75,21 +75,45 @@ function LoginPage() {
         return;
       }
 
-      const { data: profile, error: profileError } = await (supabase as any)
-        .from("profiles")
-        .select("approval_status, is_active")
-        .eq("id", authData.user.id)
-        .maybeSingle();
+      const [{ data: profile, error: profileError }, { data: clientRow }] = await Promise.all([
+        (supabase as any)
+          .from("profiles")
+          .select("approval_status, is_active")
+          .eq("id", authData.user.id)
+          .maybeSingle(),
+        (supabase as any)
+          .from("clients")
+          .select("id, approval_status")
+          .eq("auth_user_id", authData.user.id)
+          .maybeSingle(),
+      ]);
       if (profileError) throw profileError;
-      const approvalStatus = String(profile?.approval_status ?? "").toLowerCase();
-      if (approvalStatus !== "approved" || profile.is_active === false) {
+
+      const clientApproval = clientRow?.approval_status
+        ? String(clientRow.approval_status).toLowerCase()
+        : null;
+      const profileApproval = profile?.approval_status
+        ? String(profile.approval_status).toLowerCase()
+        : null;
+      const effectiveApproval = clientApproval ?? profileApproval ?? "";
+      const isActive = profile?.is_active !== false;
+
+      if (effectiveApproval !== "approved" || !isActive) {
         await supabase.auth.signOut();
         toast.error(
-          approvalStatus === "rejected"
+          effectiveApproval === "rejected"
             ? "Your registration was rejected. Contact the administrator."
             : "Your registration is awaiting administrator approval.",
         );
         return;
+      }
+
+      // If client was approved in clients table but profile was not yet synced, synchronize now
+      if (clientApproval === "approved" && profileApproval !== "approved") {
+        await (supabase as any)
+          .from("profiles")
+          .update({ approval_status: "Approved", is_active: true })
+          .eq("id", authData.user.id);
       }
 
       toast.success("Login successful!");

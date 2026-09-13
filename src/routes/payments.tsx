@@ -17,8 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { usePayments } from "@/data/payments";
 import type { Payment } from "@/data/types";
-import { formatCurrency } from "@/lib/format";
-import { format } from "date-fns";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { PaymentFormDialog } from "@/components/payments/payment-form-dialog";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
@@ -141,7 +140,7 @@ function PaymentsPage() {
                           <Badge variant="outline">{payment.payment_method}</Badge>
                         </TableCell>
                         <TableCell className="text-sm">
-                          {format(new Date(payment.payment_date), "MMM dd, yyyy")}
+                          {formatDate(payment.payment_date)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

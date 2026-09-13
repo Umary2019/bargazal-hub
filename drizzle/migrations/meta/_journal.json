@@ -29,6 +29,20 @@
       "when": 1789039657184,
       "tag": "0012_settle_paystack_payment",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789255000000,
+      "tag": "0013_prevent_duplicate_project_invoices",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789260000000,
+      "tag": "0014_project_lifecycle_revisions_deliverables",
+      "breakpoints": true
     }
   ]
 }

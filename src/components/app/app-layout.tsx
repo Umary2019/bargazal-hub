@@ -25,6 +25,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/app/theme-toggle";
+import { NotificationBell } from "@/components/app/notification-bell";
 import { usePendingServiceRequestsCount } from "@/data/service-requests";
 
 interface NavItem {
@@ -226,7 +227,10 @@ export function AppLayout({ children }: AppLayoutProps) {
               </button>
             )}
             <div className="flex-1" />
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <ThemeToggle />
+            </div>
           </div>
         </header>
 

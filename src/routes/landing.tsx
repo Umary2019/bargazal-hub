@@ -125,6 +125,7 @@ function Landing() {
   }, [session, loading, navigate]);
 
   const goToLogin = () => navigate({ to: "/login" });
+  const goToRegister = () => navigate({ to: "/register" });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -160,11 +161,11 @@ function Landing() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={goToLogin}>
+            <Button variant="ghost" size="sm" onClick={goToLogin}>
               Sign in
             </Button>
-            <Button size="sm" onClick={goToLogin} className="gap-1.5">
-              Open dashboard
+            <Button size="sm" onClick={goToRegister} className="gap-1.5">
+              Register
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
             <button
@@ -226,10 +227,10 @@ function Landing() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
-                  onClick={goToLogin}
-                  className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
+                  onClick={goToRegister}
+                  className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold"
                 >
-                  Access the platform
+                  Register as a Client
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -238,7 +239,7 @@ function Landing() {
                   onClick={goToLogin}
                   className="border-primary-foreground/25 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
                 >
-                  Staff sign in
+                  Sign in to Portal
                 </Button>
               </div>
 

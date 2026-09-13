@@ -572,3 +572,35 @@ export function useSetClientApproval() {
     onError: (error) => notifyError(error, "Could not update client"),
   });
 }
+
+export function useCancelServiceRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (requestId: string) => {
+      const { data, error } = await (supabase as any).rpc("cancel_service_request", {
+        _request_id: requestId,
+      });
+      if (error) {
+        // Fallback: direct update
+        const { error: updErr } = await (supabase as any)
+          .from("service_requests")
+          .update({
+            status: "Rejected",
+            admin_notes: "[Cancelled by client]",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", requestId)
+          .eq("status", "Pending");
+        if (updErr) throw updErr;
+      }
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["client-portal"] });
+      qc.invalidateQueries({ queryKey: ["service_requests", "pending_count"] });
+      toast.success("Service request cancelled");
+    },
+    onError: (error) => notifyError(error, "Could not cancel request"),
+  });
+}

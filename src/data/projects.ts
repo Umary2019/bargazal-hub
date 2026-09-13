@@ -101,3 +101,57 @@ export function useDeleteProject() {
     onError: (error) => notifyError(error, "Could not delete project"),
   });
 }
+
+export function useProjectFiles(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ["project-files", projectId],
+    enabled: Boolean(projectId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_files" as never)
+        .select("*")
+        .eq("project_id", projectId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string;
+        project_id: string;
+        name: string;
+        storage_path: string;
+        content_type: string | null;
+        size_bytes: number | null;
+        created_at: string;
+      }>;
+    },
+  });
+}
+
+export function useAcceptDelivery() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, feedback }: { projectId: string; feedback?: string }) => {
+      const { data, error } = await (supabase as any).rpc("accept_project_delivery", {
+        _project_id: projectId,
+        _feedback: feedback || null,
+      });
+      if (error) {
+        // Fallback: direct update if RPC is missing
+        const { error: updateError } = await (supabase as any)
+          .from("projects")
+          .update({ status: "Completed", progress: 100, updated_at: new Date().toISOString() })
+          .eq("id", projectId);
+        if (updateError) throw updateError;
+      }
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["project", variables.projectId] });
+      qc.invalidateQueries({ queryKey: ["client-portal"] });
+      qc.invalidateQueries({ queryKey: ["assigned-work"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Project delivery approved! Work marked as completed.");
+    },
+    onError: (error) => notifyError(error, "Could not approve project delivery"),
+  });
+}

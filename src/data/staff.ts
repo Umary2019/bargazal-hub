@@ -74,19 +74,23 @@ export function useCreateStaff() {
       phone?: string;
       position?: string;
     }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Authentication required");
-
-      const { data, error } = await (supabase as any).rpc("promote_client_to_staff", {
-        _client_id: values.email,
-        _job_title: values.position || "Staff",
+      const { data, error } = await supabase.functions.invoke("create-staff-account", {
+        body: {
+          email: values.email,
+          password: values.password || "BargazalStaff@2026",
+          fullName: values.full_name,
+          phone: values.phone || "08000000000",
+          jobTitle: values.position || "Staff",
+        },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEY });
-      toast.success("Staff account created");
+      qc.invalidateQueries({ queryKey: ["staff-management"] });
+      toast.success("Staff account created successfully");
     },
     onError: (error) => notifyError(error, "Could not create staff account"),
   });

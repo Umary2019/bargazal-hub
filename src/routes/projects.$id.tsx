@@ -15,6 +15,7 @@ import { useDeleteProject } from "@/data/projects";
 import { formatDate } from "@/lib/format";
 import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
 import { ProjectDeliveryBoard } from "@/components/projects/project-delivery-board";
+import { ProjectCollaborationCard } from "@/components/projects/project-collaboration-card";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,7 +30,7 @@ function ProjectDetailPage() {
   const { data: project, isLoading, error } = useProject(id);
   const { data: linkedInvoices = [] } = useInvoices({ projectId: id });
   const { data: linkedPayments = [] } = usePayments({ projectId: id });
-  const { isAdmin, isStaff, user } = useAuth();
+  const { isAdmin, isStaff, user, role } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const deleteProject = useDeleteProject();
 
@@ -52,6 +53,22 @@ function ProjectDetailPage() {
         </div>
       </ProtectedRoute>
     );
+
+  if (role === "client") {
+    return (
+      <ProtectedRoute roles={["client"]}>
+        <div className="space-y-3 p-4">
+          <h1 className="text-xl font-semibold">Client Project View</h1>
+          <p className="text-muted-foreground">
+            Your project deliverables, revisions, and messaging are managed directly in your Client Workspace.
+          </p>
+          <Button onClick={() => navigate({ to: "/dashboard" })}>
+            Go to Client Workspace
+          </Button>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   const canAccessProject = isAdmin || (isStaff && project.assigned_staff_id === user?.id);
   if (!canAccessProject)
@@ -116,6 +133,8 @@ function ProjectDetailPage() {
         <ProjectDetailsCard project={project} />
 
         <ProjectDeliveryBoard projectId={project.id} />
+
+        <ProjectCollaborationCard projectId={project.id} projectTitle={project.title} />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>

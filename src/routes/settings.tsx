@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
+import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,6 +65,7 @@ type BusinessSettingsForm = z.infer<typeof businessSettingsSchema>;
 function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const qc = useQueryClient();
+  const { user: currentUser } = useAuth();
 
   const { data: accessUsers = [], isLoading: accessUsersLoading } = useQuery({
     queryKey: ["admin_users"],
@@ -100,6 +102,18 @@ function SettingsPage() {
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: "admin" | "staff" }) => {
+      if (userId === currentUser?.id && role !== "admin") {
+        throw new Error("You cannot remove your own administrator access.");
+      }
+      const currentAdmins = accessUsers.filter((u) => u.roles.includes("admin"));
+      if (
+        currentAdmins.length <= 1 &&
+        currentAdmins.some((a) => a.id === userId) &&
+        role !== "admin"
+      ) {
+        throw new Error("Cannot demote the only administrator in the system.");
+      }
+
       const { error: deleteError } = await supabase
         .from("user_roles")
         .delete()
@@ -117,7 +131,7 @@ function SettingsPage() {
     },
     onError: (error) => {
       console.error(error);
-      toast.error("Could not update user role");
+      toast.error(error instanceof Error ? error.message : "Could not update user role");
     },
   });
 
@@ -149,6 +163,27 @@ function SettingsPage() {
       payment_instructions: settings?.payment_instructions || "",
     },
   });
+
+  useEffect(() => {
+    if (settings) {
+      form.reset({
+        business_name: settings.business_name || "Bargazal and Sons Tech Solution",
+        phone: settings.phone || "",
+        whatsapp: settings.whatsapp || "",
+        email: settings.email || "",
+        address: settings.address || "",
+        website: settings.website || "",
+        currency: settings.currency || "NGN",
+        tax_rate: settings.tax_rate ?? 0,
+        invoice_prefix: settings.invoice_prefix || "BTS-INV",
+        signature_url: settings.signature_url || "",
+        bank_name: settings.bank_name || "",
+        bank_account_name: settings.bank_account_name || "",
+        bank_account_number: settings.bank_account_number || "",
+        payment_instructions: settings.payment_instructions || "",
+      });
+    }
+  }, [settings, form]);
 
   async function onSubmit(data: BusinessSettingsForm) {
     setIsLoading(true);
