@@ -75,3 +75,59 @@ export function useDeleteExpense() {
     onError: (error) => notifyError(error, "Could not delete expense"),
   });
 }
+
+export function useApproveExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from("expenses")
+        .update({
+          approval_status: "approved",
+          approved_by: user?.id || null,
+          approved_at: new Date().toISOString(),
+        } as any)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      await logActivity("expense", id, "approved", data.description);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Expense approved");
+    },
+    onError: (error) => notifyError(error, "Could not approve expense"),
+  });
+}
+
+export function useRejectExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const { data, error } = await supabase
+        .from("expenses")
+        .update({
+          approval_status: "rejected",
+          rejection_reason: reason,
+        } as any)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      await logActivity("expense", id, "rejected", data.description);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Expense rejected");
+    },
+    onError: (error) => notifyError(error, "Could not reject expense"),
+  });
+}

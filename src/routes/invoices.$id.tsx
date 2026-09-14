@@ -11,6 +11,9 @@ import {
   Share2,
   ShieldCheck,
   Trash2,
+  Calendar,
+  Ban,
+  AlertTriangle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,14 +22,15 @@ import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useInvoice } from "@/data/invoices";
-import { useDeleteInvoice } from "@/data/invoices";
+import { useInvoice, useDeleteInvoice, useInvoiceInstallments } from "@/data/invoices";
 import { usePayments } from "@/data/payments";
 import { useServiceRequest } from "@/data/service-requests";
 import { initiatePaystackPayment, verifyPaystackPayment } from "@/data/paystack";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { InvoiceFormDialog } from "@/components/invoices/invoice-form-dialog";
+import { InvoiceInstallmentsDialog } from "@/components/invoices/invoice-installments-dialog";
+import { CancelInvoiceDialog } from "@/components/invoices/cancel-invoice-dialog";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
 import { PaymentReceipt } from "@/components/payments/payment-receipt";
@@ -55,6 +59,9 @@ function InvoiceDetailPage() {
   const [sharing, setSharing] = useState(false);
   const [sending, setSending] = useState<"email" | "whatsapp" | null>(null);
   const [isPaying, setIsPaying] = useState(false);
+  const [installmentsOpen, setInstallmentsOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const { data: installments = [] } = useInvoiceInstallments(id);
   const deleteInvoice = useDeleteInvoice();
 
   useEffect(() => {
@@ -207,6 +214,25 @@ function InvoiceDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-1 h-4 w-4" /> Edit
             </Button>
+            {!isClient && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInstallmentsOpen(true)}
+              >
+                <Calendar className="mr-1 h-4 w-4" /> Installments
+              </Button>
+            )}
+            {!isClient && invoice.status !== "Cancelled" && Number(invoice.balance) > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={() => setCancelOpen(true)}
+              >
+                <Ban className="mr-1 h-4 w-4" /> Cancel
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer className="mr-1 h-4 w-4" /> Print invoice
             </Button>
@@ -296,6 +322,68 @@ function InvoiceDetailPage() {
             />
           </div>
         </div>
+
+        {/* Cancellation Notice Banner */}
+        {invoice.status === "Cancelled" && (
+          <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-red-950 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-sm">Invoice Cancelled</p>
+              <p className="text-xs text-red-800 dark:text-red-300 mt-0.5">
+                {(invoice as any).cancellation_reason || "This invoice has been officially cancelled."}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Installment Payment Schedule */}
+        {installments.length > 0 && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary" /> Installment Payment Schedule ({installments.length} parts)
+                </CardTitle>
+                {!isClient && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => setInstallmentsOpen(true)}
+                  >
+                    Modify Schedule
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                {installments.map((inst: any) => (
+                  <div key={inst.id} className="p-2.5 rounded-lg border bg-background space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold">#{inst.installment_number}</span>
+                      <Badge
+                        variant={inst.status === "paid" ? "default" : "outline"}
+                        className="text-[10px] capitalize"
+                      >
+                        {inst.status}
+                      </Badge>
+                    </div>
+                    <div className="font-semibold text-sm text-foreground">
+                      {formatCurrency(Number(inst.amount))}
+                    </div>
+                    <div className="text-muted-foreground text-[11px]">
+                      Due: {inst.due_date ? formatDate(inst.due_date) : "Upon completion"}
+                    </div>
+                    {inst.notes && (
+                      <p className="text-[10px] text-muted-foreground truncate">{inst.notes}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-4 md:grid-cols-5">
           <Card>
@@ -498,6 +586,16 @@ function InvoiceDetailPage() {
         </div>
       </div>
       <InvoiceFormDialog open={editOpen} onOpenChange={setEditOpen} invoice={invoice} />
+      <InvoiceInstallmentsDialog
+        open={installmentsOpen}
+        onOpenChange={setInstallmentsOpen}
+        invoice={invoice}
+      />
+      <CancelInvoiceDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        invoice={invoice}
+      />
       {Number(invoice.amount_paid) > 0 && (
         <PaymentReceipt
           invoice={invoice}

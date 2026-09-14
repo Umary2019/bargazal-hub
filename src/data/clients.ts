@@ -83,3 +83,99 @@ export function useDeleteClient() {
     onError: (error) => notifyError(error, "Could not delete client"),
   });
 }
+
+export function useArchiveClient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from("clients")
+        .update({ archived_at: new Date().toISOString(), status: "archived" } as any)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      await logActivity("client", id, "archived", data.full_name);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Client archived");
+    },
+    onError: (error) => notifyError(error, "Could not archive client"),
+  });
+}
+
+export function useRestoreClient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from("clients")
+        .update({ archived_at: null, status: "active" } as any)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      await logActivity("client", id, "restored", data.full_name);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Client restored");
+    },
+    onError: (error) => notifyError(error, "Could not restore client"),
+  });
+}
+
+export function useBulkDeleteClients() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("clients").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, ids) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`${ids.length} client(s) deleted`);
+    },
+    onError: (error) => notifyError(error, "Could not delete selected clients"),
+  });
+}
+
+export function useBulkUpdateClientStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) => {
+      const { error } = await supabase
+        .from("clients")
+        .update({ status } as any)
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      toast.success(`Updated ${variables.ids.length} client(s) to ${variables.status}`);
+    },
+    onError: (error) => notifyError(error, "Could not update client status"),
+  });
+}
+
+export function useImportClients() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (newClients: ClientInput[]) => {
+      const { data, error } = await supabase.from("clients").insert(newClients).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      toast.success(`Successfully imported ${data.length} client(s)`);
+    },
+    onError: (error) => notifyError(error, "Failed to import clients"),
+  });
+}

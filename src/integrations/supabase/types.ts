@@ -115,6 +115,10 @@ export type Database = {
           notes: string | null;
           phone: string | null;
           state: string | null;
+          status: string;
+          tags: string[] | null;
+          acquisition_source: string | null;
+          archived_at: string | null;
           updated_at: string;
           user_id: string | null;
           whatsapp: string | null;
@@ -132,6 +136,10 @@ export type Database = {
           notes?: string | null;
           phone?: string | null;
           state?: string | null;
+          status?: string;
+          tags?: string[] | null;
+          acquisition_source?: string | null;
+          archived_at?: string | null;
           updated_at?: string;
           user_id?: string | null;
           whatsapp?: string | null;
@@ -149,6 +157,10 @@ export type Database = {
           notes?: string | null;
           phone?: string | null;
           state?: string | null;
+          status?: string;
+          tags?: string[] | null;
+          acquisition_source?: string | null;
+          archived_at?: string | null;
           updated_at?: string;
           user_id?: string | null;
           whatsapp?: string | null;
@@ -160,12 +172,18 @@ export type Database = {
           amount: number;
           category: string;
           created_at: string;
+          created_by: string | null;
           description: string;
           expense_date: string;
           expense_number: string;
           id: string;
           notes: string | null;
           payment_method: Database["public"]["Enums"]["payment_method"];
+          approval_status: string;
+          approved_by: string | null;
+          approved_at: string | null;
+          rejection_reason: string | null;
+          receipt_url: string | null;
           updated_at: string;
           vendor: string | null;
         };
@@ -173,12 +191,18 @@ export type Database = {
           amount: number;
           category: string;
           created_at?: string;
+          created_by?: string | null;
           description: string;
           expense_date?: string;
           expense_number: string;
           id?: string;
           notes?: string | null;
           payment_method?: Database["public"]["Enums"]["payment_method"];
+          approval_status?: string;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          rejection_reason?: string | null;
+          receipt_url?: string | null;
           updated_at?: string;
           vendor?: string | null;
         };
@@ -186,12 +210,18 @@ export type Database = {
           amount?: number;
           category?: string;
           created_at?: string;
+          created_by?: string | null;
           description?: string;
           expense_date?: string;
           expense_number?: string;
           id?: string;
           notes?: string | null;
           payment_method?: Database["public"]["Enums"]["payment_method"];
+          approval_status?: string;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          rejection_reason?: string | null;
+          receipt_url?: string | null;
           updated_at?: string;
           vendor?: string | null;
         };
@@ -295,6 +325,10 @@ export type Database = {
           invoice_number: string;
           issue_date: string;
           notes: string | null;
+          client_notes: string | null;
+          payment_terms: string | null;
+          cancelled_at: string | null;
+          cancellation_reason: string | null;
           project_id: string | null;
           service_request_id: string | null;
           status: Database["public"]["Enums"]["invoice_status"];
@@ -314,6 +348,10 @@ export type Database = {
           invoice_number: string;
           issue_date?: string;
           notes?: string | null;
+          client_notes?: string | null;
+          payment_terms?: string | null;
+          cancelled_at?: string | null;
+          cancellation_reason?: string | null;
           project_id?: string | null;
           service_request_id?: string | null;
           status?: Database["public"]["Enums"]["invoice_status"];
@@ -333,6 +371,10 @@ export type Database = {
           invoice_number?: string;
           issue_date?: string;
           notes?: string | null;
+          client_notes?: string | null;
+          payment_terms?: string | null;
+          cancelled_at?: string | null;
+          cancellation_reason?: string | null;
           project_id?: string | null;
           service_request_id?: string | null;
           status?: Database["public"]["Enums"]["invoice_status"];
@@ -1228,6 +1270,252 @@ export type Database = {
           id?: string;
           role?: Database["public"]["Enums"]["app_role"];
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      invoice_installments: {
+        Row: {
+          id: string;
+          invoice_id: string;
+          installment_number: number;
+          amount: number;
+          due_date: string | null;
+          status: string;
+          paid_at: string | null;
+          payment_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          invoice_id: string;
+          installment_number: number;
+          amount: number;
+          due_date?: string | null;
+          status?: string;
+          paid_at?: string | null;
+          payment_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          invoice_id?: string;
+          installment_number?: number;
+          amount?: number;
+          due_date?: string | null;
+          status?: string;
+          paid_at?: string | null;
+          payment_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      refunds: {
+        Row: {
+          id: string;
+          payment_id: string;
+          invoice_id: string;
+          amount: number;
+          reason: string;
+          status: string;
+          gateway_refund_id: string | null;
+          processed_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          payment_id: string;
+          invoice_id: string;
+          amount: number;
+          reason: string;
+          status?: string;
+          gateway_refund_id?: string | null;
+          processed_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          payment_id?: string;
+          invoice_id?: string;
+          amount?: number;
+          reason?: string;
+          status?: string;
+          gateway_refund_id?: string | null;
+          processed_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      invoice_reminder_logs: {
+        Row: {
+          id: string;
+          invoice_id: string;
+          reminder_type: string;
+          channel: string;
+          status: string;
+          recipient: string;
+          sent_at: string;
+        };
+        Insert: {
+          id?: string;
+          invoice_id: string;
+          reminder_type: string;
+          channel?: string;
+          status?: string;
+          recipient: string;
+          sent_at?: string;
+        };
+        Update: {
+          id?: string;
+          invoice_id?: string;
+          reminder_type?: string;
+          channel?: string;
+          status?: string;
+          recipient?: string;
+          sent_at?: string;
+        };
+        Relationships: [];
+      };
+      email_logs: {
+        Row: {
+          id: string;
+          recipient: string;
+          subject: string;
+          template: string;
+          status: string;
+          error_message: string | null;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          recipient: string;
+          subject: string;
+          template: string;
+          status?: string;
+          error_message?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          recipient?: string;
+          subject?: string;
+          template?: string;
+          status?: string;
+          error_message?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      project_revisions: {
+        Row: {
+          id: string;
+          project_id: string;
+          client_id: string;
+          requested_by: string;
+          reason: string;
+          status: string;
+          admin_notes: string | null;
+          created_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          client_id: string;
+          requested_by: string;
+          reason: string;
+          status?: string;
+          admin_notes?: string | null;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          client_id?: string;
+          requested_by?: string;
+          reason?: string;
+          status?: string;
+          admin_notes?: string | null;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Relationships: [];
+      };
+      project_messages: {
+        Row: {
+          id: string;
+          project_id: string;
+          sender_id: string;
+          sender_name: string | null;
+          sender_role: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          sender_id: string;
+          sender_name?: string | null;
+          sender_role: string;
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          sender_id?: string;
+          sender_name?: string | null;
+          sender_role?: string;
+          message?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          message: string;
+          type: string;
+          link: string | null;
+          priority: string | null;
+          related_entity: string | null;
+          related_entity_id: string | null;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          message: string;
+          type?: string;
+          link?: string | null;
+          priority?: string | null;
+          related_entity?: string | null;
+          related_entity_id?: string | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          message?: string;
+          type?: string;
+          link?: string | null;
+          priority?: string | null;
+          related_entity?: string | null;
+          related_entity_id?: string | null;
+          is_read?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };

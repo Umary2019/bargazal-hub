@@ -24,7 +24,39 @@ export type DashboardData = {
   paymentsByMethod: { name: string; total: number }[];
 };
 
-export type DashboardRange = "thisMonth" | "thisYear" | "allTime";
+export type DashboardRange = "today" | "thisWeek" | "thisMonth" | "thisYear" | "allTime";
+
+function matchesDashboardRange(dateStr: string | null | undefined, range: DashboardRange): boolean {
+  if (!dateStr) return false;
+  if (range === "allTime") return true;
+
+  const now = new Date();
+  const datePrefix = dateStr.slice(0, 10);
+  const todayStr = now.toISOString().slice(0, 10);
+
+  if (range === "today") {
+    return datePrefix === todayStr;
+  }
+
+  if (range === "thisWeek") {
+    const day = now.getDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset);
+    const mondayStr = monday.toISOString().slice(0, 10);
+    return datePrefix >= mondayStr && datePrefix <= todayStr;
+  }
+
+  if (range === "thisMonth") {
+    const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return dateStr.startsWith(currentMonthPrefix);
+  }
+
+  if (range === "thisYear") {
+    return dateStr.startsWith(`${now.getFullYear()}-`);
+  }
+
+  return true;
+}
 
 const MONTH_LABELS = [
   "Jan",
@@ -49,7 +81,7 @@ export function useDashboard(range: DashboardRange = "allTime") {
         fetchAllPages((from, to) =>
           supabase
             .from("payments")
-            .select("amount, payment_date, payment_method, clients(full_name)")
+            .select("amount, payment_date, payment_method, project_id, invoice_id, clients(full_name)")
             .is("voided_at", null)
             .range(from, to),
         ),
@@ -62,14 +94,14 @@ export function useDashboard(range: DashboardRange = "allTime") {
         fetchAllPages((from, to) =>
           supabase
             .from("invoices")
-            .select("total, amount_paid, balance, status, due_date")
+            .select("id, project_id, total, amount_paid, balance, status, due_date")
             .range(from, to),
         ),
         supabase.from("clients").select("id", { count: "exact", head: true }),
         fetchAllPages((from, to) =>
           supabase
             .from("projects")
-            .select("status, is_final_year, budget, services(name)")
+            .select("id, status, is_final_year, budget, services(name)")
             .range(from, to),
         ),
       ]);
@@ -77,28 +109,20 @@ export function useDashboard(range: DashboardRange = "allTime") {
       if (clientsRes.error) throw clientsRes.error;
 
       const projectRows = projects as {
+        id: string;
         status: string;
         is_final_year: boolean;
         budget: number | string;
         services: { name: string } | null;
       }[];
-      const now = new Date();
-      const periodStart =
-        range === "thisMonth"
-          ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
-          : range === "thisYear"
-            ? `${now.getFullYear()}-01`
-            : null;
-      const periodPayments = periodStart
-        ? payments.filter((row) => (row.payment_date ?? "").startsWith(periodStart))
-        : payments;
-      const periodExpenses = periodStart
-        ? expenses.filter((row) => (row.expense_date ?? "").startsWith(periodStart))
-        : expenses;
+      const periodPayments = payments.filter((row) => matchesDashboardRange(row.payment_date, range));
+      const periodExpenses = expenses.filter((row) => matchesDashboardRange(row.expense_date, range));
       const paymentRows = periodPayments as Array<{
         amount: number;
         payment_date: string;
         payment_method: string;
+        project_id: string | null;
+        invoice_id: string | null;
         clients: { full_name: string } | null;
       }>;
       const expenseRows = periodExpenses as Array<{
@@ -126,6 +150,7 @@ export function useDashboard(range: DashboardRange = "allTime") {
           row.status !== "Cancelled",
       ).length;
 
+      const now = new Date();
       const months: MonthlyPoint[] = [];
       for (let index = 11; index >= 0; index -= 1) {
         const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
@@ -150,6 +175,21 @@ export function useDashboard(range: DashboardRange = "allTime") {
       const clientRevenue = new Map<string, number>();
       const categoryExpenses = new Map<string, number>();
       const methodPayments = new Map<string, number>();
+
+      const projectToServiceName = new Map<string, string>();
+      for (const p of projectRows) {
+        if (p.id && p.services?.name) {
+          projectToServiceName.set(p.id, p.services.name);
+        }
+      }
+
+      const invoiceToServiceName = new Map<string, string>();
+      for (const inv of invoices as Array<{ id: string; project_id: string | null }>) {
+        if (inv.id && inv.project_id && projectToServiceName.has(inv.project_id)) {
+          invoiceToServiceName.set(inv.id, projectToServiceName.get(inv.project_id)!);
+        }
+      }
+
       for (const payment of paymentRows) {
         const clientName = payment.clients?.full_name ?? "Unassigned client";
         clientRevenue.set(
@@ -160,6 +200,17 @@ export function useDashboard(range: DashboardRange = "allTime") {
           payment.payment_method,
           (methodPayments.get(payment.payment_method) ?? 0) + toNumber(payment.amount),
         );
+
+        // Calculate service revenue from actual collected payments, not project budget
+        const serviceName =
+          (payment.project_id && projectToServiceName.get(payment.project_id)) ||
+          (payment.invoice_id && invoiceToServiceName.get(payment.invoice_id)) ||
+          "Direct / General Services";
+
+        serviceRevenue.set(
+          serviceName,
+          (serviceRevenue.get(serviceName) ?? 0) + toNumber(payment.amount),
+        );
       }
       for (const expense of expenseRows) {
         categoryExpenses.set(
@@ -169,11 +220,6 @@ export function useDashboard(range: DashboardRange = "allTime") {
       }
       for (const project of projectRows) {
         statusCounts.set(project.status, (statusCounts.get(project.status) ?? 0) + 1);
-        const serviceName = project.services?.name ?? "Unassigned";
-        serviceRevenue.set(
-          serviceName,
-          (serviceRevenue.get(serviceName) ?? 0) + toNumber(project.budget),
-        );
       }
 
       return {

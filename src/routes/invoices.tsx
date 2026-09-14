@@ -44,7 +44,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useInvoices, useDeleteInvoice } from "@/data/invoices";
+import { useInvoices, useDeleteInvoice, useCheckOverdueInvoices } from "@/data/invoices";
 import type { InvoiceWithRelations } from "@/data/types";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Link } from "@tanstack/react-router";
@@ -75,6 +75,7 @@ function InvoicesCollection() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const deleteInvoice = useDeleteInvoice();
+  const checkOverdue = useCheckOverdueInvoices();
 
   // Summary KPI Metrics
   const stats = useMemo(() => {
@@ -236,10 +237,22 @@ function InvoicesCollection() {
             <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
             <p className="text-muted-foreground">Manage, track, and monitor customer invoices</p>
           </div>
-          <Button className="gap-2" onClick={() => setDialogOpen(true)}>
-            <Plus className="w-4 h-4" />
-            New Invoice
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              disabled={checkOverdue.isPending}
+              onClick={() => checkOverdue.mutate()}
+            >
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              {checkOverdue.isPending ? "Scanning..." : "Scan Overdue Invoices"}
+            </Button>
+            <Button className="gap-2" size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="w-4 h-4" />
+              New Invoice
+            </Button>
+          </div>
         </div>
 
         {/* KPI Summary Cards */}

@@ -9,6 +9,7 @@ import { usePendingServiceRequestsCount } from "@/data/service-requests";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
 import { ClientPortal } from "@/components/portals/client-portal";
+import { CrmSalesFunnel } from "@/components/dashboard/crm-sales-funnel";
 import {
   LineChart,
   Line,
@@ -192,6 +193,9 @@ function OperationsDashboard() {
             </Card>
           </Link>
         </div>
+
+        {/* CRM Sales Pipeline & Funnel */}
+        <CrmSalesFunnel />
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

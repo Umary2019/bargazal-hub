@@ -82,3 +82,56 @@ export function useDeleteService() {
     onError: (error) => notifyError(error, "Could not delete service"),
   });
 }
+
+export function useSaveServiceCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      values,
+    }: {
+      id?: string | null;
+      values: Partial<ServiceCategory>;
+    }) => {
+      if (id) {
+        const { data, error } = await supabase
+          .from("service_categories")
+          .update(values as any)
+          .eq("id", id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      const { data, error } = await supabase
+        .from("service_categories")
+        .insert(values as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["service_categories"] });
+      qc.invalidateQueries({ queryKey: ["services"] });
+      toast.success("Service category saved successfully");
+    },
+    onError: (error) => notifyError(error, "Could not save category"),
+  });
+}
+
+export function useDeleteServiceCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("service_categories").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["service_categories"] });
+      qc.invalidateQueries({ queryKey: ["services"] });
+      toast.success("Category deleted");
+    },
+    onError: (error) => notifyError(error, "Could not delete category"),
+  });
+}

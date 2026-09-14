@@ -21,6 +21,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSaveClient, useClient } from "@/data/clients";
 import type { Client } from "@/data/types";
 
@@ -33,6 +40,9 @@ const clientSchema = z.object({
   city: z.string().optional().or(z.literal("")),
   state: z.string().optional().or(z.literal("")),
   institution: z.string().optional().or(z.literal("")),
+  status: z.string().optional(),
+  acquisition_source: z.string().optional().or(z.literal("")),
+  tags: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
 });
 
@@ -60,6 +70,9 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
       city: client?.city ?? "",
       state: client?.state ?? "",
       institution: client?.institution ?? "",
+      status: client?.status ?? "active",
+      acquisition_source: client?.acquisition_source ?? "",
+      tags: client?.tags ? client.tags.join(", ") : "",
       notes: client?.notes ?? "",
     },
   });
@@ -75,15 +88,23 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
         city: client?.city ?? "",
         state: client?.state ?? "",
         institution: client?.institution ?? "",
+        status: client?.status ?? "active",
+        acquisition_source: client?.acquisition_source ?? "",
+        tags: client?.tags ? client.tags.join(", ") : "",
         notes: client?.notes ?? "",
       });
     }
   }, [client, form, open]);
 
   async function onSubmit(data: ClientFormData) {
+    const { tags: tagsStr, ...rest } = data;
+    const tags = tagsStr ? tagsStr.split(",").map((s) => s.trim()).filter(Boolean) : [];
     await saveClient.mutateAsync({
       id: clientId,
-      values: data as Parameters<typeof saveClient.mutateAsync>[0]["values"],
+      values: {
+        ...rest,
+        tags,
+      } as any,
     });
     form.reset();
     onOpenChange(false);
@@ -207,6 +228,71 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
                   )}
                 />
               </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value ?? "active"}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="lead">Lead / Prospect</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="acquisition_source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Acquisition Source</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select source" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Direct">Direct Contact</SelectItem>
+                          <SelectItem value="Website">Website</SelectItem>
+                          <SelectItem value="Referral">Referral</SelectItem>
+                          <SelectItem value="Social Media">Social Media</SelectItem>
+                          <SelectItem value="Walk-in">Walk-in / Campus</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags (comma-separated)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. SIWES, Student, Corporate, VIP" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

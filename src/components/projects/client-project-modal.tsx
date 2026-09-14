@@ -359,7 +359,19 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
                     <div className="flex items-center gap-2.5 min-w-0">
                       <FileText className="h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0">
-                        <p className="font-medium truncate text-foreground">{file.name}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-medium truncate text-foreground">{file.name}</p>
+                          {(file as any).version && (
+                            <Badge variant="outline" className="text-[10px] font-mono">
+                              v{(file as any).version}
+                            </Badge>
+                          )}
+                          {(file as any).category && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {(file as any).category}
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-[10px] text-muted-foreground">
                           {formatFileSize(file.size_bytes)} · Uploaded {formatDate(file.created_at)}
                         </p>

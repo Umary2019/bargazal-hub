@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useDashboard } from "@/data/dashboard";
+import { useDashboard, type DashboardRange } from "@/data/dashboard";
 import { formatCurrency } from "@/lib/format";
+import { exportToCsv } from "@/lib/csv";
 import {
   BarChart,
   Bar,
@@ -35,10 +36,8 @@ export const Route = createFileRoute("/reports")({
   component: ReportsPage,
 });
 
-type DateRange = "thisMonth" | "thisYear" | "allTime";
-
 function ReportsPage() {
-  const [dateRange, setDateRange] = useState<DateRange>("thisMonth");
+  const [dateRange, setDateRange] = useState<DashboardRange>("thisMonth");
   const { data: dashboard, isLoading } = useDashboard(dateRange);
 
   if (isLoading || !dashboard) {
@@ -57,28 +56,51 @@ function ReportsPage() {
   const COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
   function exportReport() {
-    const rows = [
+    exportToCsv(
+      `bargazal-summary-report-${dateRange}`,
       ["Metric", "Value"],
-      ["Revenue", report.revenue],
-      ["Expenses", report.expenses],
-      ["Profit", report.profit],
-      ["Outstanding", report.outstanding],
-      ["Clients", report.clientCount],
-      ["Active Projects", report.activeProjects],
-      ["Overdue Invoices", report.overdueInvoices],
-      [],
-      ["Month", "Revenue", "Expenses", "Profit"],
-      ...report.monthly.map((month) => [month.month, month.revenue, month.expenses, month.profit]),
-    ];
-    const csv = rows
-      .map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(","))
-      .join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `bargazal-report-${dateRange}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+      [
+        ["Revenue", report.revenue],
+        ["Expenses", report.expenses],
+        ["Profit", report.profit],
+        ["Outstanding", report.outstanding],
+        ["Clients", report.clientCount],
+        ["Active Projects", report.activeProjects],
+        ["Overdue Invoices", report.overdueInvoices],
+      ],
+    );
+  }
+
+  function exportMonthly() {
+    exportToCsv(
+      `bargazal-monthly-financials-${dateRange}`,
+      ["Month", "Revenue (NGN)", "Expenses (NGN)", "Net Profit (NGN)"],
+      report.monthly.map((m) => [m.month, m.revenue, m.expenses, m.profit]),
+    );
+  }
+
+  function exportServices() {
+    exportToCsv(
+      `bargazal-services-revenue-${dateRange}`,
+      ["Service Category / Name", "Actual Revenue Collected (NGN)"],
+      report.topServices.map((s) => [s.name, s.revenue]),
+    );
+  }
+
+  function exportExpensesBreakdown() {
+    exportToCsv(
+      `bargazal-expenses-breakdown-${dateRange}`,
+      ["Expense Category", "Total Amount (NGN)"],
+      report.expensesByCategory.map((e) => [e.name, e.total]),
+    );
+  }
+
+  function exportClients() {
+    exportToCsv(
+      `bargazal-clients-revenue-${dateRange}`,
+      ["Client Name", "Total Revenue Collected (NGN)"],
+      report.revenueByClient.map((c) => [c.name, c.revenue]),
+    );
   }
 
   return (
@@ -87,26 +109,29 @@ function ReportsPage() {
         {/* Header */}
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-            <p className="text-muted-foreground">Business insights and analytics</p>
+            <h1 className="text-3xl font-bold tracking-tight">Reports & Analytics</h1>
+            <p className="text-muted-foreground">Comprehensive business insights and real financial audits</p>
           </div>
           <Button className="gap-2" variant="outline" onClick={exportReport}>
             <Download className="w-4 h-4" />
-            Export Report
+            Export Summary (CSV)
           </Button>
         </div>
 
         {/* Date Range Filter */}
         <Card>
-          <CardContent className="pt-6">
-            <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
-              <SelectTrigger className="w-full sm:w-40">
+          <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">Filter Reporting Window:</span>
+            <Select value={dateRange} onValueChange={(v) => setDateRange(v as DashboardRange)}>
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Select date range" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="thisWeek">This Week</SelectItem>
                 <SelectItem value="thisMonth">This Month</SelectItem>
                 <SelectItem value="thisYear">This Year</SelectItem>
-                <SelectItem value="allTime">All Time</SelectItem>
+                <SelectItem value="allTime">All Time (Historical)</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
@@ -123,6 +148,11 @@ function ReportsPage() {
 
           {/* Financial Report */}
           <TabsContent value="financial" className="space-y-4">
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={exportMonthly} className="gap-2">
+                <Download className="w-4 h-4" /> Export Monthly Financials (CSV)
+              </Button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-2">
@@ -289,8 +319,14 @@ function ReportsPage() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle>Revenue by Client</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>Revenue by Client</CardTitle>
+                  <CardDescription>Actual payments collected by client</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={exportClients} className="gap-2">
+                  <Download className="w-4 h-4" /> Export Clients (CSV)
+                </Button>
               </CardHeader>
               <CardContent className="space-y-2">
                 {dashboard.revenueByClient.map((client) => (
@@ -311,9 +347,14 @@ function ReportsPage() {
           {/* Services Report */}
           <TabsContent value="services" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Top Services by Revenue</CardTitle>
-                <CardDescription>Services with highest project budgets</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>Top Services by Revenue</CardTitle>
+                  <CardDescription>Actual collected revenue per service category</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={exportServices} className="gap-2">
+                  <Download className="w-4 h-4" /> Export Services (CSV)
+                </Button>
               </CardHeader>
               <CardContent>
                 {dashboard.topServices.length > 0 ? (
@@ -335,8 +376,14 @@ function ReportsPage() {
             </Card>
             <div className="grid gap-6 lg:grid-cols-2">
               <Card>
-                <CardHeader>
-                  <CardTitle>Expenses by Category</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div>
+                    <CardTitle>Expenses by Category</CardTitle>
+                    <CardDescription>Breakdown of expenditures</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={exportExpensesBreakdown} className="gap-2">
+                    <Download className="w-4 h-4" /> Export (CSV)
+                  </Button>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {dashboard.expensesByCategory.map((item) => (

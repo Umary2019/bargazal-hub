@@ -17,6 +17,7 @@ import {
   UserPlus,
   Inbox,
   LayoutDashboard,
+  Search,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/app/theme-toggle";
 import { NotificationBell } from "@/components/app/notification-bell";
+import { GlobalSearchDialog } from "@/components/app/global-search-dialog";
 import { usePendingServiceRequestsCount } from "@/data/service-requests";
 
 interface NavItem {
@@ -122,6 +124,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
   const { data: pendingCount = 0 } = usePendingServiceRequestsCount();
 
@@ -226,13 +229,27 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             )}
-            <div className="flex-1" />
+            <div className="flex-1 max-w-md mx-2 sm:mx-4">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-md border border-slate-200 dark:border-slate-700 w-full transition-colors cursor-pointer"
+                title="Global Search (Cmd+K or Ctrl+K)"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span className="flex-1 text-left hidden sm:inline">Search clients, invoices, projects...</span>
+                <span className="flex-1 text-left sm:hidden">Search...</span>
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               <NotificationBell />
               <ThemeToggle />
             </div>
           </div>
         </header>
+        <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto">

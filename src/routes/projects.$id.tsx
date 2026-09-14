@@ -16,6 +16,7 @@ import { formatDate } from "@/lib/format";
 import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
 import { ProjectDeliveryBoard } from "@/components/projects/project-delivery-board";
 import { ProjectCollaborationCard } from "@/components/projects/project-collaboration-card";
+import { ProjectActivityTimeline } from "@/components/projects/project-activity-timeline";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
@@ -281,6 +282,9 @@ function ProjectDetailPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Chronological Activity & Delivery Timeline */}
+        <ProjectActivityTimeline projectId={id} />
       </div>
       {isAdmin ? (
         <ProjectFormDialog open={editOpen} onOpenChange={setEditOpen} project={project} />

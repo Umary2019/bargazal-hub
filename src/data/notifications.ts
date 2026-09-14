@@ -6,8 +6,11 @@ export interface AppNotification {
   user_id: string;
   title: string;
   message: string;
-  type: "info" | "success" | "warning" | "error" | "request" | "project" | "invoice" | "payment" | "revision";
+  type: string;
   link?: string | null;
+  priority?: "Low" | "Normal" | "High" | "Urgent" | string | null;
+  related_entity?: string | null;
+  related_entity_id?: string | null;
   is_read: boolean;
   created_at: string;
 }

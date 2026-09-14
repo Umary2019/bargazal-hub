@@ -18,6 +18,7 @@ import {
   Search,
   Loader2,
   Sparkles,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -49,6 +50,7 @@ import { initiatePaystackPayment, verifyPaystackPayment } from "@/data/paystack"
 import { ClientInvoiceDialog } from "@/components/invoices/client-invoice-dialog";
 import { PaymentReceipt } from "@/components/payments/payment-receipt";
 import { ClientProjectModal } from "@/components/projects/client-project-modal";
+import { ClientProfileDialog } from "@/components/clients/client-profile-dialog";
 import { getInvoicePaymentStatus } from "@/lib/invoice-status";
 
 export function ClientPortal() {
@@ -75,6 +77,7 @@ export function ClientPortal() {
   const [invoiceFilter, setInvoiceFilter] = useState<"all" | "unpaid" | "paid">("all");
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [receiptInvoice, setReceiptInvoice] = useState<any | null>(null);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
 
   // Handle Paystack callback verification on mount
   useEffect(() => {
@@ -237,11 +240,22 @@ export function ClientPortal() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Client workspace</h1>
-        <p className="text-muted-foreground">
-          Request services, track your project progress, and review billing.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Client workspace</h1>
+          <p className="text-muted-foreground">
+            Request services, track your project progress, and review billing.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowProfileDialog(true)}
+          className="gap-2 self-start sm:self-auto"
+        >
+          <User className="h-4 w-4" />
+          Profile & Settings
+        </Button>
       </div>
 
       {client.approval_status !== "Approved" && (
@@ -1078,6 +1092,13 @@ export function ClientPortal() {
           onOpenChange={(open) => !open && setReceiptInvoice(null)}
         />
       )}
+
+      {/* Client Profile Settings Dialog */}
+      <ClientProfileDialog
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        client={client}
+      />
     </div>
   );
 }

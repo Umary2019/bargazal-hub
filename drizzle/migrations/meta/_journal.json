@@ -43,6 +43,13 @@
       "when": 1789260000000,
       "tag": "0014_project_lifecycle_revisions_deliverables",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789300000000,
+      "tag": "0015_complete_business_platform",
+      "breakpoints": true
     }
   ]
 }

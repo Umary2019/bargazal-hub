@@ -102,9 +102,16 @@ export function NotificationBell() {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <p className={`text-xs ${!notification.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80"}`}>
-                      {notification.title}
-                    </p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <p className={`text-xs truncate ${!notification.is_read ? "font-semibold text-foreground" : "font-medium text-foreground/80"}`}>
+                        {notification.title}
+                      </p>
+                      {notification.priority && (notification.priority === "High" || notification.priority === "Urgent") && (
+                        <span className="rounded bg-red-100 px-1 py-0.2 text-[9px] font-bold text-red-700 dark:bg-red-950 dark:text-red-300 shrink-0">
+                          {notification.priority}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] text-muted-foreground shrink-0 font-mono">
                       {formatDate(notification.created_at)}
                     </span>

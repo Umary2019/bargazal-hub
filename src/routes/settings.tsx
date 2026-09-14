@@ -31,6 +31,9 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AuditLogsTab } from "@/components/settings/audit-logs-tab";
+import { AccountSecurityTab } from "@/components/settings/account-security-tab";
+import { BackupExportTab } from "@/components/settings/backup-export-tab";
 
 type UserAccessRecord = {
   id: string;
@@ -216,10 +219,13 @@ function SettingsPage() {
 
         {/* Settings Tabs */}
         <Tabs defaultValue="business" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="business">Business Information</TabsTrigger>
+          <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full h-auto p-1 gap-1">
+            <TabsTrigger value="business">Business Info</TabsTrigger>
             <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
             <TabsTrigger value="access">Team & Access</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="audit">Audit Logs</TabsTrigger>
+            <TabsTrigger value="backup">Data Backup</TabsTrigger>
           </TabsList>
 
           <TabsContent value="access">
@@ -536,6 +542,18 @@ function SettingsPage() {
                 </Form>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="security">
+            <AccountSecurityTab />
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <AuditLogsTab />
+          </TabsContent>
+
+          <TabsContent value="backup">
+            <BackupExportTab />
           </TabsContent>
         </Tabs>
       </div>

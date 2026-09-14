@@ -136,7 +136,117 @@ function invalidateMoney(qc: ReturnType<typeof useQueryClient>) {
     ["project"],
     ["dashboard"],
     ["activity"],
+    ["paystack-transactions"],
+    ["refunds"],
   ]) {
     qc.invalidateQueries({ queryKey: key });
   }
+}
+
+export function usePaystackTransactions() {
+  return useQuery({
+    queryKey: ["paystack-transactions"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("paystack_transactions")
+        .select("*, invoices(id, invoice_number, total, balance, client_id, clients(id, full_name, email))")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useRefunds() {
+  return useQuery({
+    queryKey: ["refunds"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("refunds")
+        .select("*, payments(payment_number, amount, payment_date), invoices(invoice_number, client_id, clients(full_name))")
+        .order("created_at", { ascending: false });
+      if (error) return [];
+      return data ?? [];
+    },
+  });
+}
+
+export function useProcessRefund() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      paymentId,
+      amount,
+      reason,
+      transactionReference,
+    }: {
+      paymentId: string;
+      amount: number;
+      reason: string;
+      transactionReference?: string;
+    }) => {
+      // Try server-side refund endpoint first
+      try {
+        const response = await fetch("/api/public/paystack/refund", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentId,
+            amount,
+            reason,
+            transactionReference,
+          }),
+        });
+        if (response.ok) {
+          const res = await response.json();
+          if (res.success) return res;
+        }
+      } catch (err) {
+        console.warn("[Process Refund] Server endpoint error, falling back to direct RPC:", err);
+      }
+
+      // Fallback: direct RPC call
+      const { data, error } = await (supabase as any).rpc("process_payment_refund", {
+        _payment_id: paymentId,
+        _amount: amount,
+        _reason: reason,
+        _gateway_refund_id: transactionReference || null,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      invalidateMoney(qc);
+      toast.success("Refund processed and invoice balances updated");
+    },
+    onError: (error) => notifyError(error, "Could not process refund"),
+  });
+}
+
+export function useReconcileTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      transactionId,
+      invoiceId,
+      notes,
+    }: {
+      transactionId: string;
+      invoiceId: string;
+      notes?: string;
+    }) => {
+      const { data, error } = await (supabase as any).rpc("reconcile_transaction", {
+        _transaction_id: transactionId,
+        _invoice_id: invoiceId,
+        _notes: notes || null,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      invalidateMoney(qc);
+      toast.success("Transaction reconciled and invoice settled");
+    },
+    onError: (error) => notifyError(error, "Could not reconcile transaction"),
+  });
 }

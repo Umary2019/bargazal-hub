@@ -32,6 +32,7 @@ import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as PublicInvoicesTokenRouteImport } from './routes/public.invoices.$token'
 import { Route as ApiPublicPaystackHealthRouteImport } from './routes/api/public/paystack/health'
 import { Route as ApiPublicPaystackInitRouteImport } from './routes/api/public/paystack/init'
+import { Route as ApiPublicPaystackRefundRouteImport } from './routes/api/public/paystack/refund'
 import { Route as ApiPublicPaystackVerifyRouteImport } from './routes/api/public/paystack/verify'
 import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack/webhook'
 
@@ -150,6 +151,11 @@ const ApiPublicPaystackInitRoute = ApiPublicPaystackInitRouteImport.update({
   path: '/api/public/paystack/init',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaystackRefundRoute = ApiPublicPaystackRefundRouteImport.update({
+  id: '/api/public/paystack/refund',
+  path: '/api/public/paystack/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaystackVerifyRoute = ApiPublicPaystackVerifyRouteImport.update({
   id: '/api/public/paystack/verify',
   path: '/api/public/paystack/verify',
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
   '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
   '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
+  '/api/public/paystack/refund': typeof ApiPublicPaystackRefundRoute
   '/api/public/paystack/verify': typeof ApiPublicPaystackVerifyRoute
   '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
 }
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
   '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
   '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
+  '/api/public/paystack/refund': typeof ApiPublicPaystackRefundRoute
   '/api/public/paystack/verify': typeof ApiPublicPaystackVerifyRoute
   '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
 }
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
   '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
   '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
+  '/api/public/paystack/refund': typeof ApiPublicPaystackRefundRoute
   '/api/public/paystack/verify': typeof ApiPublicPaystackVerifyRoute
   '/api/public/paystack/webhook': typeof ApiPublicPaystackWebhookRoute
 }
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/public/invoices/$token'
     | '/api/public/paystack/health'
     | '/api/public/paystack/init'
+    | '/api/public/paystack/refund'
     | '/api/public/paystack/verify'
     | '/api/public/paystack/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/public/invoices/$token'
     | '/api/public/paystack/health'
     | '/api/public/paystack/init'
+    | '/api/public/paystack/refund'
     | '/api/public/paystack/verify'
     | '/api/public/paystack/webhook'
   id:
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/public/invoices/$token'
     | '/api/public/paystack/health'
     | '/api/public/paystack/init'
+    | '/api/public/paystack/refund'
     | '/api/public/paystack/verify'
     | '/api/public/paystack/webhook'
   fileRoutesById: FileRoutesById
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   PublicInvoicesTokenRoute: typeof PublicInvoicesTokenRoute
   ApiPublicPaystackHealthRoute: typeof ApiPublicPaystackHealthRoute
   ApiPublicPaystackInitRoute: typeof ApiPublicPaystackInitRoute
+  ApiPublicPaystackRefundRoute: typeof ApiPublicPaystackRefundRoute
   ApiPublicPaystackVerifyRoute: typeof ApiPublicPaystackVerifyRoute
   ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
 }
@@ -516,6 +529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaystackInitRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/paystack/refund': {
+      id: '/api/public/paystack/refund'
+      path: '/api/public/paystack/refund'
+      fullPath: '/api/public/paystack/refund'
+      preLoaderRoute: typeof ApiPublicPaystackRefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/paystack/verify': {
       id: '/api/public/paystack/verify'
       path: '/api/public/paystack/verify'
@@ -589,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicInvoicesTokenRoute: PublicInvoicesTokenRoute,
   ApiPublicPaystackHealthRoute: ApiPublicPaystackHealthRoute,
   ApiPublicPaystackInitRoute: ApiPublicPaystackInitRoute,
+  ApiPublicPaystackRefundRoute: ApiPublicPaystackRefundRoute,
   ApiPublicPaystackVerifyRoute: ApiPublicPaystackVerifyRoute,
   ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
 }
