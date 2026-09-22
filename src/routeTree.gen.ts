@@ -29,6 +29,7 @@ import { Route as WorkRouteImport } from './routes/work'
 import { Route as ClientsIdRouteImport } from './routes/clients.$id'
 import { Route as InvoicesIdRouteImport } from './routes/invoices.$id'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as PublicInvoicesTokenRouteImport } from './routes/public.invoices.$token'
 import { Route as ApiPublicPaystackHealthRouteImport } from './routes/api/public/paystack/health'
 import { Route as ApiPublicPaystackInitRouteImport } from './routes/api/public/paystack/init'
@@ -136,6 +137,11 @@ const ProjectsIdRoute = ProjectsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ProjectsRoute,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicInvoicesTokenRoute = PublicInvoicesTokenRouteImport.update({
   id: '/public/invoices/$token',
   path: '/public/invoices/$token',
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
   '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
   '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
   '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
   '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/clients/$id': typeof ClientsIdRoute
   '/invoices/$id': typeof InvoicesIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/public/invoices/$token': typeof PublicInvoicesTokenRoute
   '/api/public/paystack/health': typeof ApiPublicPaystackHealthRoute
   '/api/public/paystack/init': typeof ApiPublicPaystackInitRoute
@@ -276,6 +285,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
+    | '/api/public/health'
     | '/public/invoices/$token'
     | '/api/public/paystack/health'
     | '/api/public/paystack/init'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
+    | '/api/public/health'
     | '/public/invoices/$token'
     | '/api/public/paystack/health'
     | '/api/public/paystack/init'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/projects/$id'
+    | '/api/public/health'
     | '/public/invoices/$token'
     | '/api/public/paystack/health'
     | '/api/public/paystack/init'
@@ -358,6 +370,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   StaffRoute: typeof StaffRoute
   WorkRoute: typeof WorkRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   PublicInvoicesTokenRoute: typeof PublicInvoicesTokenRoute
   ApiPublicPaystackHealthRoute: typeof ApiPublicPaystackHealthRoute
   ApiPublicPaystackInitRoute: typeof ApiPublicPaystackInitRoute
@@ -508,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIdRouteImport
       parentRoute: typeof ProjectsRoute
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/public/invoices/$token': {
       id: '/public/invoices/$token'
       path: '/public/invoices/$token'
@@ -606,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   StaffRoute: StaffRoute,
   WorkRoute: WorkRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   PublicInvoicesTokenRoute: PublicInvoicesTokenRoute,
   ApiPublicPaystackHealthRoute: ApiPublicPaystackHealthRoute,
   ApiPublicPaystackInitRoute: ApiPublicPaystackInitRoute,
