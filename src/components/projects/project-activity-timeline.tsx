@@ -44,7 +44,8 @@ export function ProjectActivityTimeline({ projectId }: { projectId: string }) {
           type: "message",
           title: "Message Sent",
           detail: m.message,
-          author: m.profiles?.full_name || (m.sender_role === "staff" ? "Staff Specialist" : "Client"),
+          author:
+            m.profiles?.full_name || (m.sender_role === "staff" ? "Staff Specialist" : "Client"),
           badgeText: m.sender_role,
           badgeVariant: "secondary",
         });
@@ -105,7 +106,7 @@ export function ProjectActivityTimeline({ projectId }: { projectId: string }) {
 
       // Sort chronological descending (newest first)
       return timeline.sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
     },
   });
@@ -138,7 +139,9 @@ export function ProjectActivityTimeline({ projectId }: { projectId: string }) {
         {isLoading ? (
           <p className="text-xs text-muted-foreground py-4">Loading timeline events...</p>
         ) : items.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-4">No logged activity on this project yet.</p>
+          <p className="text-xs text-muted-foreground py-4">
+            No logged activity on this project yet.
+          </p>
         ) : (
           <div className="relative pl-6 border-l border-border space-y-6">
             {items.map((item) => (
@@ -156,9 +159,7 @@ export function ProjectActivityTimeline({ projectId }: { projectId: string }) {
                         {item.badgeText}
                       </Badge>
                     )}
-                    {item.author && (
-                      <span className="text-muted-foreground">by {item.author}</span>
-                    )}
+                    {item.author && <span className="text-muted-foreground">by {item.author}</span>}
                     <span className="text-[10px] text-muted-foreground font-mono ml-auto">
                       {formatDateTime(item.timestamp)}
                     </span>

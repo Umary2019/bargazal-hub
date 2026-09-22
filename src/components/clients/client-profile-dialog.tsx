@@ -131,7 +131,7 @@ export function ClientProfileDialog({ open, onOpenChange, client }: ClientProfil
     if (!client?.id) return;
     localStorage.setItem(
       `client_prefs_${client.id}`,
-      JSON.stringify({ emailNotifications, invoiceReminders })
+      JSON.stringify({ emailNotifications, invoiceReminders }),
     );
     toast.success("Notification preferences saved");
   }
@@ -282,10 +282,7 @@ export function ClientProfileDialog({ open, onOpenChange, client }: ClientProfil
                   Receive status updates and milestone notices via email
                 </div>
               </div>
-              <Switch
-                checked={emailNotifications}
-                onCheckedChange={setEmailNotifications}
-              />
+              <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
             </div>
 
             <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -295,10 +292,7 @@ export function ClientProfileDialog({ open, onOpenChange, client }: ClientProfil
                   Receive friendly reminders prior to invoice due dates
                 </div>
               </div>
-              <Switch
-                checked={invoiceReminders}
-                onCheckedChange={setInvoiceReminders}
-              />
+              <Switch checked={invoiceReminders} onCheckedChange={setInvoiceReminders} />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">

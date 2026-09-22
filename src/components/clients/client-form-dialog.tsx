@@ -98,7 +98,12 @@ export function ClientFormDialog({ open, onOpenChange, clientId }: ClientFormDia
 
   async function onSubmit(data: ClientFormData) {
     const { tags: tagsStr, ...rest } = data;
-    const tags = tagsStr ? tagsStr.split(",").map((s) => s.trim()).filter(Boolean) : [];
+    const tags = tagsStr
+      ? tagsStr
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
     await saveClient.mutateAsync({
       id: clientId,
       values: {

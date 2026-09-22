@@ -61,11 +61,10 @@ function ProjectDetailPage() {
         <div className="space-y-3 p-4">
           <h1 className="text-xl font-semibold">Client Project View</h1>
           <p className="text-muted-foreground">
-            Your project deliverables, revisions, and messaging are managed directly in your Client Workspace.
+            Your project deliverables, revisions, and messaging are managed directly in your Client
+            Workspace.
           </p>
-          <Button onClick={() => navigate({ to: "/dashboard" })}>
-            Go to Client Workspace
-          </Button>
+          <Button onClick={() => navigate({ to: "/dashboard" })}>Go to Client Workspace</Button>
         </div>
       </ProtectedRoute>
     );

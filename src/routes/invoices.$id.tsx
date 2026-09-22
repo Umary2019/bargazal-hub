@@ -215,11 +215,7 @@ function InvoiceDetailPage() {
               <Pencil className="mr-1 h-4 w-4" /> Edit
             </Button>
             {!isClient && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInstallmentsOpen(true)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setInstallmentsOpen(true)}>
                 <Calendar className="mr-1 h-4 w-4" /> Installments
               </Button>
             )}
@@ -330,7 +326,8 @@ function InvoiceDetailPage() {
             <div>
               <p className="font-semibold text-sm">Invoice Cancelled</p>
               <p className="text-xs text-red-800 dark:text-red-300 mt-0.5">
-                {(invoice as any).cancellation_reason || "This invoice has been officially cancelled."}
+                {(invoice as any).cancellation_reason ||
+                  "This invoice has been officially cancelled."}
               </p>
             </div>
           </div>
@@ -342,7 +339,8 @@ function InvoiceDetailPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" /> Installment Payment Schedule ({installments.length} parts)
+                  <Calendar className="w-4 h-4 text-primary" /> Installment Payment Schedule (
+                  {installments.length} parts)
                 </CardTitle>
                 {!isClient && (
                   <Button
@@ -591,11 +589,7 @@ function InvoiceDetailPage() {
         onOpenChange={setInstallmentsOpen}
         invoice={invoice}
       />
-      <CancelInvoiceDialog
-        open={cancelOpen}
-        onOpenChange={setCancelOpen}
-        invoice={invoice}
-      />
+      <CancelInvoiceDialog open={cancelOpen} onOpenChange={setCancelOpen} invoice={invoice} />
       {Number(invoice.amount_paid) > 0 && (
         <PaymentReceipt
           invoice={invoice}

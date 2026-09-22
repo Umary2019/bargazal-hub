@@ -4,7 +4,20 @@ export interface NotificationPayload {
   userId: string;
   title: string;
   message: string;
-  type?: "info" | "success" | "warning" | "error" | "request" | "project" | "invoice" | "payment" | "revision" | "task" | "milestone" | "quote" | "security";
+  type?:
+    | "info"
+    | "success"
+    | "warning"
+    | "error"
+    | "request"
+    | "project"
+    | "invoice"
+    | "payment"
+    | "revision"
+    | "task"
+    | "milestone"
+    | "quote"
+    | "security";
   link?: string | null;
   priority?: "Low" | "Normal" | "High" | "Urgent";
   relatedEntity?: string | null;
@@ -63,9 +76,7 @@ export async function sendInAppNotification(payload: NotificationPayload): Promi
 /**
  * Notifies all administrative users.
  */
-export async function notifyAdmins(
-  params: Omit<NotificationPayload, "userId">,
-): Promise<void> {
+export async function notifyAdmins(params: Omit<NotificationPayload, "userId">): Promise<void> {
   try {
     const { data: admins } = await (supabase as any)
       .from("profiles")

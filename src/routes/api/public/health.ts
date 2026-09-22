@@ -6,9 +6,7 @@ export const Route = createFileRoute("/api/public/health")({
     handlers: {
       GET: async () => {
         try {
-          const supabaseUrl =
-            process.env["SUPABASE_URL"] ||
-            process.env["VITE_SUPABASE_URL"];
+          const supabaseUrl = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
 
           const supabaseKey =
             process.env["SUPABASE_SERVICE_ROLE_KEY"] ||
@@ -33,10 +31,7 @@ export const Route = createFileRoute("/api/public/health")({
 
           const supabase = createClient(supabaseUrl, supabaseKey);
 
-          const { error } = await supabase
-            .from("invoices")
-            .select("id")
-            .limit(1);
+          const { error } = await supabase.from("invoices").select("id").limit(1);
 
           if (error) {
             return new Response(
@@ -87,4 +82,4 @@ export const Route = createFileRoute("/api/public/health")({
       },
     },
   },
-});   
+});

@@ -23,14 +23,10 @@ export function CrmSalesFunnel() {
         .select("id, status");
 
       // 2. Quotes
-      const { data: quotes = [] } = await supabase
-        .from("quotes" as never)
-        .select("id, status");
+      const { data: quotes = [] } = await supabase.from("quotes" as never).select("id, status");
 
       // 3. Projects
-      const { data: projects = [] } = await supabase
-        .from("projects")
-        .select("id, status");
+      const { data: projects = [] } = await supabase.from("projects").select("id, status");
 
       // 4. Clients acquisition source
       const { data: clients = [] } = await supabase
@@ -45,7 +41,7 @@ export function CrmSalesFunnel() {
       const acceptedQuotes = (quotes ?? []).filter((q: any) => q.status === "accepted").length;
 
       const activeProjects = (projects ?? []).filter(
-        (p) => ACTIVE_PROJECT_STATUSES.includes(p.status as any) || p.status === "Planning"
+        (p) => ACTIVE_PROJECT_STATUSES.includes(p.status as any) || p.status === "Planning",
       ).length;
       const completedProjects = (projects ?? []).filter((p) => p.status === "Completed").length;
 

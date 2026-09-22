@@ -1,5 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Mail, Phone, FolderOpen, Receipt, Building2, Tag, MessageSquare, Calendar } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  FolderOpen,
+  Receipt,
+  Building2,
+  Tag,
+  MessageSquare,
+  Calendar,
+} from "lucide-react";
 
 import { ProtectedRoute } from "@/components/app/protected-route";
 import { Button } from "@/components/ui/button";
@@ -57,13 +67,9 @@ function ClientDetailPage() {
                   Inactive
                 </Badge>
               ) : (client as any).status === "lead" ? (
-                <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                  Lead
-                </Badge>
+                <Badge className="bg-blue-100 text-blue-800 border-blue-200">Lead</Badge>
               ) : (
-                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
-                  Active
-                </Badge>
+                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Active</Badge>
               )}
             </div>
             {(client as any).institution && (
@@ -96,7 +102,9 @@ function ClientDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{formatCurrency(totalBilled)}</div>
+              <div className="text-2xl font-bold text-foreground">
+                {formatCurrency(totalBilled)}
+              </div>
               <p className="text-xs text-muted-foreground mt-0.5">{invoices.length} invoice(s)</p>
             </CardContent>
           </Card>
@@ -297,8 +305,8 @@ function ClientDetailPage() {
                               inv.status === "Paid"
                                 ? "bg-emerald-100 text-emerald-800"
                                 : inv.status === "Overdue"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-amber-100 text-amber-800"
                             }
                           >
                             {inv.status}

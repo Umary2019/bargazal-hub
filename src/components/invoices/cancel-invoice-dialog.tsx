@@ -19,11 +19,7 @@ interface CancelInvoiceDialogProps {
   invoice: any;
 }
 
-export function CancelInvoiceDialog({
-  open,
-  onOpenChange,
-  invoice,
-}: CancelInvoiceDialogProps) {
+export function CancelInvoiceDialog({ open, onOpenChange, invoice }: CancelInvoiceDialogProps) {
   const [reason, setReason] = useState("");
   const cancelInvoice = useCancelInvoice();
 
@@ -56,8 +52,8 @@ export function CancelInvoiceDialog({
               <AlertTriangle className="w-5 h-5" /> Cancel Invoice #{invoice?.invoice_number}
             </DialogTitle>
             <DialogDescription>
-              Cancelling will invalidate this invoice and prevent further client payments.
-              Existing settled payments will not be erased.
+              Cancelling will invalidate this invoice and prevent further client payments. Existing
+              settled payments will not be erased.
             </DialogDescription>
           </DialogHeader>
 
@@ -75,11 +71,7 @@ export function CancelInvoiceDialog({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
             <Button

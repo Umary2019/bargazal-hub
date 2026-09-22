@@ -114,9 +114,7 @@ function InvoicesCollection() {
         (invoice.projects?.services?.name?.toLowerCase().includes(q) ?? false);
 
       const computedStatus = getInvoicePaymentStatus(invoice);
-      const matchesStatus =
-        statusFilter === "all" ||
-        computedStatus === statusFilter;
+      const matchesStatus = statusFilter === "all" || computedStatus === statusFilter;
 
       const matchesDate = (() => {
         if (dateFilter === "all") return true;
@@ -131,8 +129,7 @@ function InvoicesCollection() {
         }
         if (dateFilter === "month") {
           return (
-            issueDate.getFullYear() === now.getFullYear() &&
-            issueDate.getMonth() === now.getMonth()
+            issueDate.getFullYear() === now.getFullYear() && issueDate.getMonth() === now.getMonth()
           );
         }
         if (dateFilter === "year") {
@@ -328,10 +325,7 @@ function InvoicesCollection() {
                 />
               </div>
 
-              <Select
-                value={statusFilter}
-                onValueChange={(v) => setStatusFilter(v)}
-              >
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -345,10 +339,7 @@ function InvoicesCollection() {
                 </SelectContent>
               </Select>
 
-              <Select
-                value={dateFilter}
-                onValueChange={(v) => setDateFilter(v)}
-              >
+              <Select value={dateFilter} onValueChange={(v) => setDateFilter(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Date range" />
                 </SelectTrigger>
@@ -367,7 +358,9 @@ function InvoicesCollection() {
         <Card>
           <CardHeader>
             <CardTitle>All Invoices</CardTitle>
-            <CardDescription>{filteredInvoices.length} invoice(s) matching criteria</CardDescription>
+            <CardDescription>
+              {filteredInvoices.length} invoice(s) matching criteria
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -404,9 +397,10 @@ function InvoicesCollection() {
                   <TableBody>
                     {filteredInvoices.map((invoice) => {
                       const computedStatus = getInvoicePaymentStatus(invoice);
-                      const latestPayment = (invoice.payments && invoice.payments.length > 0)
-                        ? invoice.payments[0]
-                        : null;
+                      const latestPayment =
+                        invoice.payments && invoice.payments.length > 0
+                          ? invoice.payments[0]
+                          : null;
                       const paymentRecord = latestPayment as unknown as {
                         id: string;
                         payment_date: string;
@@ -476,12 +470,18 @@ function InvoicesCollection() {
                                   <span>{formatDate(paymentRecord.payment_date)}</span>
                                 </div>
                                 {paymentRecord.provider_reference && (
-                                  <div className="font-mono text-[10px] text-muted-foreground truncate max-w-[110px]" title={paymentRecord.provider_reference}>
+                                  <div
+                                    className="font-mono text-[10px] text-muted-foreground truncate max-w-[110px]"
+                                    title={paymentRecord.provider_reference}
+                                  >
                                     {paymentRecord.provider_reference}
                                   </div>
                                 )}
                                 {paymentRecord.channel && (
-                                  <Badge variant="secondary" className="text-[9px] uppercase px-1 py-0 font-mono">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[9px] uppercase px-1 py-0 font-mono"
+                                  >
                                     {paymentRecord.channel}
                                   </Badge>
                                 )}
@@ -493,7 +493,12 @@ function InvoicesCollection() {
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Link to="/invoices/$id" params={{ id: invoice.id }}>
-                                <Button variant="ghost" size="sm" className="h-8 px-2" title="View details">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                  title="View details"
+                                >
                                   <Eye className="h-4 w-4" />
                                 </Button>
                               </Link>

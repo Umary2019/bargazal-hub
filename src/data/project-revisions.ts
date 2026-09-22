@@ -40,13 +40,7 @@ export function useProjectRevisions(projectId: string | undefined) {
 export function useRequestRevision() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      projectId,
-      reason,
-    }: {
-      projectId: string;
-      reason: string;
-    }) => {
+    mutationFn: async ({ projectId, reason }: { projectId: string; reason: string }) => {
       const { data, error } = await (supabase as any).rpc("request_project_revision", {
         _project_id: projectId,
         _reason: reason.trim(),

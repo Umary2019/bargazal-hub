@@ -25,7 +25,12 @@ export function BackupExportTab() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch record counts for overview
-  const { data: counts, isLoading, refetch, isFetching } = useQuery({
+  const {
+    data: counts,
+    isLoading,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["backup_table_counts"],
     queryFn: async () => {
       const tables = [
@@ -42,9 +47,11 @@ export function BackupExportTab() {
 
       const results = await Promise.all(
         tables.map(async (table) => {
-          const res = await supabase.from(table as any).select("id", { count: "exact", head: true });
+          const res = await supabase
+            .from(table as any)
+            .select("id", { count: "exact", head: true });
           return { table, count: res.count ?? 0 };
-        })
+        }),
       );
 
       return results;
@@ -78,7 +85,9 @@ export function BackupExportTab() {
         fetchAllPages((from, to) => supabase.from("quotes").select("*").range(from, to)),
         fetchAllPages((from, to) => supabase.from("quote_items").select("*").range(from, to)),
         fetchAllPages((from, to) => supabase.from("services").select("*").range(from, to)),
-        fetchAllPages((from, to) => supabase.from("service_categories").select("*").range(from, to)),
+        fetchAllPages((from, to) =>
+          supabase.from("service_categories").select("*").range(from, to),
+        ),
         fetchAllPages((from, to) => supabase.from("activity_log").select("*").range(from, to)),
       ]);
 
@@ -154,7 +163,10 @@ export function BackupExportTab() {
     try {
       toast.info(`Exporting ${table}...`);
       const rows = await fetchAllPages((from, to) =>
-        supabase.from(table as any).select("*").range(from, to)
+        supabase
+          .from(table as any)
+          .select("*")
+          .range(from, to),
       );
 
       if (rows.length === 0) {
@@ -181,7 +193,8 @@ export function BackupExportTab() {
               Business Data Backup & Disaster Recovery
             </CardTitle>
             <CardDescription>
-              Export a complete snapshot of all business data, clients, projects, finances, and audit logs.
+              Export a complete snapshot of all business data, clients, projects, finances, and
+              audit logs.
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -250,13 +263,18 @@ export function BackupExportTab() {
             </h4>
             <ul className="text-xs text-muted-foreground space-y-2 list-disc pl-5">
               <li>
-                <strong>Complete Snapshot:</strong> The downloaded JSON file includes all table schema rows, UUID references, timestamps, and foreign key relations.
+                <strong>Complete Snapshot:</strong> The downloaded JSON file includes all table
+                schema rows, UUID references, timestamps, and foreign key relations.
               </li>
               <li>
-                <strong>Automated Supabase Backups:</strong> In addition to this on-demand export tool, Supabase automatically performs daily physical backups with Point-In-Time-Recovery (PITR).
+                <strong>Automated Supabase Backups:</strong> In addition to this on-demand export
+                tool, Supabase automatically performs daily physical backups with
+                Point-In-Time-Recovery (PITR).
               </li>
               <li>
-                <strong>Data Restoration:</strong> In case of catastrophic data loss, this JSON snapshot can be imported into any PostgreSQL instance or Supabase project via our database restore script.
+                <strong>Data Restoration:</strong> In case of catastrophic data loss, this JSON
+                snapshot can be imported into any PostgreSQL instance or Supabase project via our
+                database restore script.
               </li>
             </ul>
           </div>

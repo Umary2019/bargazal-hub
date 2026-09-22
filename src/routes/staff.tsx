@@ -115,10 +115,8 @@ function StaffPage() {
       if (taskError) throw taskError;
 
       const now = new Date();
-      const tasksByStaff: Record<
-        string,
-        { pending: number; completed: number; overdue: number }
-      > = {};
+      const tasksByStaff: Record<string, { pending: number; completed: number; overdue: number }> =
+        {};
 
       (tasksData ?? []).forEach((t: any) => {
         const staffId = t.assigned_to;
@@ -188,7 +186,10 @@ function StaffPage() {
     setIsSavingEdit(true);
     try {
       const skillsArray = editSkills
-        ? editSkills.split(",").map((s) => s.trim()).filter(Boolean)
+        ? editSkills
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [];
       const { error } = await (supabase as any)
         .from("profiles")
@@ -255,7 +256,8 @@ function StaffPage() {
                 <div className="text-2xl font-bold text-emerald-600">
                   {
                     staff.filter(
-                      (s: any) => (s.availability || "available") === "available" && s.is_active !== false
+                      (s: any) =>
+                        (s.availability || "available") === "available" && s.is_active !== false,
                     ).length
                   }
                 </div>
@@ -273,10 +275,12 @@ function StaffPage() {
                 <div className="text-2xl font-bold text-primary">
                   {Object.values(workload.projectsByStaff).reduce(
                     (sum, p) => sum + (p.active || 0),
-                    0
+                    0,
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">Projects currently in progress</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Projects currently in progress
+                </p>
               </CardContent>
             </Card>
 
@@ -290,7 +294,7 @@ function StaffPage() {
                 <div className="text-2xl font-bold text-amber-600">
                   {Object.values(workload.tasksByStaff).reduce(
                     (sum, t) => sum + (t.pending || 0),
-                    0
+                    0,
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">Tasks assigned across staff</p>
@@ -448,10 +452,7 @@ function StaffPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() =>
-                                  updateStaff(
-                                    member.id,
-                                    member.is_active ? "inactive" : "active"
-                                  )
+                                  updateStaff(member.id, member.is_active ? "inactive" : "active")
                                 }
                               >
                                 {member.is_active ? "Deactivate" : "Reactivate"}
@@ -539,11 +540,7 @@ function StaffPage() {
                 </div>
 
                 <DialogFooter className="pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditMember(null)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setEditMember(null)}>
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isSavingEdit}>
@@ -575,7 +572,9 @@ function StaffPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Email Address</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Email Address
+                    </label>
                     <Input
                       required
                       type="email"
@@ -585,7 +584,9 @@ function StaffPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Job Title / Role</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Job Title / Role
+                    </label>
                     <Input
                       placeholder="e.g. Lead Software Engineer"
                       value={staffForm.position}
@@ -593,7 +594,9 @@ function StaffPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Phone Number</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Phone Number
+                    </label>
                     <Input
                       placeholder="e.g. 08012345678"
                       value={staffForm.phone}
@@ -601,7 +604,9 @@ function StaffPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Temporary Password</label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Temporary Password
+                    </label>
                     <Input
                       type="password"
                       placeholder="Default: BargazalStaff@2026"

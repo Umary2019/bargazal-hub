@@ -271,7 +271,9 @@ export function PaymentReceipt({ invoice, payments, open, onOpenChange }: Paymen
           <div className="mt-6 bg-emerald-50 p-3 text-center font-bold text-emerald-700">
             {receiptStatus} · Invoice {invoice.invoice_number} ·{" "}
             {payment?.payment_method || "Payment received"}
-            {(payment as any)?.channel ? ` (${String((payment as any).channel).toUpperCase()})` : ""}
+            {(payment as any)?.channel
+              ? ` (${String((payment as any).channel).toUpperCase()})`
+              : ""}
           </div>
           <div className="mt-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
             <div className="w-56 text-sm">

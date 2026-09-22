@@ -273,11 +273,15 @@ export function ClientInvoiceDialog({
                   </div>
                   <div>
                     <span className="text-muted-foreground">Payment Reference:</span>
-                    <p className="font-mono font-medium truncate">{latestPayment.reference || "Online"}</p>
+                    <p className="font-mono font-medium truncate">
+                      {latestPayment.reference || "Online"}
+                    </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Channel:</span>
-                    <p className="font-medium capitalize">{latestPayment.channel || "Paystack Online"}</p>
+                    <p className="font-medium capitalize">
+                      {latestPayment.channel || "Paystack Online"}
+                    </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Amount Paid:</span>

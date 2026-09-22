@@ -52,7 +52,7 @@ export function InvoiceInstallmentsDialog({
             due_date: inst.due_date,
             notes: inst.notes || "",
             status: inst.status,
-          }))
+          })),
         );
       } else {
         // Generate default 2 installments
@@ -108,13 +108,13 @@ export function InvoiceInstallmentsDialog({
       filtered.map((item, idx) => ({
         ...item,
         installment_number: idx + 1,
-      }))
+      })),
     );
   }
 
   function handleUpdateItem(index: number, field: keyof InstallmentItem, value: any) {
     setInstallments((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
     );
   }
 
@@ -126,7 +126,7 @@ export function InvoiceInstallmentsDialog({
   async function handleSave() {
     if (!isSumValid) {
       toast.error(
-        `Installment total (₦${currentSum.toLocaleString()}) must match invoice total (₦${invoiceTotal.toLocaleString()})`
+        `Installment total (₦${currentSum.toLocaleString()}) must match invoice total (₦${invoiceTotal.toLocaleString()})`,
       );
       return;
     }
@@ -179,9 +179,7 @@ export function InvoiceInstallmentsDialog({
             <div>
               <span className="text-muted-foreground block">Difference</span>
               <span
-                className={`font-semibold ${
-                  isSumValid ? "text-emerald-600" : "text-amber-600"
-                }`}
+                className={`font-semibold ${isSumValid ? "text-emerald-600" : "text-amber-600"}`}
               >
                 {isSumValid ? "Exact match" : formatCurrency(difference)}
               </span>

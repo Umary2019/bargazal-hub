@@ -251,7 +251,10 @@ export function ProjectDeliveryBoard({ projectId }: { projectId: string }) {
       table: "project_milestones" | "project_tasks";
       id: string;
     }) => {
-      const { error } = await supabase.from(table as never).delete().eq("id", id);
+      const { error } = await supabase
+        .from(table as never)
+        .delete()
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -327,7 +330,8 @@ export function ProjectDeliveryBoard({ projectId }: { projectId: string }) {
       <CardHeader>
         <CardTitle>Delivery Plan, Tasks & Deliverables</CardTitle>
         <CardDescription>
-          Organize milestones, assign detailed tasks with deadlines, and upload versioned deliverables.
+          Organize milestones, assign detailed tasks with deadlines, and upload versioned
+          deliverables.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -433,9 +437,7 @@ export function ProjectDeliveryBoard({ projectId }: { projectId: string }) {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-red-600 hover:bg-red-50"
-                      onClick={() =>
-                        deleteItem.mutate({ table: "project_milestones", id: m.id })
-                      }
+                      onClick={() => deleteItem.mutate({ table: "project_milestones", id: m.id })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -520,9 +522,7 @@ export function ProjectDeliveryBoard({ projectId }: { projectId: string }) {
                   <div className="flex items-start sm:items-center gap-3 flex-1">
                     <button
                       type="button"
-                      onClick={() =>
-                        updateTask.mutate({ id: task.id, is_completed: !isDone })
-                      }
+                      onClick={() => updateTask.mutate({ id: task.id, is_completed: !isDone })}
                       className="mt-0.5 sm:mt-0 text-muted-foreground hover:text-foreground"
                     >
                       {isDone ? (
@@ -742,7 +742,9 @@ export function ProjectDeliveryBoard({ projectId }: { projectId: string }) {
               </div>
             ))}
             {filesQuery.data?.length === 0 && (
-              <p className="text-xs text-muted-foreground py-2">No files or deliverables uploaded.</p>
+              <p className="text-xs text-muted-foreground py-2">
+                No files or deliverables uploaded.
+              </p>
             )}
           </div>
         </section>

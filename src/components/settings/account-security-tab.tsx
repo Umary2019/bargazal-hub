@@ -123,11 +123,17 @@ export function AccountSecurityTab() {
                   Revoke Other Active Sessions
                 </p>
                 <p className="text-xs text-amber-700 dark:text-amber-400">
-                  Log out of any other computers, phones, or browser sessions where you are currently signed in.
+                  Log out of any other computers, phones, or browser sessions where you are
+                  currently signed in.
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={handleGlobalSignOut} className="shrink-0 border-amber-300 dark:border-amber-800">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGlobalSignOut}
+              className="shrink-0 border-amber-300 dark:border-amber-800"
+            >
               Sign Out Others
             </Button>
           </div>
@@ -142,7 +148,8 @@ export function AccountSecurityTab() {
             Update Account Password
           </CardTitle>
           <CardDescription>
-            Change your password to maintain rigorous account security across all administrative tools.
+            Change your password to maintain rigorous account security across all administrative
+            tools.
           </CardDescription>
         </CardHeader>
         <CardContent>

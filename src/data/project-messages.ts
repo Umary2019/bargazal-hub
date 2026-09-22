@@ -37,13 +37,7 @@ export function useProjectMessages(projectId: string | undefined) {
 export function usePostProjectMessage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      projectId,
-      message,
-    }: {
-      projectId: string;
-      message: string;
-    }) => {
+    mutationFn: async ({ projectId, message }: { projectId: string; message: string }) => {
       const { data, error } = await (supabase as any).rpc("post_project_message", {
         _project_id: projectId,
         _message: message.trim(),
@@ -66,7 +60,8 @@ export function usePostProjectMessage() {
           .eq("user_id", user.id)
           .maybeSingle();
 
-        const role = roleRow?.role === "admin" ? "admin" : roleRow?.role === "staff" ? "staff" : "client";
+        const role =
+          roleRow?.role === "admin" ? "admin" : roleRow?.role === "staff" ? "staff" : "client";
 
         const { error: insErr } = await (supabase as any).from("project_messages").insert({
           project_id: projectId,

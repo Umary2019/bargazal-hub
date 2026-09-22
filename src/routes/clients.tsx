@@ -77,7 +77,9 @@ function ClientsCollection() {
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "archived">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "archived">(
+    "all",
+  );
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [archiveId, setArchiveId] = useState<string | null>(null);
@@ -101,7 +103,8 @@ function ClientsCollection() {
       if (statusFilter === "archived") {
         if (!client.archived_at && client.status !== "archived") return false;
       } else if (statusFilter === "active") {
-        if (client.archived_at || client.status === "inactive" || client.status === "archived") return false;
+        if (client.archived_at || client.status === "inactive" || client.status === "archived")
+          return false;
       } else if (statusFilter === "inactive") {
         if (client.archived_at || client.status !== "inactive") return false;
       } else {
@@ -115,7 +118,8 @@ function ClientsCollection() {
       const emailMatch = client.email?.toLowerCase().includes(q) ?? false;
       const phoneMatch = client.phone?.includes(q) ?? false;
       const instMatch = client.institution?.toLowerCase().includes(q) ?? false;
-      const tagsMatch = Array.isArray(client.tags) && client.tags.some((t: string) => t.toLowerCase().includes(q));
+      const tagsMatch =
+        Array.isArray(client.tags) && client.tags.some((t: string) => t.toLowerCase().includes(q));
       const sourceMatch = client.acquisition_source?.toLowerCase().includes(q) ?? false;
       return nameMatch || emailMatch || phoneMatch || instMatch || tagsMatch || sourceMatch;
     });
@@ -134,9 +138,7 @@ function ClientsCollection() {
   }
 
   function toggleSelectOne(id: string) {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   }
 
   // Approval handler
@@ -241,7 +243,10 @@ function ClientsCollection() {
       const acquisition_source = r["Acquisition Source"] || r["acquisition_source"] || null;
       const tagsRaw = r["Tags"] || r["tags"] || "";
       const tags = tagsRaw
-        ? tagsRaw.split(/[,;]/).map((t: string) => t.trim()).filter(Boolean)
+        ? tagsRaw
+            .split(/[,;]/)
+            .map((t: string) => t.trim())
+            .filter(Boolean)
         : [];
       const address = r["Address"] || r["address"] || null;
 
@@ -382,9 +387,7 @@ function ClientsCollection() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() =>
-                      bulkUpdateStatus.mutate({ ids: selectedIds, status: "active" })
-                    }
+                    onClick={() => bulkUpdateStatus.mutate({ ids: selectedIds, status: "active" })}
                   >
                     Mark Active
                   </Button>
@@ -413,7 +416,7 @@ function ClientsCollection() {
                     onClick={() => {
                       if (
                         confirm(
-                          `Are you sure you want to delete ${selectedIds.length} selected client(s)?`
+                          `Are you sure you want to delete ${selectedIds.length} selected client(s)?`,
                         )
                       ) {
                         bulkDeleteClients.mutate(selectedIds);
@@ -423,11 +426,7 @@ function ClientsCollection() {
                   >
                     Delete Selected
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setSelectedIds([])}
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
                     Cancel
                   </Button>
                 </div>
@@ -489,7 +488,9 @@ function ClientsCollection() {
                   <TableBody>
                     {filteredClients.map((client: any) => {
                       const isSelected = selectedIds.includes(client.id);
-                      const isArchived = Boolean(client.archived_at || client.status === "archived");
+                      const isArchived = Boolean(
+                        client.archived_at || client.status === "archived",
+                      );
                       return (
                         <TableRow key={client.id} className={isSelected ? "bg-primary/5" : ""}>
                           <TableCell>
@@ -544,11 +545,17 @@ function ClientsCollection() {
                           <TableCell>
                             <div className="flex flex-col gap-1 items-start">
                               {isArchived ? (
-                                <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-300">
+                                <Badge
+                                  variant="outline"
+                                  className="bg-amber-50 text-amber-800 border-amber-300"
+                                >
                                   Archived
                                 </Badge>
                               ) : client.status === "inactive" ? (
-                                <Badge variant="outline" className="text-slate-600 border-slate-300">
+                                <Badge
+                                  variant="outline"
+                                  className="text-slate-600 border-slate-300"
+                                >
                                   Inactive
                                 </Badge>
                               ) : client.status === "lead" ? (

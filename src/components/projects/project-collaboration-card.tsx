@@ -97,7 +97,10 @@ export function ProjectCollaborationCard({
             </CardDescription>
           </div>
           {pendingRevisions.length > 0 && (
-            <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300 self-start sm:self-auto gap-1">
+            <Badge
+              variant="outline"
+              className="border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300 self-start sm:self-auto gap-1"
+            >
               <AlertCircle className="h-3.5 w-3.5" />
               {pendingRevisions.length} active revision{pendingRevisions.length > 1 ? "s" : ""}
             </Badge>
@@ -192,9 +195,7 @@ export function ProjectCollaborationCard({
           {/* REVISIONS TAB */}
           <TabsContent value="revisions" className="space-y-4">
             {revisionsLoading ? (
-              <p className="text-xs text-muted-foreground text-center py-4">
-                Loading revisions...
-              </p>
+              <p className="text-xs text-muted-foreground text-center py-4">Loading revisions...</p>
             ) : revisions.length === 0 ? (
               <div className="py-8 text-center border rounded-lg bg-muted/10">
                 <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-600 mb-1" />
@@ -255,9 +256,12 @@ export function ProjectCollaborationCard({
                     {rev.status === "Resolved" && (
                       <div className="rounded-md border border-emerald-300 bg-emerald-50 p-2.5 text-xs text-emerald-950 dark:border-emerald-900/80 dark:bg-emerald-950/40 dark:text-emerald-200">
                         <span className="font-semibold">
-                          Resolved {rev.resolved_at ? `on ${formatDate(rev.resolved_at)}` : ""}:{" "}
+                          Resolved {rev.resolved_at ? `on ${formatDate(rev.resolved_at)}` : ""}
+                          :{" "}
                         </span>
-                        <span>{rev.admin_notes || "Delivered revision successfully addressed."}</span>
+                        <span>
+                          {rev.admin_notes || "Delivered revision successfully addressed."}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -277,13 +281,16 @@ export function ProjectCollaborationCard({
           <DialogHeader>
             <DialogTitle>Resolve Revision Request</DialogTitle>
             <DialogDescription>
-              Confirm that you have addressed the client&apos;s requested changes and uploaded updated deliverables.
+              Confirm that you have addressed the client&apos;s requested changes and uploaded
+              updated deliverables.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="rounded-lg border bg-muted/30 p-3 text-xs">
               <span className="font-semibold block mb-1">Client Feedback:</span>
-              <p className="text-muted-foreground whitespace-pre-wrap">{selectedRevision?.reason}</p>
+              <p className="text-muted-foreground whitespace-pre-wrap">
+                {selectedRevision?.reason}
+              </p>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-foreground">

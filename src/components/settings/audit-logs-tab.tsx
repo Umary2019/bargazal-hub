@@ -1,15 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  History,
-  Download,
-  Search,
-  Filter,
-  RefreshCw,
-  Clock,
-  User,
-  Shield,
-} from "lucide-react";
+import { History, Download, Search, Filter, RefreshCw, Clock, User, Shield } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,7 +52,8 @@ export function AuditLogsTab() {
   const logs = data ?? [];
 
   const filteredLogs = logs.filter((item) => {
-    const matchesEntity = entityFilter === "all" || item.entity_type.toLowerCase() === entityFilter.toLowerCase();
+    const matchesEntity =
+      entityFilter === "all" || item.entity_type.toLowerCase() === entityFilter.toLowerCase();
     const matchesSearch =
       !searchTerm.trim() ||
       item.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,7 +74,7 @@ export function AuditLogsTab() {
         l.entity_type,
         l.entity_id ?? "",
         l.detail ?? "",
-      ])
+      ]),
     );
   };
 
@@ -112,7 +104,8 @@ export function AuditLogsTab() {
             System Audit & Activity Logs
           </CardTitle>
           <CardDescription>
-            Immutable chronological record of administrative actions, payments, status modifications, and security events.
+            Immutable chronological record of administrative actions, payments, status
+            modifications, and security events.
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
@@ -215,7 +208,10 @@ export function AuditLogsTab() {
                           {log.entity_type}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-xs truncate" title={log.detail ?? ""}>
+                      <td
+                        className="px-4 py-3 text-xs text-muted-foreground max-w-xs truncate"
+                        title={log.detail ?? ""}
+                      >
                         {log.detail || log.entity_id || "—"}
                       </td>
                     </tr>

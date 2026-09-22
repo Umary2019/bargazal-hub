@@ -149,7 +149,9 @@ export function usePaystackTransactions() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("paystack_transactions")
-        .select("*, invoices(id, invoice_number, total, balance, client_id, clients(id, full_name, email))")
+        .select(
+          "*, invoices(id, invoice_number, total, balance, client_id, clients(id, full_name, email))",
+        )
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -163,7 +165,9 @@ export function useRefunds() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("refunds")
-        .select("*, payments(payment_number, amount, payment_date), invoices(invoice_number, client_id, clients(full_name))")
+        .select(
+          "*, payments(payment_number, amount, payment_date), invoices(invoice_number, client_id, clients(full_name))",
+        )
         .order("created_at", { ascending: false });
       if (error) return [];
       return data ?? [];

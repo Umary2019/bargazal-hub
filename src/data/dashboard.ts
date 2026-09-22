@@ -81,7 +81,9 @@ export function useDashboard(range: DashboardRange = "allTime") {
         fetchAllPages((from, to) =>
           supabase
             .from("payments")
-            .select("amount, payment_date, payment_method, project_id, invoice_id, clients(full_name)")
+            .select(
+              "amount, payment_date, payment_method, project_id, invoice_id, clients(full_name)",
+            )
             .is("voided_at", null)
             .range(from, to),
         ),
@@ -115,8 +117,12 @@ export function useDashboard(range: DashboardRange = "allTime") {
         budget: number | string;
         services: { name: string } | null;
       }[];
-      const periodPayments = payments.filter((row) => matchesDashboardRange(row.payment_date, range));
-      const periodExpenses = expenses.filter((row) => matchesDashboardRange(row.expense_date, range));
+      const periodPayments = payments.filter((row) =>
+        matchesDashboardRange(row.payment_date, range),
+      );
+      const periodExpenses = expenses.filter((row) =>
+        matchesDashboardRange(row.expense_date, range),
+      );
       const paymentRows = periodPayments as Array<{
         amount: number;
         payment_date: string;

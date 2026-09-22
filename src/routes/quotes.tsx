@@ -72,7 +72,7 @@ function QuotesPage() {
   // Calculations
   const subtotal = items.reduce(
     (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0),
-    0
+    0,
   );
   const discountAmount = Math.round((subtotal * (Number(discountPct) || 0)) / 100);
   const taxableAmount = Math.max(0, subtotal - discountAmount);
@@ -162,7 +162,7 @@ function QuotesPage() {
     mutationFn: async (id: string) => {
       const { data, error } = await supabase.rpc(
         "convert_quote_to_invoice" as never,
-        { _quote_id: id } as never
+        { _quote_id: id } as never,
       );
       if (error) throw error;
       return data as unknown as string;
@@ -187,13 +187,11 @@ function QuotesPage() {
   }
 
   function handleUpdateItem(idx: number, field: keyof QuoteItemInput, val: any) {
-    setItems((prev) =>
-      prev.map((it, i) => (i === idx ? { ...it, [field]: val } : it))
-    );
+    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, [field]: val } : it)));
   }
 
   const canCreate = Boolean(
-    clientId && items.some((i) => i.description.trim() && Number(i.unit_price) > 0)
+    clientId && items.some((i) => i.description.trim() && Number(i.unit_price) > 0),
   );
 
   return (
@@ -204,7 +202,8 @@ function QuotesPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Quotations & Proposals</h1>
             <p className="text-muted-foreground">
-              Prepare multi-item quotes with discount and tax, send to clients, and convert to invoices.
+              Prepare multi-item quotes with discount and tax, send to clients, and convert to
+              invoices.
             </p>
           </div>
         </div>
@@ -440,10 +439,10 @@ function QuotesPage() {
                               quote.status === "Accepted"
                                 ? "bg-emerald-100 text-emerald-800"
                                 : quote.status === "Converted"
-                                ? "bg-blue-100 text-blue-800"
-                                : quote.status === "Rejected"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-slate-100 text-slate-800"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : quote.status === "Rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-slate-100 text-slate-800"
                             }
                           >
                             {quote.status}
@@ -472,13 +471,11 @@ function QuotesPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {["Draft", "Sent", "Accepted", "Rejected", "Expired"].map(
-                              (status) => (
-                                <SelectItem key={status} value={status}>
-                                  {status}
-                                </SelectItem>
-                              )
-                            )}
+                            {["Draft", "Sent", "Accepted", "Rejected", "Expired"].map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
 

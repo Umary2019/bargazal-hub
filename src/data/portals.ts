@@ -47,7 +47,8 @@ export function useClientPortalData(clientId: string | undefined) {
           .eq("client_id", clientId)
           .order("created_at", { ascending: false }),
       ]);
-      for (const result of [requests, projects, invoices, quotes]) if (result.error) throw result.error;
+      for (const result of [requests, projects, invoices, quotes])
+        if (result.error) throw result.error;
 
       const reqList = requests.data ?? [];
       const projList = projects.data ?? [];

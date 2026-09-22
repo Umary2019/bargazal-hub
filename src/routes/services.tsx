@@ -260,7 +260,9 @@ function ServicesPage() {
                           <TableCell className="text-xs text-muted-foreground">
                             {service.service_categories?.name || "Uncategorized"}
                           </TableCell>
-                          <TableCell className="font-semibold">{formatCurrency(service.price)}</TableCell>
+                          <TableCell className="font-semibold">
+                            {formatCurrency(service.price)}
+                          </TableCell>
                           <TableCell>
                             <Badge variant="outline">{service.pricing_type}</Badge>
                           </TableCell>
@@ -345,7 +347,9 @@ function ServicesPage() {
                             <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
                               {cat.description || "—"}
                             </TableCell>
-                            <TableCell className="font-mono text-xs">{cat.sort_order ?? 0}</TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {cat.sort_order ?? 0}
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline">{count} services</Badge>
                             </TableCell>
@@ -374,7 +378,11 @@ function ServicesPage() {
                                       size="sm"
                                       className="text-red-600 hover:bg-red-50"
                                       disabled={count > 0}
-                                      title={count > 0 ? "Cannot delete category containing services" : "Delete category"}
+                                      title={
+                                        count > 0
+                                          ? "Cannot delete category containing services"
+                                          : "Delete category"
+                                      }
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -405,9 +413,7 @@ function ServicesPage() {
       <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {selectedCat ? "Edit Category" : "Add Service Category"}
-            </DialogTitle>
+            <DialogTitle>{selectedCat ? "Edit Category" : "Add Service Category"}</DialogTitle>
             <DialogDescription>
               Provide name, display priority, and description for this service category.
             </DialogDescription>
@@ -452,11 +458,7 @@ function ServicesPage() {
               </div>
             </div>
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCategoryDialogOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setCategoryDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saveCategory.isPending}>

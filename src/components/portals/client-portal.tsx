@@ -277,7 +277,9 @@ export function ClientPortal() {
             <div>
               <p className="font-semibold">Your payment has been successfully received.</p>
               <p className="text-sm text-emerald-800/90 dark:text-emerald-300/90">
-                Transaction confirmed with Paystack (Ref: <span className="font-mono font-medium">{verifiedPaymentRef}</span>). Your project is now funded and in development.
+                Transaction confirmed with Paystack (Ref:{" "}
+                <span className="font-mono font-medium">{verifiedPaymentRef}</span>). Your project
+                is now funded and in development.
               </p>
             </div>
           </div>
@@ -308,8 +310,11 @@ export function ClientPortal() {
                 <span className="font-bold">
                   {formatCurrency(Number(unpaidInvoices[0].balance || unpaidInvoices[0].total))}
                 </span>{" "}
-                for {unpaidInvoices[0].projects?.services?.name || unpaidInvoices[0].projects?.title || "approved project"}.
-                {unpaidInvoices.length > 1 && ` (${unpaidInvoices.length} total unpaid)`}
+                for{" "}
+                {unpaidInvoices[0].projects?.services?.name ||
+                  unpaidInvoices[0].projects?.title ||
+                  "approved project"}
+                .{unpaidInvoices.length > 1 && ` (${unpaidInvoices.length} total unpaid)`}
               </p>
             </div>
           </div>
@@ -716,7 +721,9 @@ export function ClientPortal() {
               >
                 Cancel Request
               </Button>
-            ) : <div />}
+            ) : (
+              <div />
+            )}
             <Button variant="outline" onClick={() => setSelectedRequest(null)}>
               Close
             </Button>
@@ -727,7 +734,8 @@ export function ClientPortal() {
         <CardHeader>
           <CardTitle>Project progress</CardTitle>
           <CardDescription>
-            Track your ongoing projects, download deliverables, request revisions, and message your project team.
+            Track your ongoing projects, download deliverables, request revisions, and message your
+            project team.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -741,7 +749,9 @@ export function ClientPortal() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
-                    <span className="font-semibold text-foreground text-base block">{project.title}</span>
+                    <span className="font-semibold text-foreground text-base block">
+                      {project.title}
+                    </span>
                     {project.project_number && (
                       <span className="text-xs font-mono text-muted-foreground block">
                         #{project.project_number}
@@ -756,7 +766,9 @@ export function ClientPortal() {
                       </p>
                     )}
                   </div>
-                  <Badge variant="outline" className="shrink-0">{project.status}</Badge>
+                  <Badge variant="outline" className="shrink-0">
+                    {project.status}
+                  </Badge>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div className="h-full bg-primary" style={{ width: `${project.progress}%` }} />
@@ -803,7 +815,9 @@ export function ClientPortal() {
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-foreground">{quote.quote_number}</span>
+                    <span className="font-mono font-bold text-foreground">
+                      {quote.quote_number}
+                    </span>
                     <Badge
                       className={
                         quote.status === "Accepted"
@@ -820,7 +834,9 @@ export function ClientPortal() {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {quote.quote_items?.[0]?.description || "Service Quotation"} ·{" "}
-                    {quote.expiry_date ? `Valid until ${formatDate(quote.expiry_date)}` : "No expiration"}
+                    {quote.expiry_date
+                      ? `Valid until ${formatDate(quote.expiry_date)}`
+                      : "No expiration"}
                   </p>
                   <p className="text-base font-bold text-foreground mt-1">
                     {formatCurrency(Number(quote.total))}
@@ -920,7 +936,8 @@ export function ClientPortal() {
                   <FileText className="h-10 w-10 mx-auto text-muted-foreground/60 mb-2" />
                   <p className="font-semibold text-foreground">No invoices generated yet</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                    When the administrator approves your service request, an invoice will be automatically generated here for instant payment.
+                    When the administrator approves your service request, an invoice will be
+                    automatically generated here for instant payment.
                   </p>
                 </div>
               );
@@ -1008,10 +1025,7 @@ export function ClientPortal() {
                               {status}
                             </Badge>
                           </td>
-                          <td
-                            className="py-3 px-4 text-right"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-2">
                               <Button
                                 variant="ghost"

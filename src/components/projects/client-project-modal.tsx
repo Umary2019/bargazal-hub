@@ -42,7 +42,9 @@ interface ClientProjectModalProps {
 }
 
 export function ClientProjectModal({ project, open, onOpenChange }: ClientProjectModalProps) {
-  const [activeTab, setActiveTab] = useState<"overview" | "files" | "messages" | "revisions">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "files" | "messages" | "revisions">(
+    "overview",
+  );
   const [revisionReason, setRevisionReason] = useState("");
   const [showRevisionForm, setShowRevisionForm] = useState(false);
   const [deliveryFeedback, setDeliveryFeedback] = useState("");
@@ -169,7 +171,8 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
             <div>
               <p className="font-semibold text-foreground">Project Delivery & Review</p>
               <p className="text-xs text-muted-foreground">
-                Download delivered deliverables below. You can approve completion or request revisions anytime.
+                Download delivered deliverables below. You can approve completion or request
+                revisions anytime.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -205,7 +208,8 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
               <CheckCircle2 className="h-5 w-5" /> Confirm Project Acceptance
             </div>
             <p className="text-xs text-emerald-900/80 dark:text-emerald-200">
-              By confirming, you acknowledge that project deliverables have been received and verified. The project will be marked as Completed (100%).
+              By confirming, you acknowledge that project deliverables have been received and
+              verified. The project will be marked as Completed (100%).
             </p>
             <Textarea
               placeholder="Optional feedback or testimonial for our team..."
@@ -232,12 +236,16 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
 
         {/* Request Revision Form Panel */}
         {showRevisionForm && (
-          <form onSubmit={handleSubmitRevision} className="rounded-lg border border-amber-300 bg-amber-50/70 dark:bg-amber-950/20 p-4 space-y-3">
+          <form
+            onSubmit={handleSubmitRevision}
+            className="rounded-lg border border-amber-300 bg-amber-50/70 dark:bg-amber-950/20 p-4 space-y-3"
+          >
             <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold text-sm">
               <RotateCcw className="h-4 w-4" /> Request Project Revision
             </div>
             <p className="text-xs text-amber-900/80 dark:text-amber-200">
-              Specify the exact adjustments, corrections, or chapter sections that need attention. The assigned technical specialist will be notified immediately.
+              Specify the exact adjustments, corrections, or chapter sections that need attention.
+              The assigned technical specialist will be notified immediately.
             </p>
             <Textarea
               required
@@ -248,7 +256,12 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
               rows={3}
             />
             <div className="flex justify-end gap-2">
-              <Button size="sm" variant="ghost" type="button" onClick={() => setShowRevisionForm(false)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                onClick={() => setShowRevisionForm(false)}
+              >
                 Cancel
               </Button>
               <Button
@@ -315,7 +328,9 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
               </div>
               <div className="rounded-md border p-2.5">
                 <span className="text-muted-foreground block">Priority</span>
-                <span className="font-semibold text-foreground mt-0.5 block">{project.priority ?? "Normal"}</span>
+                <span className="font-semibold text-foreground mt-0.5 block">
+                  {project.priority ?? "Normal"}
+                </span>
               </div>
               <div className="rounded-md border p-2.5">
                 <span className="text-muted-foreground block">Budget</span>
@@ -327,7 +342,9 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
 
             {project.description && (
               <div className="space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground">Project Scope & Details</span>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  Project Scope & Details
+                </span>
                 <div className="rounded-md border bg-muted/20 p-3 text-xs leading-relaxed whitespace-pre-wrap">
                   {project.description}
                 </div>
@@ -337,7 +354,10 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
             {isCompleted && (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-xs text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-300 flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
-                <span>This project is completed and verified. You can access all delivered files under the Files tab.</span>
+                <span>
+                  This project is completed and verified. You can access all delivered files under
+                  the Files tab.
+                </span>
               </div>
             )}
           </TabsContent>
@@ -350,12 +370,18 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
               <div className="rounded-lg border border-dashed p-8 text-center text-xs text-muted-foreground">
                 <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
                 <p className="font-medium text-foreground">No files delivered yet</p>
-                <p className="mt-0.5">Deliverables uploaded by your assigned specialist will appear here for instant download.</p>
+                <p className="mt-0.5">
+                  Deliverables uploaded by your assigned specialist will appear here for instant
+                  download.
+                </p>
               </div>
             ) : (
               <div className="divide-y rounded-lg border">
                 {files.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 text-xs hover:bg-muted/30">
+                  <div
+                    key={file.id}
+                    className="flex items-center justify-between p-3 text-xs hover:bg-muted/30"
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <FileText className="h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0">
@@ -397,7 +423,9 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
           <TabsContent value="messages" className="space-y-3 pt-2">
             <div className="max-h-60 overflow-y-auto space-y-2 rounded-lg border p-3 bg-muted/10">
               {messagesLoading ? (
-                <p className="py-4 text-center text-xs text-muted-foreground">Loading conversation...</p>
+                <p className="py-4 text-center text-xs text-muted-foreground">
+                  Loading conversation...
+                </p>
               ) : messages.length === 0 ? (
                 <div className="py-6 text-center text-xs text-muted-foreground">
                   <MessageSquare className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/40" />
@@ -414,7 +442,9 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1 text-[10px] opacity-80">
-                      <span className="font-semibold">{msg.sender_name} ({msg.sender_role})</span>
+                      <span className="font-semibold">
+                        {msg.sender_name} ({msg.sender_role})
+                      </span>
                       <span>{formatDateTime(msg.created_at)}</span>
                     </div>
                     <p className="whitespace-pre-wrap">{msg.message}</p>
@@ -430,7 +460,12 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
                 onChange={(e) => setMessageText(e.target.value)}
                 className="text-xs"
               />
-              <Button size="sm" type="submit" disabled={postMessage.isPending || !messageText.trim()} className="gap-1">
+              <Button
+                size="sm"
+                type="submit"
+                disabled={postMessage.isPending || !messageText.trim()}
+                className="gap-1"
+              >
                 <Send className="h-3.5 w-3.5" /> Send
               </Button>
             </form>
@@ -439,7 +474,9 @@ export function ClientProjectModal({ project, open, onOpenChange }: ClientProjec
           {/* TAB 4: REVISIONS */}
           <TabsContent value="revisions" className="space-y-3 pt-2">
             {revisionsLoading ? (
-              <p className="py-6 text-center text-xs text-muted-foreground">Loading revision history...</p>
+              <p className="py-6 text-center text-xs text-muted-foreground">
+                Loading revision history...
+              </p>
             ) : revisions.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
                 <RotateCcw className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/40" />

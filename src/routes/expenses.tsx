@@ -121,7 +121,7 @@ function ExpensesPage() {
 
   const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const pendingCount = expenses.filter(
-    (e: any) => (e.approval_status || "approved") === "pending"
+    (e: any) => (e.approval_status || "approved") === "pending",
   ).length;
 
   // Export to CSV
@@ -218,9 +218,8 @@ function ExpensesPage() {
             <CardContent>
               <div className="text-2xl font-bold text-emerald-600">
                 {
-                  expenses.filter(
-                    (e: any) => (e.approval_status || "approved") === "approved"
-                  ).length
+                  expenses.filter((e: any) => (e.approval_status || "approved") === "approved")
+                    .length
                 }
               </div>
               <p className="text-xs text-muted-foreground">Active business deductions</p>

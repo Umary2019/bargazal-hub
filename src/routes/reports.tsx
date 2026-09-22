@@ -110,7 +110,9 @@ function ReportsPage() {
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Reports & Analytics</h1>
-            <p className="text-muted-foreground">Comprehensive business insights and real financial audits</p>
+            <p className="text-muted-foreground">
+              Comprehensive business insights and real financial audits
+            </p>
           </div>
           <Button className="gap-2" variant="outline" onClick={exportReport}>
             <Download className="w-4 h-4" />
@@ -121,7 +123,9 @@ function ReportsPage() {
         {/* Date Range Filter */}
         <Card>
           <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">Filter Reporting Window:</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              Filter Reporting Window:
+            </span>
             <Select value={dateRange} onValueChange={(v) => setDateRange(v as DashboardRange)}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Select date range" />
@@ -381,7 +385,12 @@ function ReportsPage() {
                     <CardTitle>Expenses by Category</CardTitle>
                     <CardDescription>Breakdown of expenditures</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={exportExpensesBreakdown} className="gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={exportExpensesBreakdown}
+                    className="gap-2"
+                  >
                     <Download className="w-4 h-4" /> Export (CSV)
                   </Button>
                 </CardHeader>

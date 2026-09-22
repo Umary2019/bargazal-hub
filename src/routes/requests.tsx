@@ -202,8 +202,7 @@ function RequestsPage() {
     setApproveNote("");
     setInvoiceAmount(String(request.budget || 0));
     const defaultDue =
-      request.preferred_deadline ||
-      new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+      request.preferred_deadline || new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
     setInvoiceDueDate(defaultDue);
   }
 
@@ -830,8 +829,12 @@ function RequestsPage() {
                   {selectedRequestInvoice && (
                     <div className="mt-2 rounded border border-blue-200 bg-blue-50/70 p-2 text-xs text-blue-950 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
                       <span className="font-semibold">Linked Invoice: </span>
-                      <span className="font-mono">{selectedRequestInvoice.invoice_number}</span> — Total:{" "}
-                      <span className="font-semibold">{formatCurrency(selectedRequestInvoice.total)}</span> (
+                      <span className="font-mono">{selectedRequestInvoice.invoice_number}</span> —
+                      Total:{" "}
+                      <span className="font-semibold">
+                        {formatCurrency(selectedRequestInvoice.total)}
+                      </span>{" "}
+                      (
                       <span
                         className={
                           selectedRequestInvoice.status === "Paid"
@@ -1030,69 +1033,70 @@ function RequestsPage() {
                 </Select>
               </div>
 
-                {/* Automatic Invoice Generation Controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-foreground">
-                      Invoice Amount (₦) *
-                    </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="100"
-                      placeholder="0.00"
-                      value={invoiceAmount}
-                      onChange={(e) => setInvoiceAmount(e.target.value)}
-                    />
-                    <span className="text-[10px] text-muted-foreground">
-                      Auto-creates an invoice for this client
-                    </span>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-foreground">
-                      Payment Due Date *
-                    </label>
-                    <Input
-                      type="date"
-                      value={invoiceDueDate}
-                      onChange={(e) => setInvoiceDueDate(e.target.value)}
-                    />
-                    <span className="text-[10px] text-muted-foreground">
-                      Default: {approveDialogRequest?.preferred_deadline ? "Client preferred" : "14 days"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Admin Note */}
+              {/* Automatic Invoice Generation Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-foreground">
-                    Admin / Kickoff Note (Optional)
+                    Invoice Amount (₦) *
                   </label>
-                  <Textarea
-                    placeholder="Add any internal kickoff instructions or client note..."
-                    rows={2}
-                    value={approveNote}
-                    onChange={(e) => setApproveNote(e.target.value)}
+                  <Input
+                    type="number"
+                    min="0"
+                    step="100"
+                    placeholder="0.00"
+                    value={invoiceAmount}
+                    onChange={(e) => setInvoiceAmount(e.target.value)}
                   />
+                  <span className="text-[10px] text-muted-foreground">
+                    Auto-creates an invoice for this client
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Payment Due Date *</label>
+                  <Input
+                    type="date"
+                    value={invoiceDueDate}
+                    onChange={(e) => setInvoiceDueDate(e.target.value)}
+                  />
+                  <span className="text-[10px] text-muted-foreground">
+                    Default:{" "}
+                    {approveDialogRequest?.preferred_deadline ? "Client preferred" : "14 days"}
+                  </span>
                 </div>
               </div>
 
-              <DialogFooter className="gap-2 sm:gap-0">
-                <Button
-                  variant="outline"
-                  onClick={() => setApproveDialogRequest(null)}
-                  disabled={approveRequest.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="bg-emerald-600 text-white hover:bg-emerald-700"
-                  onClick={() => void handleConfirmApprove()}
-                  disabled={approveRequest.isPending}
-                >
-                  {approveRequest.isPending ? "Approving & Invoicing..." : "Approve & Generate Invoice"}
-                </Button>
-              </DialogFooter>
+              {/* Admin Note */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">
+                  Admin / Kickoff Note (Optional)
+                </label>
+                <Textarea
+                  placeholder="Add any internal kickoff instructions or client note..."
+                  rows={2}
+                  value={approveNote}
+                  onChange={(e) => setApproveNote(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => setApproveDialogRequest(null)}
+                disabled={approveRequest.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-emerald-600 text-white hover:bg-emerald-700"
+                onClick={() => void handleConfirmApprove()}
+                disabled={approveRequest.isPending}
+              >
+                {approveRequest.isPending
+                  ? "Approving & Invoicing..."
+                  : "Approve & Generate Invoice"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 

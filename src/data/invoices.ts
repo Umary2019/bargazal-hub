@@ -202,7 +202,10 @@ export function useCheckOverdueInvoices() {
         if (invs && invs.length > 0) {
           for (const inv of invs) {
             if (Number(inv.balance ?? inv.total) > 0) {
-              await (supabase as any).from("invoices").update({ status: "Overdue" }).eq("id", inv.id);
+              await (supabase as any)
+                .from("invoices")
+                .update({ status: "Overdue" })
+                .eq("id", inv.id);
             }
           }
         }

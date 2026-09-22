@@ -76,7 +76,9 @@ function PaymentsPage() {
   const { data: refunds = [], isLoading: refundsLoading } = useRefunds();
   const { data: invoices = [] } = useInvoices();
 
-  const [activeTab, setActiveTab] = useState<"records" | "gateway" | "refunds" | "reconciliation">("records");
+  const [activeTab, setActiveTab] = useState<"records" | "gateway" | "refunds" | "reconciliation">(
+    "records",
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [pageSize, setPageSize] = useState(15);
@@ -226,8 +228,12 @@ function PaymentsPage() {
               <CardTitle className="text-sm font-medium">Total Settled</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">{formatCurrency(totalSettled)}</div>
-              <p className="text-xs text-muted-foreground">{payments.length} successful payment(s)</p>
+              <div className="text-2xl font-bold text-emerald-600">
+                {formatCurrency(totalSettled)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {payments.length} successful payment(s)
+              </p>
             </CardContent>
           </Card>
 
@@ -256,7 +262,9 @@ function PaymentsPage() {
               <CardTitle className="text-sm font-medium">Unreconciled / Incomplete</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-amber-600">{unreconciledTransactions.length}</div>
+              <div className="text-2xl font-bold text-amber-600">
+                {unreconciledTransactions.length}
+              </div>
               <p className="text-xs text-muted-foreground">Pending or unlinked items</p>
             </CardContent>
           </Card>
@@ -316,13 +324,19 @@ function PaymentsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Settled Payment Records</CardTitle>
-                <CardDescription>All confirmed client payments recorded in the database.</CardDescription>
+                <CardDescription>
+                  All confirmed client payments recorded in the database.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {paymentsLoading ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">Loading payments...</div>
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Loading payments...
+                  </div>
                 ) : filteredPayments.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">No payment records found.</div>
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No payment records found.
+                  </div>
                 ) : (
                   <div className="overflow-x-auto rounded-lg border">
                     <Table>
@@ -341,7 +355,9 @@ function PaymentsPage() {
                       <TableBody>
                         {filteredPayments.map((payment) => (
                           <TableRow key={payment.id}>
-                            <TableCell className="font-mono font-medium">{payment.payment_number}</TableCell>
+                            <TableCell className="font-mono font-medium">
+                              {payment.payment_number}
+                            </TableCell>
                             <TableCell>{payment.clients?.full_name ?? "—"}</TableCell>
                             <TableCell>
                               {payment.invoices ? (
@@ -384,7 +400,11 @@ function PaymentsPage() {
                                 </Button>
                                 <ConfirmDialog
                                   trigger={
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-destructive"
+                                    >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
                                   }
@@ -409,13 +429,19 @@ function PaymentsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Paystack Gateway Transactions</CardTitle>
-                <CardDescription>Live payment sessions, authorization attempts, and webhook records.</CardDescription>
+                <CardDescription>
+                  Live payment sessions, authorization attempts, and webhook records.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {txLoading ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">Loading gateway logs...</div>
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Loading gateway logs...
+                  </div>
                 ) : filteredTransactions.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">No gateway transactions matching criteria.</div>
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No gateway transactions matching criteria.
+                  </div>
                 ) : (
                   <div className="overflow-x-auto rounded-lg border">
                     <Table>
@@ -436,7 +462,9 @@ function PaymentsPage() {
                           const isFailed = tx.status === "failed";
                           return (
                             <TableRow key={tx.id}>
-                              <TableCell className="font-mono font-medium text-xs">{tx.reference}</TableCell>
+                              <TableCell className="font-mono font-medium text-xs">
+                                {tx.reference}
+                              </TableCell>
                               <TableCell>
                                 <Badge
                                   className={
@@ -454,7 +482,9 @@ function PaymentsPage() {
                               <TableCell className="font-semibold text-foreground">
                                 {formatCurrency(Number(tx.amount_kobo || 0) / 100)}
                               </TableCell>
-                              <TableCell className="capitalize text-xs">{tx.channel || "card"}</TableCell>
+                              <TableCell className="capitalize text-xs">
+                                {tx.channel || "card"}
+                              </TableCell>
                               <TableCell>
                                 {tx.invoices ? (
                                   <Link
@@ -465,7 +495,9 @@ function PaymentsPage() {
                                     {tx.invoices.invoice_number}
                                   </Link>
                                 ) : (
-                                  <span className="text-muted-foreground italic text-xs">Unlinked</span>
+                                  <span className="text-muted-foreground italic text-xs">
+                                    Unlinked
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell className="text-xs text-muted-foreground font-mono">
@@ -487,13 +519,19 @@ function PaymentsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Processed Refunds</CardTitle>
-                <CardDescription>Audit trail of all partial and full payment refunds.</CardDescription>
+                <CardDescription>
+                  Audit trail of all partial and full payment refunds.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {refundsLoading ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">Loading refund records...</div>
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Loading refund records...
+                  </div>
                 ) : refunds.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">No refunds processed yet.</div>
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No refunds processed yet.
+                  </div>
                 ) : (
                   <div className="overflow-x-auto rounded-lg border">
                     <Table>
@@ -511,7 +549,9 @@ function PaymentsPage() {
                       <TableBody>
                         {refunds.map((ref: any) => (
                           <TableRow key={ref.id}>
-                            <TableCell className="text-xs font-mono">{formatDate(ref.created_at)}</TableCell>
+                            <TableCell className="text-xs font-mono">
+                              {formatDate(ref.created_at)}
+                            </TableCell>
                             <TableCell className="font-mono text-xs">
                               {ref.invoices?.invoice_number || "—"}
                             </TableCell>
@@ -520,9 +560,14 @@ function PaymentsPage() {
                               {formatCurrency(ref.amount)}
                             </TableCell>
                             <TableCell>
-                              <Badge className="bg-emerald-100 text-emerald-800">{ref.status}</Badge>
+                              <Badge className="bg-emerald-100 text-emerald-800">
+                                {ref.status}
+                              </Badge>
                             </TableCell>
-                            <TableCell className="text-xs max-w-[200px] truncate" title={ref.reason}>
+                            <TableCell
+                              className="text-xs max-w-[200px] truncate"
+                              title={ref.reason}
+                            >
                               {ref.reason}
                             </TableCell>
                             <TableCell className="font-mono text-xs text-muted-foreground">
@@ -544,7 +589,8 @@ function PaymentsPage() {
               <CardHeader>
                 <CardTitle>Transaction Reconciliation Center</CardTitle>
                 <CardDescription>
-                  Manually link orphaned gateway payments or resolve reference discrepancies with customer invoices.
+                  Manually link orphaned gateway payments or resolve reference discrepancies with
+                  customer invoices.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -552,7 +598,9 @@ function PaymentsPage() {
                   <div className="py-8 text-center border rounded-lg bg-emerald-50/20 text-emerald-900 dark:text-emerald-300">
                     <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-600 mb-1" />
                     <p className="text-sm font-semibold">All transactions reconciled</p>
-                    <p className="text-xs text-muted-foreground">No unlinked or orphaned gateway records requiring attention.</p>
+                    <p className="text-xs text-muted-foreground">
+                      No unlinked or orphaned gateway records requiring attention.
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto rounded-lg border">
@@ -570,7 +618,9 @@ function PaymentsPage() {
                       <TableBody>
                         {unreconciledTransactions.map((tx: any) => (
                           <TableRow key={tx.id}>
-                            <TableCell className="font-mono text-xs font-semibold">{tx.reference}</TableCell>
+                            <TableCell className="font-mono text-xs font-semibold">
+                              {tx.reference}
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline">{tx.status}</Badge>
                             </TableCell>
@@ -608,11 +658,7 @@ function PaymentsPage() {
       </div>
 
       {/* Record Manual Payment Dialog */}
-      <PaymentFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        payment={selectedPayment}
-      />
+      <PaymentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} payment={selectedPayment} />
 
       {/* REFUND DIALOG */}
       <Dialog open={Boolean(refundTarget)} onOpenChange={(open) => !open && setRefundTarget(null)}>
@@ -620,12 +666,15 @@ function PaymentsPage() {
           <DialogHeader>
             <DialogTitle>Process Payment Refund</DialogTitle>
             <DialogDescription>
-              Refund payment #{refundTarget?.payment_number}. The linked invoice balance will automatically be recalculated.
+              Refund payment #{refundTarget?.payment_number}. The linked invoice balance will
+              automatically be recalculated.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleConfirmRefund} className="space-y-4 py-2">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Original Payment Amount</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                Original Payment Amount
+              </label>
               <Input disabled value={refundTarget ? formatCurrency(refundTarget.amount) : ""} />
             </div>
 
@@ -657,11 +706,7 @@ function PaymentsPage() {
               <Button type="button" variant="outline" onClick={() => setRefundTarget(null)}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="destructive"
-                disabled={processRefund.isPending}
-              >
+              <Button type="submit" variant="destructive" disabled={processRefund.isPending}>
                 {processRefund.isPending ? "Processing..." : "Confirm & Issue Refund"}
               </Button>
             </DialogFooter>
@@ -670,7 +715,10 @@ function PaymentsPage() {
       </Dialog>
 
       {/* RECONCILIATION DIALOG */}
-      <Dialog open={Boolean(reconcileTarget)} onOpenChange={(open) => !open && setReconcileTarget(null)}>
+      <Dialog
+        open={Boolean(reconcileTarget)}
+        onOpenChange={(open) => !open && setReconcileTarget(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Reconcile Transaction</DialogTitle>
@@ -680,11 +728,20 @@ function PaymentsPage() {
           </DialogHeader>
           <form onSubmit={handleConfirmReconcile} className="space-y-4 py-2">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Transaction Details</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                Transaction Details
+              </label>
               <div className="rounded-lg border p-3 bg-muted/20 text-xs space-y-1">
-                <p><span className="font-semibold">Reference:</span> {reconcileTarget?.reference}</p>
-                <p><span className="font-semibold">Customer:</span> {reconcileTarget?.customer_email}</p>
-                <p><span className="font-semibold">Amount:</span> {formatCurrency(Number(reconcileTarget?.amount_kobo || 0) / 100)}</p>
+                <p>
+                  <span className="font-semibold">Reference:</span> {reconcileTarget?.reference}
+                </p>
+                <p>
+                  <span className="font-semibold">Customer:</span> {reconcileTarget?.customer_email}
+                </p>
+                <p>
+                  <span className="font-semibold">Amount:</span>{" "}
+                  {formatCurrency(Number(reconcileTarget?.amount_kobo || 0) / 100)}
+                </p>
               </div>
             </div>
 
@@ -699,7 +756,8 @@ function PaymentsPage() {
                     .filter((i) => i.status !== "Cancelled" && i.status !== "Paid")
                     .map((inv) => (
                       <SelectItem key={inv.id} value={inv.id}>
-                        {inv.invoice_number} — {inv.clients?.full_name} (Due: {formatCurrency(inv.balance ?? inv.total)})
+                        {inv.invoice_number} — {inv.clients?.full_name} (Due:{" "}
+                        {formatCurrency(inv.balance ?? inv.total)})
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -707,7 +765,9 @@ function PaymentsPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">Reconciliation Audit Notes</label>
+              <label className="text-xs font-medium text-foreground">
+                Reconciliation Audit Notes
+              </label>
               <Textarea
                 rows={2}
                 placeholder="Explain the reason for manual link..."
