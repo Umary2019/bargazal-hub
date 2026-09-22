@@ -23,7 +23,10 @@ export const Route = createFileRoute("/api/public/health")({
               }),
               {
                 status: 500,
-                headers: { "content-type": "application/json" },
+                headers: {
+                  "content-type": "application/json",
+                  "cache-control": "no-store",
+                },
               },
             );
           }
@@ -43,7 +46,10 @@ export const Route = createFileRoute("/api/public/health")({
               }),
               {
                 status: 503,
-                headers: { "content-type": "application/json" },
+                headers: {
+                  "content-type": "application/json",
+                  "cache-control": "no-store",
+                },
               },
             );
           }
@@ -57,7 +63,10 @@ export const Route = createFileRoute("/api/public/health")({
             }),
             {
               status: 200,
-              headers: { "content-type": "application/json" },
+              headers: {
+                "content-type": "application/json",
+                "cache-control": "no-store",
+              },
             },
           );
         } catch {
@@ -68,11 +77,14 @@ export const Route = createFileRoute("/api/public/health")({
             }),
             {
               status: 503,
-              headers: { "content-type": "application/json" },
+              headers: {
+                "content-type": "application/json",
+                "cache-control": "no-store",
+              },
             },
           );
         }
       },
     },
   },
-});
+});   
